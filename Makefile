@@ -13,23 +13,23 @@ all:
 	@echo 'Fin ansisop-panel'
 
 	@echo 'Compilando MiniGral_lib...'
-	-cd MiniGral_lib/ && sudo $(MAKE)
+	-cd MiniGral_lib/Debug && sudo $(MAKE)
 	@echo 'Fin MiniGral_lib'
 
 	@echo 'Compilando MSP...'
-	-cd MSP/ && sudo $(MAKE)
+	-cd MSP/Debug && sudo $(MAKE)
 	@echo 'Fin MSP'
 
 	@echo 'Compilando CPU...'
-	-cd CPU/ && sudo $(MAKE)
+	-cd CPU/Debug && sudo $(MAKE)
 	@echo 'Fin CPU'
 
 	@echo 'Compilando Kernel...'
-	-cd Kernel/ && sudo $(MAKE)
+	-cd Kernel/Debug && sudo $(MAKE)
 	@echo 'Fin Kernel'
 
 	@echo 'Compilado Consola...'
-	-cd Consola/ && sudo $(MAKE)	
+	-cd Consola/Debug && sudo $(MAKE)	
 	@echo 'Fin Consola'
 
 	@echo 'Make OK'
@@ -45,23 +45,23 @@ clean:
 	@echo 'Fin ansisop-panel'
 
 	@echo 'Compilando MiniGral_lib...'
-	-cd MiniGral_lib/ && sudo $(MAKE) clean
+	-cd MiniGral_lib/Debug && sudo $(MAKE) clean
 	@echo 'Fin MiniGral_lib'
 
 	@echo 'Compilando MSP...'
-	-cd MSP/ && sudo $(MAKE) clean
+	-cd MSP/Debug && sudo $(MAKE) clean
 	@echo 'Fin MSP'
 
 	@echo 'Compilando CPU...'
-	-cd CPU/ && sudo $(MAKE) clean
+	-cd CPU/Debug && sudo $(MAKE) clean
 	@echo 'Fin CPU'
 
 	@echo 'Compilando Kernel...'
-	-cd Kernel/ && sudo $(MAKE) clean
+	-cd Kernel/Debug && sudo $(MAKE) clean
 	@echo 'Fin Kernel'
 
 	@echo 'Compilado Consola...'
-	-cd Consola/ && sudo $(MAKE) clean
+	-cd Consola/Debug && sudo $(MAKE) clean
 	@echo 'Fin Consola'
 
 	@echo 'Clean OK'
