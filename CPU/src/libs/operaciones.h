@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <commons/string.h>
 
+//t_hilo tcb;
+
 enum bytecodes{
 	LOAD,
 	GETM,

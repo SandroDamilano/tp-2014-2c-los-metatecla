@@ -11,7 +11,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+
+char* PATH;
+
+int main(int argc, const char* argv[]) {
+
+	PATH = argv[1];
+	inicializar_configuracion();
+
 	return EXIT_SUCCESS;
 }
