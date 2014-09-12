@@ -240,11 +240,40 @@ void ejecutarLinea(int codigo[]){
 	}
 }
 
+void copiar_tcb_a_registros(){
+	registros_cpu.I = tcb->pid;
+	registros_cpu.K = tcb->kernel_mode;
+	registros_cpu.M = tcb->segmento_codigo;
+	registros_cpu.P = tcb->puntero_instruccion;
+	registros_cpu.S = tcb->cursor_stack;
+	registros_cpu.X = tcb->base_stack;
+	registros_cpu.registros_programacion[0] = tcb->registros[0];
+	registros_cpu.registros_programacion[1] = tcb->registros[1];
+	registros_cpu.registros_programacion[2] = tcb->registros[2];
+	registros_cpu.registros_programacion[3] = tcb->registros[3];
+	registros_cpu.registros_programacion[4] = tcb->registros[4];
+	//Creo que falta el flag F que se olvidaron de ponerlo
+}
+
+void copiar_registros_a_tcb(){
+	tcb->pid = registros_cpu.I;
+	tcb->kernel_mode = registros_cpu.K;
+	tcb->segmento_codigo = registros_cpu.M;
+	tcb->puntero_instruccion = registros_cpu.P;
+	tcb->cursor_stack = registros_cpu.S;
+	tcb->base_stack = registros_cpu.X;
+	tcb->registros[0] = registros_cpu.registros_programacion[0];
+	tcb->registros[1] = registros_cpu.registros_programacion[1];
+	tcb->registros[2] = registros_cpu.registros_programacion[2];
+	tcb->registros[3] = registros_cpu.registros_programacion[3];
+	tcb->registros[4] = registros_cpu.registros_programacion[4];
+}
 
 void ejecutar(){
 	//socket a MSP con PC de tcb
 	//socket de MSP con codigo
 	cantidad_lineas_ejecutadas = 0;
+	copiar_tcb_a_registros();
 
 	while(1){
 	ejecutarLinea(codigo);

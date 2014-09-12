@@ -49,6 +49,8 @@ void inicializar_configuracion(){
 	} else{
 		leer_configuracion();
 	}
+
+	inicializar_panel(CPU,"/home/utnso/tp-2014-2c-los-metatecla/CPU");
 }
 
 

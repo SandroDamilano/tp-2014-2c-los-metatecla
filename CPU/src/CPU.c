@@ -10,7 +10,7 @@
 
 #include "libs/funcionesCPU.h"
 
-t_tcb* tcb;
+t_hilo* tcb;
 char* PATH;
 
 int main(int argc, char** argv) {

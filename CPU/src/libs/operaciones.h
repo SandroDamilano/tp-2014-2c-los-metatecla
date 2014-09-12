@@ -12,20 +12,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <commons/string.h>
+#include "panel/cpu.h"
 
-typedef struct {
-	uint32_t pid;
-	uint32_t tid;
-	bool kernel_mode;
-	uint32_t M; //Direccion base del segmento de codigo
-	uint32_t segmento_codigo_size;
-	uint32_t P; //program counter
-	uint32_t X; //Direccion base del segmento de stack
-	uint32_t S; //Cursor de stack
-	int32_t registros[5];
-} t_tcb;
-
-extern t_tcb* tcb;
+extern t_hilo* tcb;
+t_registros_cpu registros_cpu;
 int quantum;
 int cantidad_lineas_ejecutadas;
 int codigo[10];
@@ -37,6 +27,8 @@ int obtener_direccion(int codigo[], int posicion);
 int obtener_numero(int codigo[], int posicion);
 int obtener_registro(int codigo[], int posicion);
 int obtener_bytecode(int codigo[]);
+void copiar_tcb_a_registros();
+void copiar_registros_a_tcb();
 
 enum bytecodes{
 	LOAD,
