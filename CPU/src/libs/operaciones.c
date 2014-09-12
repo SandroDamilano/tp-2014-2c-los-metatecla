@@ -152,7 +152,7 @@ void ejecutar(int bytecode){
 	switch(bytecodeLetras){
 	case LOAD:
 		break;
-	case GETM:
+	/*case GETM:
 		break;
 	case SETM:
 		break;
@@ -217,6 +217,6 @@ void ejecutar(int bytecode){
 	case BLOK:
 		break;
 	case WAKE:
-		break;
+		break;*/
 	}
 }
