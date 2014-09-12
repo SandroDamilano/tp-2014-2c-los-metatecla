@@ -9,12 +9,13 @@
 
 t_config* config_cpu;
 t_log* log_cpu;
+int retardo;
 
 void leer_configuracion(){
 	config_cpu = config_create(PATH);
 	char* direccion_ip_kernel;
 	char* direccion_ip_msp;
-	int puerto_kernel, puerto_msp, retardo;
+	int puerto_kernel, puerto_msp, ret;
 
 	direccion_ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
 	puerto_kernel = config_get_int_value(config_cpu,"PUERTO_KERNEL");
@@ -32,10 +33,10 @@ void leer_configuracion(){
 	dictionary_put(config_cpu->properties,"IP_MSP",direccion_ip_msp);
 	dictionary_put(config_cpu->properties,"PUERTO_MSP",&puerto_msp);
 
-	retardo = config_get_int_value(config_cpu,"RETARDO");
-	log_info(log_cpu,"El retardo es:%d",retardo);
-	dictionary_put(config_cpu->properties,"RETARDO",&retardo);
-
+	ret = config_get_int_value(config_cpu,"RETARDO");
+	log_info(log_cpu,"El retardo es:%d",ret);
+	retardo = ret;
+	dictionary_put(config_cpu->properties,"RETARDO",&ret);
 
 }
 
@@ -49,4 +50,5 @@ void inicializar_configuracion(){
 		leer_configuracion();
 	}
 }
+
 

@@ -146,11 +146,30 @@ int convertirAString(int bytecode){
 	return bytecodeLetras;
 }
 
-void ejecutar(int bytecode){
+int obtener_bytecode(int codigo[]){
+	//reutilizo obtener_direccion con posicion 0
+	return 1;
+}
+
+int obtener_registro(int codigo[], int posicion){
+	return 1;
+}
+
+int obtener_numero(int codigo[], int posicion){
+	return 1;
+}
+
+int obtener_direccion(int codigo[], int posicion){
+	return 1;
+}
+
+void ejecutarLinea(int codigo[]){
+	int bytecode = obtener_bytecode(codigo);
 	int bytecodeLetras = convertirAString(bytecode);
 
 	switch(bytecodeLetras){
 	case LOAD:
+
 		break;
 	/*case GETM:
 		break;
@@ -218,5 +237,26 @@ void ejecutar(int bytecode){
 		break;
 	case WAKE:
 		break;*/
+	}
+}
+
+
+void ejecutar(){
+	//socket a MSP con PC de tcb
+	//socket de MSP con codigo
+	cantidad_lineas_ejecutadas = 0;
+
+	while(1){
+	ejecutarLinea(codigo);
+	cantidad_lineas_ejecutadas++;
+
+	if(cantidad_lineas_ejecutadas == quantum){
+		//actualizo campo de tcb para informar que sale por quantum (habria que consultar a ayudante que se puede agregar eso)
+		//socket a Kernel con el tcb
+		break;
+	} else{
+		//socket a MSP con PC
+		//socket de MSP con codigo
+	}
 	}
 }

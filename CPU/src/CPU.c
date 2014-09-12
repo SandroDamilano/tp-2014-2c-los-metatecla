@@ -8,16 +8,21 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "libs/funcionesCPU.h"
 
-
+t_tcb* tcb;
 char* PATH;
 
-int main(int argc, const char* argv[]) {
+int main(int argc, char** argv) {
 
 	PATH = argv[1];
 	inicializar_configuracion();
+
+	//Abrir conexion de sockets con Kernel y MSP.
+
+	//Recibir quantum del Kernel
+
+	//ejecutar();
 
 	return EXIT_SUCCESS;
 }
