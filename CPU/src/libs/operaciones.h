@@ -13,7 +13,25 @@
 #include <stdint.h>
 #include <commons/string.h>
 
-//t_hilo tcb;
+typedef struct {
+	uint32_t pid;
+	uint32_t tid;
+	bool kernel_mode;
+	uint32_t M; //Direccion base del segmento de codigo
+	uint32_t segmento_codigo_size;
+	uint32_t P; //program counter
+	uint32_t X; //Direccion base del segmento de stack
+	uint32_t S; //Cursor de stack
+	int32_t registros[5];
+} t_tcb;
+
+extern t_tcb* tcb;
+int quantum;
+int cantidad_lineas_ejecutadas;
+
+void ejecutarLinea(int bytecode);
+int convertirAString(int bytecode);
+void ejecutar(void);
 
 enum bytecodes{
 	LOAD,
@@ -55,20 +73,6 @@ enum {
 	WAKE,
 }intrucciones_protegidas;
 
-/* EL TIPO t_hilo ESTA EN LA SHARED LIBRARY ANSISOP-PANEL QUE NO ME PUDE BAJAR*/
-
-typedef struct {
-	uint32_t pid;
-	uint32_t tid;
-	bool kernel_mode;
-	uint32_t segmento_codigo;
-	uint32_t segmento_codigo_size;
-	uint32_t puntero_instruccion;
-	uint32_t base_stack;
-	uint32_t cursor_stack;
-	int32_t registros[5];
-	//t_cola cola;
-} t_hilo;
 
 
 #endif /* OPERACIONES_H_ */

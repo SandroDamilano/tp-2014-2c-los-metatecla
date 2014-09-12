@@ -146,7 +146,7 @@ int convertirAString(int bytecode){
 	return bytecodeLetras;
 }
 
-void ejecutar(int bytecode){
+void ejecutarLinea(int bytecode){
 	int bytecodeLetras = convertirAString(bytecode);
 
 	switch(bytecodeLetras){
@@ -218,5 +218,26 @@ void ejecutar(int bytecode){
 		break;
 	case WAKE:
 		break;*/
+	}
+}
+
+
+void ejecutar(){
+	//socket a MSP con PC de tcb
+	int codigo; //socket de MSP con codigo
+	cantidad_lineas_ejecutadas = 0;
+
+	while(1){
+	ejecutarLinea(codigo);
+	cantidad_lineas_ejecutadas++;
+
+	if(cantidad_lineas_ejecutadas == quantum){
+		//actualizo campo de tcb para informar que sale por quantum (habria que consultar a ayudante que se puede agregar eso)
+		//socket a Kernel con el tcb
+		break;
+	} else{
+		//socket a MSP con PC
+		//socket de MSP con codigo
+	}
 	}
 }
