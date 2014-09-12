@@ -1,17 +1,19 @@
 /*
  ============================================================================
- Name        : Kernel.c
- Author      : 
+ Name        : main.c
+ Author      : los-metatecla
  Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
+ Copyright   :
+ Description :	PROCESO KERNEL
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "kernel.h"
+
+#include <panel/kernel.h>
 
 int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+
+	conexion_cpu(12);
 	return EXIT_SUCCESS;
 }
