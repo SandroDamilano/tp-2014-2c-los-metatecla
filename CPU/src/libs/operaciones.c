@@ -7,169 +7,174 @@
 
 #include "operaciones.h"
 
-int convertirAString(int bytecode){
-	char* string = string_itoa(bytecode);
+int convertirAString(char* bytecode){
 	int bytecodeLetras;
 
-	if(string_equals_ignore_case(string,"LOAD")){
+	if(string_equals_ignore_case(bytecode,"LOAD")){
 		bytecodeLetras = LOAD;
 	}
 
-	if(string_equals_ignore_case(string,"GETM")){
+	if(string_equals_ignore_case(bytecode,"GETM")){
 			bytecodeLetras = GETM;
 		}
 
-	if(string_equals_ignore_case(string,"SETM")){
+	if(string_equals_ignore_case(bytecode,"SETM")){
 			bytecodeLetras = SETM;
 		}
 
-	if(string_equals_ignore_case(string,"MOVR")){
-			bytecodeLetras = ADDR;
+	if(string_equals_ignore_case(bytecode,"MOVR")){
+			bytecodeLetras = MOVR;
 		}
 
-	if(string_equals_ignore_case(string,"SUBR")){
+	if(string_equals_ignore_case(bytecode,"ADDR")){
+				bytecodeLetras = ADDR;
+			}
+
+	if(string_equals_ignore_case(bytecode,"SUBR")){
 			bytecodeLetras = SUBR;
 		}
 
-	if(string_equals_ignore_case(string,"MULR")){
+	if(string_equals_ignore_case(bytecode,"MULR")){
 			bytecodeLetras = MULR;
 		}
 
-	if(string_equals_ignore_case(string,"MODR")){
+	if(string_equals_ignore_case(bytecode,"MODR")){
 			bytecodeLetras = MODR;
 		}
 
-	if(string_equals_ignore_case(string,"DIVR")){
+	if(string_equals_ignore_case(bytecode,"DIVR")){
 			bytecodeLetras = DIVR;
 		}
 
-	if(string_equals_ignore_case(string,"INCR")){
+	if(string_equals_ignore_case(bytecode,"INCR")){
 			bytecodeLetras = INCR;
 		}
 
-	if(string_equals_ignore_case(string,"DECR")){
+	if(string_equals_ignore_case(bytecode,"DECR")){
 			bytecodeLetras = DECR;
 		}
 
-	if(string_equals_ignore_case(string,"COMP")){
+	if(string_equals_ignore_case(bytecode,"COMP")){
 			bytecodeLetras = COMP;
 		}
 
-	if(string_equals_ignore_case(string,"CGEQ")){
+	if(string_equals_ignore_case(bytecode,"CGEQ")){
 			bytecodeLetras = CGEQ;
 		}
 
-	if(string_equals_ignore_case(string,"CLEQ")){
+	if(string_equals_ignore_case(bytecode,"CLEQ")){
 			bytecodeLetras = CLEQ;
 		}
 
-	if(string_equals_ignore_case(string,"GOTO")){
+	if(string_equals_ignore_case(bytecode,"GOTO")){
 			bytecodeLetras = GOTO;
 		}
 
-	if(string_equals_ignore_case(string,"JMPZ")){
+	if(string_equals_ignore_case(bytecode,"JMPZ")){
 			bytecodeLetras = JMPZ;
 		}
 
-	if(string_equals_ignore_case(string,"JPNZ")){
+	if(string_equals_ignore_case(bytecode,"JPNZ")){
 			bytecodeLetras = JPNZ;
 		}
 
-	if(string_equals_ignore_case(string,"INTE")){
+	if(string_equals_ignore_case(bytecode,"INTE")){
 			bytecodeLetras = INTE;
 		}
 
-	if(string_equals_ignore_case(string,"FLCL")){
+	if(string_equals_ignore_case(bytecode,"FLCL")){
 			bytecodeLetras = FLCL;
 		}
 
-	if(string_equals_ignore_case(string,"SHIF")){
+	if(string_equals_ignore_case(bytecode,"SHIF")){
 			bytecodeLetras = SHIF;
 		}
 
-	if(string_equals_ignore_case(string,"NOPP")){
+	if(string_equals_ignore_case(bytecode,"NOPP")){
 			bytecodeLetras = NOPP;
 		}
 
-	if(string_equals_ignore_case(string,"PUSH")){
+	if(string_equals_ignore_case(bytecode,"PUSH")){
 			bytecodeLetras = PUSH;
 		}
 
-	if(string_equals_ignore_case(string,"TAKE")){
+	if(string_equals_ignore_case(bytecode,"TAKE")){
 			bytecodeLetras = TAKE;
 		}
 
-	if(string_equals_ignore_case(string,"XXXX")){
+	if(string_equals_ignore_case(bytecode,"XXXX")){
 			bytecodeLetras = XXXX;
 		}
 
-	if(string_equals_ignore_case(string,"MALC")){
+	if(string_equals_ignore_case(bytecode,"MALC")){
 			bytecodeLetras = MALC;
 		}
 
-	if(string_equals_ignore_case(string,"FREE")){
+	if(string_equals_ignore_case(bytecode,"FREE")){
 			bytecodeLetras = FREE;
 		}
 
-	if(string_equals_ignore_case(string,"INNN")){
+	if(string_equals_ignore_case(bytecode,"INNN")){
 			bytecodeLetras = INNN;
 		}
 
-	if(string_equals_ignore_case(string,"INNC")){
+	if(string_equals_ignore_case(bytecode,"INNC")){
 			bytecodeLetras = INNC;
 		}
 
-	if(string_equals_ignore_case(string,"OUTN")){
+	if(string_equals_ignore_case(bytecode,"OUTN")){
 			bytecodeLetras = OUTN;
 		}
 
-	if(string_equals_ignore_case(string,"OUTC")){
+	if(string_equals_ignore_case(bytecode,"OUTC")){
 			bytecodeLetras = OUTC;
 		}
 
-	if(string_equals_ignore_case(string,"CREA")){
+	if(string_equals_ignore_case(bytecode,"CREA")){
 			bytecodeLetras = CREA;
 		}
 
-	if(string_equals_ignore_case(string,"JOIN")){
+	if(string_equals_ignore_case(bytecode,"JOIN")){
 			bytecodeLetras = JOIN;
 		}
 
-	if(string_equals_ignore_case(string,"BLOK")){
+	if(string_equals_ignore_case(bytecode,"BLOK")){
 			bytecodeLetras = BLOK;
 		}
 
-	if(string_equals_ignore_case(string,"WAKE")){
+	if(string_equals_ignore_case(bytecode,"WAKE")){
 			bytecodeLetras = WAKE;
 		}
 
 	return bytecodeLetras;
 }
 
-int obtener_bytecode(int codigo[]){
-	//reutilizo obtener_direccion con posicion 0
-	return 1;
+char* obtener_bytecode(int* codigo){
+	return string_substring((char*)codigo,0,4);
 }
 
-int obtener_registro(int codigo[], int posicion){
-	return 1;
+int32_t obtener_registro(int* codigo, int posicion){
+	char* registro = string_substring((char*)codigo, posicion, posicion+1);
+	return registro[0];
 }
 
-int obtener_numero(int codigo[], int posicion){
-	return 1;
+uint32_t obtener_numero(int* codigo, int posicion){
+	char* registro = string_substring((char*)codigo, posicion, posicion+3);
+	return atoi(registro);
 }
 
-int obtener_direccion(int codigo[], int posicion){
-	return 1;
+uint32_t obtener_direccion(int codigo[], int posicion){
+	return obtener_numero(codigo,posicion);
 }
 
-void ejecutarLinea(int codigo[]){
-	int bytecode = obtener_bytecode(codigo);
+
+
+void ejecutarLinea(int* codigo){
+	char* bytecode = obtener_bytecode(codigo);
 	int bytecodeLetras = convertirAString(bytecode);
 
 	switch(bytecodeLetras){
 	case LOAD:
-
 		break;
 	/*case GETM:
 		break;
@@ -272,6 +277,7 @@ void copiar_registros_a_tcb(){
 void ejecutar(){
 	//socket a MSP con PC de tcb
 	//socket de MSP con codigo
+	codigo = malloc(7*sizeof(uint32_t));
 	cantidad_lineas_ejecutadas = 0;
 	copiar_tcb_a_registros();
 
@@ -286,6 +292,7 @@ void ejecutar(){
 	} else{
 		//socket a MSP con PC
 		//socket de MSP con codigo
+		return;
 	}
 	}
 }

@@ -10,6 +10,8 @@
 
 #include "libs/funcionesCPU.h"
 
+#include "commons/bitarray.h"
+
 t_hilo* tcb;
 char* PATH;
 

@@ -18,15 +18,15 @@ extern t_hilo* tcb;
 t_registros_cpu registros_cpu;
 int quantum;
 int cantidad_lineas_ejecutadas;
-int codigo[10];
+int* codigo;
 
 void ejecutarLinea(int codigo[]);
-int convertirAString(int bytecode);
+int convertirAString(char* bytecode);
 void ejecutar(void);
-int obtener_direccion(int codigo[], int posicion);
-int obtener_numero(int codigo[], int posicion);
-int obtener_registro(int codigo[], int posicion);
-int obtener_bytecode(int codigo[]);
+uint32_t obtener_direccion(int codigo[], int posicion);
+uint32_t obtener_numero(int codigo[], int posicion);
+int32_t obtener_registro(int codigo[], int posicion);
+char* obtener_bytecode(int codigo[]);
 void copiar_tcb_a_registros();
 void copiar_registros_a_tcb();
 
@@ -69,7 +69,6 @@ enum {
 	BLOK,
 	WAKE,
 }intrucciones_protegidas;
-
 
 
 #endif /* OPERACIONES_H_ */
