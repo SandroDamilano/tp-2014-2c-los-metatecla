@@ -338,3 +338,38 @@
 [INFO] 18:20:09:63 log_CPU/(12622:12622): La direccion IP de la MSP es:127.0.0.1
 [INFO] 18:20:09:63 log_CPU/(12622:12622): El puerto de la MSP es:2001
 [INFO] 18:20:09:64 log_CPU/(12622:12622): El retardo es:800
+[INFO] 18:44:59:548 log_CPU/(13160:13160): La direccion IP del kernel es:127.0.0.1
+[INFO] 18:44:59:548 log_CPU/(13160:13160): El puerto del kernel es:5700
+[INFO] 18:44:59:549 log_CPU/(13160:13160): La direccion IP de la MSP es:127.0.0.1
+[INFO] 18:44:59:549 log_CPU/(13160:13160): El puerto de la MSP es:2001
+[INFO] 18:44:59:549 log_CPU/(13160:13160): El retardo es:800
+[INFO] 18:46:27:644 log_CPU/(13233:13233): La direccion IP del kernel es:127.0.0.1
+[INFO] 18:46:27:644 log_CPU/(13233:13233): El puerto del kernel es:5700
+[INFO] 18:46:27:644 log_CPU/(13233:13233): La direccion IP de la MSP es:127.0.0.1
+[INFO] 18:46:27:644 log_CPU/(13233:13233): El puerto de la MSP es:2001
+[INFO] 18:46:27:644 log_CPU/(13233:13233): El retardo es:800
+[INFO] 18:47:37:782 log_CPU/(13292:13292): La direccion IP del kernel es:127.0.0.1
+[INFO] 18:47:37:782 log_CPU/(13292:13292): El puerto del kernel es:5700
+[INFO] 18:47:37:782 log_CPU/(13292:13292): La direccion IP de la MSP es:127.0.0.1
+[INFO] 18:47:37:782 log_CPU/(13292:13292): El puerto de la MSP es:2001
+[INFO] 18:47:37:782 log_CPU/(13292:13292): El retardo es:800
+[INFO] 18:49:32:127 log_CPU/(13330:13330): La direccion IP del kernel es:127.0.0.1
+[INFO] 18:49:32:127 log_CPU/(13330:13330): El puerto del kernel es:5700
+[INFO] 18:49:32:127 log_CPU/(13330:13330): La direccion IP de la MSP es:127.0.0.1
+[INFO] 18:49:32:127 log_CPU/(13330:13330): El puerto de la MSP es:2001
+[INFO] 18:49:32:127 log_CPU/(13330:13330): El retardo es:800
+[INFO] 18:50:22:512 log_CPU/(13367:13367): La direccion IP del kernel es:127.0.0.1
+[INFO] 18:50:22:513 log_CPU/(13367:13367): El puerto del kernel es:5700
+[INFO] 18:50:22:513 log_CPU/(13367:13367): La direccion IP de la MSP es:127.0.0.1
+[INFO] 18:50:22:513 log_CPU/(13367:13367): El puerto de la MSP es:2001
+[INFO] 18:50:22:513 log_CPU/(13367:13367): El retardo es:800
+[INFO] 19:00:58:155 log_CPU/(13764:13764): La direccion IP del kernel es:127.0.0.1
+[INFO] 19:00:58:156 log_CPU/(13764:13764): El puerto del kernel es:5700
+[INFO] 19:00:58:156 log_CPU/(13764:13764): La direccion IP de la MSP es:127.0.0.1
+[INFO] 19:00:58:156 log_CPU/(13764:13764): El puerto de la MSP es:2001
+[INFO] 19:00:58:156 log_CPU/(13764:13764): El retardo es:800
+[INFO] 19:01:13:521 log_CPU/(13794:13794): La direccion IP del kernel es:127.0.0.1
+[INFO] 19:01:13:521 log_CPU/(13794:13794): El puerto del kernel es:5700
+[INFO] 19:01:13:521 log_CPU/(13794:13794): La direccion IP de la MSP es:127.0.0.1
+[INFO] 19:01:13:521 log_CPU/(13794:13794): El puerto de la MSP es:2001
+[INFO] 19:01:13:521 log_CPU/(13794:13794): El retardo es:800

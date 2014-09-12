@@ -7,272 +7,319 @@
 
 #include "operaciones.h"
 
-int convertirAString(char* bytecode){
-	int bytecodeLetras;
-
-	if(string_equals_ignore_case(bytecode,"LOAD")){
-		bytecodeLetras = LOAD;
-	}
-
-	if(string_equals_ignore_case(bytecode,"GETM")){
-			bytecodeLetras = GETM;
-		}
-
-	if(string_equals_ignore_case(bytecode,"SETM")){
-			bytecodeLetras = SETM;
-		}
-
-	if(string_equals_ignore_case(bytecode,"MOVR")){
-			bytecodeLetras = MOVR;
-		}
-
-	if(string_equals_ignore_case(bytecode,"ADDR")){
-				bytecodeLetras = ADDR;
-			}
-
-	if(string_equals_ignore_case(bytecode,"SUBR")){
-			bytecodeLetras = SUBR;
-		}
-
-	if(string_equals_ignore_case(bytecode,"MULR")){
-			bytecodeLetras = MULR;
-		}
-
-	if(string_equals_ignore_case(bytecode,"MODR")){
-			bytecodeLetras = MODR;
-		}
-
-	if(string_equals_ignore_case(bytecode,"DIVR")){
-			bytecodeLetras = DIVR;
-		}
-
-	if(string_equals_ignore_case(bytecode,"INCR")){
-			bytecodeLetras = INCR;
-		}
-
-	if(string_equals_ignore_case(bytecode,"DECR")){
-			bytecodeLetras = DECR;
-		}
-
-	if(string_equals_ignore_case(bytecode,"COMP")){
-			bytecodeLetras = COMP;
-		}
-
-	if(string_equals_ignore_case(bytecode,"CGEQ")){
-			bytecodeLetras = CGEQ;
-		}
-
-	if(string_equals_ignore_case(bytecode,"CLEQ")){
-			bytecodeLetras = CLEQ;
-		}
-
-	if(string_equals_ignore_case(bytecode,"GOTO")){
-			bytecodeLetras = GOTO;
-		}
-
-	if(string_equals_ignore_case(bytecode,"JMPZ")){
-			bytecodeLetras = JMPZ;
-		}
-
-	if(string_equals_ignore_case(bytecode,"JPNZ")){
-			bytecodeLetras = JPNZ;
-		}
-
-	if(string_equals_ignore_case(bytecode,"INTE")){
-			bytecodeLetras = INTE;
-		}
-
-	if(string_equals_ignore_case(bytecode,"FLCL")){
-			bytecodeLetras = FLCL;
-		}
-
-	if(string_equals_ignore_case(bytecode,"SHIF")){
-			bytecodeLetras = SHIF;
-		}
-
-	if(string_equals_ignore_case(bytecode,"NOPP")){
-			bytecodeLetras = NOPP;
-		}
-
-	if(string_equals_ignore_case(bytecode,"PUSH")){
-			bytecodeLetras = PUSH;
-		}
-
-	if(string_equals_ignore_case(bytecode,"TAKE")){
-			bytecodeLetras = TAKE;
-		}
-
-	if(string_equals_ignore_case(bytecode,"XXXX")){
-			bytecodeLetras = XXXX;
-		}
-
-	if(string_equals_ignore_case(bytecode,"MALC")){
-			bytecodeLetras = MALC;
-		}
-
-	if(string_equals_ignore_case(bytecode,"FREE")){
-			bytecodeLetras = FREE;
-		}
-
-	if(string_equals_ignore_case(bytecode,"INNN")){
-			bytecodeLetras = INNN;
-		}
-
-	if(string_equals_ignore_case(bytecode,"INNC")){
-			bytecodeLetras = INNC;
-		}
-
-	if(string_equals_ignore_case(bytecode,"OUTN")){
-			bytecodeLetras = OUTN;
-		}
-
-	if(string_equals_ignore_case(bytecode,"OUTC")){
-			bytecodeLetras = OUTC;
-		}
-
-	if(string_equals_ignore_case(bytecode,"CREA")){
-			bytecodeLetras = CREA;
-		}
-
-	if(string_equals_ignore_case(bytecode,"JOIN")){
-			bytecodeLetras = JOIN;
-		}
-
-	if(string_equals_ignore_case(bytecode,"BLOK")){
-			bytecodeLetras = BLOK;
-		}
-
-	if(string_equals_ignore_case(bytecode,"WAKE")){
-			bytecodeLetras = WAKE;
-		}
-
-	return bytecodeLetras;
-}
-
-char* obtener_bytecode(int* codigo){
-	return string_substring((char*)codigo,0,4);
-}
-
-int32_t obtener_registro(int* codigo, int posicion){
-	char* registro = string_substring((char*)codigo, posicion, posicion+1);
-	return registro[0];
-}
-
-uint32_t obtener_numero(int* codigo, int posicion){
-	char* registro = string_substring((char*)codigo, posicion, posicion+3);
-	return atoi(registro);
-}
-
-uint32_t obtener_direccion(int codigo[], int posicion){
-	return obtener_numero(codigo,posicion);
-}
-
-
-
 void ejecutarLinea(int* codigo){
 	char* bytecode = obtener_bytecode(codigo);
 	int bytecodeLetras = convertirAString(bytecode);
+	t_list* parametros = list_create();
+	int32_t reg1, reg2;
+	uint32_t numero, direccion;
 
 	switch(bytecodeLetras){
 	case LOAD:
+		reg1= obtener_registro(codigo,4);
+		numero = obtener_numero(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &numero);
+
+		ejecucion_instruccion("LOAD",parametros);
+
+
+		list_clean(parametros);
 		break;
-	/*case GETM:
+	case GETM:
+		reg1= obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("GETM",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case SETM:
+		numero = obtener_numero(codigo,4);
+		reg1 = obtener_registro(codigo,5);
+		reg2 = obtener_registro(codigo,6);
+		list_add(parametros,&numero);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("SETM",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case MOVR:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("MOVR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case ADDR:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("ADDR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case SUBR:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("SUBR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case MULR:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("MULR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case MODR:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("MODR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case DIVR:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("DIVR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case INCR:
+		reg1 = obtener_registro(codigo,4);
+		list_add(parametros,&reg1);
+
+		ejecucion_instruccion("INCR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case DECR:
+		reg1 = obtener_registro(codigo,4);
+		list_add(parametros,&reg1);
+
+		ejecucion_instruccion("DECR",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case COMP:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("COMP",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case CGEQ:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("CGEQ",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case CLEQ:
+		reg1 = obtener_registro(codigo,4);
+		reg2 = obtener_registro(codigo,5);
+		list_add(parametros,&reg1);
+		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("CLEQ",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case GOTO:
+		reg1 = obtener_registro(codigo,4);
+		list_add(parametros,&reg1);
+
+		ejecucion_instruccion("GOTO",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case JMPZ:
+		direccion = obtener_direccion(codigo,4);
+		list_add(parametros,&direccion);
+
+		ejecucion_instruccion("JMPZ",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case JPNZ:
+		direccion = obtener_direccion(codigo,4);
+		list_add(parametros,&direccion);
+
+		ejecucion_instruccion("JPNZ",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case INTE:
+		direccion = obtener_direccion(codigo,4);
+		list_add(parametros,&direccion);
+
+		ejecucion_instruccion("INTE",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case FLCL:
+		ejecucion_instruccion("JMPZ",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case SHIF:
+		numero = obtener_numero(codigo,4);
+		reg1= obtener_registro(codigo,5);
+		list_add(parametros,&numero);
+		list_add(parametros, &reg1);
+
+		ejecucion_instruccion("SHIF",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case NOPP:
+		ejecucion_instruccion("NOPP",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case PUSH:
+		numero = obtener_numero(codigo,4);
+		reg1= obtener_registro(codigo,5);
+		list_add(parametros,&numero);
+		list_add(parametros, &reg1);
+
+		ejecucion_instruccion("PUSH",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case TAKE:
+		numero = obtener_numero(codigo,4);
+		reg1= obtener_registro(codigo,5);
+		list_add(parametros,&numero);
+		list_add(parametros, &reg1);
+
+		ejecucion_instruccion("TAKE",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case XXXX:
+		ejecucion_instruccion("XXXX",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case MALC:
+		ejecucion_instruccion("MALC",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case FREE:
+		ejecucion_instruccion("FREE",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case INNN:
+		ejecucion_instruccion("INNN",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case INNC:
+		ejecucion_instruccion("INNC",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case OUTN:
+		ejecucion_instruccion("OUTN",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case OUTC:
+		ejecucion_instruccion("OUTC",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case CREA:
+		ejecucion_instruccion("CREA",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case JOIN:
+		ejecucion_instruccion("JOIN",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case BLOK:
+		ejecucion_instruccion("BLOK",parametros);
+
+
+		list_clean(parametros);
 		break;
 	case WAKE:
-		break;*/
+		ejecucion_instruccion("WAKE",parametros);
+
+
+		list_clean(parametros);
+		break;
 	}
+
+	list_destroy(parametros); //Que onda la destruccion de los elementos?
 }
 
-void copiar_tcb_a_registros(){
-	registros_cpu.I = tcb->pid;
-	registros_cpu.K = tcb->kernel_mode;
-	registros_cpu.M = tcb->segmento_codigo;
-	registros_cpu.P = tcb->puntero_instruccion;
-	registros_cpu.S = tcb->cursor_stack;
-	registros_cpu.X = tcb->base_stack;
-	registros_cpu.registros_programacion[0] = tcb->registros[0];
-	registros_cpu.registros_programacion[1] = tcb->registros[1];
-	registros_cpu.registros_programacion[2] = tcb->registros[2];
-	registros_cpu.registros_programacion[3] = tcb->registros[3];
-	registros_cpu.registros_programacion[4] = tcb->registros[4];
-	//Creo que falta el flag F que se olvidaron de ponerlo
-}
 
-void copiar_registros_a_tcb(){
-	tcb->pid = registros_cpu.I;
-	tcb->kernel_mode = registros_cpu.K;
-	tcb->segmento_codigo = registros_cpu.M;
-	tcb->puntero_instruccion = registros_cpu.P;
-	tcb->cursor_stack = registros_cpu.S;
-	tcb->base_stack = registros_cpu.X;
-	tcb->registros[0] = registros_cpu.registros_programacion[0];
-	tcb->registros[1] = registros_cpu.registros_programacion[1];
-	tcb->registros[2] = registros_cpu.registros_programacion[2];
-	tcb->registros[3] = registros_cpu.registros_programacion[3];
-	tcb->registros[4] = registros_cpu.registros_programacion[4];
-}
 
 void ejecutar(){
 	//socket a MSP con PC de tcb
@@ -280,6 +327,7 @@ void ejecutar(){
 	codigo = malloc(7*sizeof(uint32_t));
 	cantidad_lineas_ejecutadas = 0;
 	copiar_tcb_a_registros();
+	comienzo_ejecucion(tcb,quantum);
 
 	while(1){
 	ejecutarLinea(codigo);
@@ -288,6 +336,7 @@ void ejecutar(){
 	if(cantidad_lineas_ejecutadas == quantum){
 		//actualizo campo de tcb para informar que sale por quantum (habria que consultar a ayudante que se puede agregar eso)
 		//socket a Kernel con el tcb
+		fin_ejecucion();
 		break;
 	} else{
 		//socket a MSP con PC
