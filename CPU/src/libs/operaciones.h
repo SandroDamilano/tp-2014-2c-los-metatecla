@@ -10,9 +10,11 @@
 
 #include "auxiliares.h"
 
+int* param;
+
 void ejecutar(void);
 void ejecutarLinea(int codigo[]);
-int convertirAString(char* bytecode);
+int convertirAString(int* bytecode);
 
 
 

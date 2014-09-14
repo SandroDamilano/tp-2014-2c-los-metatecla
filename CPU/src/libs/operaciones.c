@@ -7,8 +7,7 @@
 
 #include "operaciones.h"
 
-void ejecutarLinea(int* codigo){
-	char* bytecode = obtener_bytecode(codigo);
+void ejecutarLinea(int* bytecode){
 	int bytecodeLetras = convertirAString(bytecode);
 	t_list* parametros = list_create();
 	int32_t reg1, reg2;
@@ -16,8 +15,8 @@ void ejecutarLinea(int* codigo){
 
 	switch(bytecodeLetras){
 	case LOAD:
-		reg1= obtener_registro(codigo,4);
-		numero = obtener_numero(codigo,5);
+		reg1= obtener_registro(param,0);
+		numero = obtener_numero(param,1);
 		list_add(parametros,&reg1);
 		list_add(parametros, &numero);
 
@@ -27,8 +26,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case GETM:
-		reg1= obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1= obtener_registro(param,0);
+		reg2 = obtener_registro(param,1);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -38,9 +37,9 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case SETM:
-		numero = obtener_numero(codigo,4);
-		reg1 = obtener_registro(codigo,5);
-		reg2 = obtener_registro(codigo,6);
+		numero = obtener_numero(param,4);
+		reg1 = obtener_registro(param,6);
+		reg2 = obtener_registro(param,7);
 		list_add(parametros,&numero);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
@@ -51,8 +50,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case MOVR:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -62,8 +61,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case ADDR:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -73,8 +72,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case SUBR:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -84,8 +83,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case MULR:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -95,8 +94,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case MODR:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -106,8 +105,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case DIVR:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -117,7 +116,7 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case INCR:
-		reg1 = obtener_registro(codigo,4);
+		reg1 = obtener_registro(param,4);
 		list_add(parametros,&reg1);
 
 		ejecucion_instruccion("INCR",parametros);
@@ -126,7 +125,7 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case DECR:
-		reg1 = obtener_registro(codigo,4);
+		reg1 = obtener_registro(param,4);
 		list_add(parametros,&reg1);
 
 		ejecucion_instruccion("DECR",parametros);
@@ -135,8 +134,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case COMP:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -146,8 +145,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case CGEQ:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -157,8 +156,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case CLEQ:
-		reg1 = obtener_registro(codigo,4);
-		reg2 = obtener_registro(codigo,5);
+		reg1 = obtener_registro(param,4);
+		reg2 = obtener_registro(param,5);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -168,7 +167,7 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case GOTO:
-		reg1 = obtener_registro(codigo,4);
+		reg1 = obtener_registro(param,4);
 		list_add(parametros,&reg1);
 
 		ejecucion_instruccion("GOTO",parametros);
@@ -177,7 +176,7 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case JMPZ:
-		direccion = obtener_direccion(codigo,4);
+		direccion = obtener_direccion(param,4);
 		list_add(parametros,&direccion);
 
 		ejecucion_instruccion("JMPZ",parametros);
@@ -186,7 +185,7 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case JPNZ:
-		direccion = obtener_direccion(codigo,4);
+		direccion = obtener_direccion(param,4);
 		list_add(parametros,&direccion);
 
 		ejecucion_instruccion("JPNZ",parametros);
@@ -195,7 +194,7 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case INTE:
-		direccion = obtener_direccion(codigo,4);
+		direccion = obtener_direccion(param,4);
 		list_add(parametros,&direccion);
 
 		ejecucion_instruccion("INTE",parametros);
@@ -210,8 +209,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case SHIF:
-		numero = obtener_numero(codigo,4);
-		reg1= obtener_registro(codigo,5);
+		numero = obtener_numero(param,4);
+		reg1= obtener_registro(param,5);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 
@@ -227,8 +226,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case PUSH:
-		numero = obtener_numero(codigo,4);
-		reg1= obtener_registro(codigo,5);
+		numero = obtener_numero(param,4);
+		reg1= obtener_registro(param,5);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 
@@ -238,8 +237,8 @@ void ejecutarLinea(int* codigo){
 		list_clean(parametros);
 		break;
 	case TAKE:
-		numero = obtener_numero(codigo,4);
-		reg1= obtener_registro(codigo,5);
+		numero = obtener_numero(param,4);
+		reg1= obtener_registro(param,5);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 
@@ -323,14 +322,14 @@ void ejecutarLinea(int* codigo){
 
 void ejecutar(){
 	//socket a MSP con PC de tcb
-	//socket de MSP con codigo
-	codigo = malloc(7*sizeof(uint32_t));
+	//socket de MSP con bytecode
+	int* bytecode = malloc(sizeof(uint32_t));
 	cantidad_lineas_ejecutadas = 0;
 	copiar_tcb_a_registros();
 	comienzo_ejecucion(tcb,quantum);
 
 	while(1){
-	ejecutarLinea(codigo);
+	ejecutarLinea(bytecode);
 	cantidad_lineas_ejecutadas++;
 
 	if(cantidad_lineas_ejecutadas == quantum){

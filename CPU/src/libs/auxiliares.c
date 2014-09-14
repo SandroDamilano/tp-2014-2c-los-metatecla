@@ -36,25 +36,22 @@ void copiar_registros_a_tcb(){
 	tcb->registros[4] = registros_cpu.registros_programacion[4];
 }
 
-char* obtener_bytecode(int* codigo){
-	return string_substring((char*)codigo,0,4);
-}
-
-int32_t obtener_registro(int* codigo, int posicion){
-	char* registro = string_substring((char*)codigo, posicion, posicion+1);
+int32_t obtener_registro(int* parametros, int posicion){
+	char* registro = string_substring((char*)parametros, posicion, posicion+1);
 	return registro[0];
 }
 
-uint32_t obtener_numero(int* codigo, int posicion){
-	char* registro = string_substring((char*)codigo, posicion, posicion+1);
+uint32_t obtener_numero(int* parametros, int posicion){
+	char* registro = string_substring((char*)parametros, posicion, posicion+3);
 	return atoi(registro);
 }
 
-uint32_t obtener_direccion(int codigo[], int posicion){
-	return obtener_numero(codigo,posicion);
+uint32_t obtener_direccion(int* parametros, int posicion){
+	return obtener_numero(parametros,posicion);
 }
 
-int convertirAString(char* bytecode){
+int convertirAString(int* byte){
+	char* bytecode = byte;
 	int bytecodeLetras;
 
 	if(string_equals_ignore_case(bytecode,"LOAD")){
