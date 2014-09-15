@@ -8,6 +8,11 @@
 #ifndef CONSOLAMSP_H_
 #define CONSOLAMSP_H_
 
+#include <stdio.h>
+#include <stdbool.h>
+#include <pthread.h>
+#include <stdint.h>
+
 void *inciarConsola(void *param1);
 
 

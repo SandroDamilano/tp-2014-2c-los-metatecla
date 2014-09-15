@@ -4,11 +4,8 @@
  *  Created on: 11/09/2014
  *      Author: utnso
  */
-#include <stdio.h>
-#include <stdbool.h>
-#include <pthread.h>
-#include <stdint.h>
 
+#include "ConsolaMSP.h"
 
 void *inciarConsola(void *param1){
 

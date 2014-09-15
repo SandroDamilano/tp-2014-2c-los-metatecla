@@ -36,18 +36,18 @@ void copiar_registros_a_tcb(){
 	tcb->registros[4] = registros_cpu.registros_programacion[4];
 }
 
-int32_t obtener_registro(int* parametros, int posicion){
-	char* registro = string_substring((char*)parametros, posicion, posicion+1);
-	return registro[0];
+void obtener_registro(char* parametros, int posicion, char* registro){
+	memcpy(registro, parametros + posicion, sizeof(char));
 }
 
-uint32_t obtener_numero(int* parametros, int posicion){
-	char* registro = string_substring((char*)parametros, posicion, posicion+3);
-	return atoi(registro);
+void obtener_numero(char* parametros, int posicion, uint32_t* numero, char* aux){
+	memcpy(aux,parametros,sizeof(uint32_t));
+	int num = atoi(aux);
+	memcpy(numero,&num,sizeof(uint32_t));
 }
 
-uint32_t obtener_direccion(int* parametros, int posicion){
-	return obtener_numero(parametros,posicion);
+void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux){
+	obtener_numero(parametros,posicion,direccion , aux);
 }
 
 int convertirAString(int* byte){

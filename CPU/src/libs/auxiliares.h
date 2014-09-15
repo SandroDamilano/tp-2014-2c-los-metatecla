@@ -12,17 +12,17 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <commons/string.h>
+#include <string.h>
 #include "ansisop-panel/cpu.h"
 
 extern t_hilo* tcb;
 t_registros_cpu registros_cpu;
 int quantum;
 int cantidad_lineas_ejecutadas;
-extern int* param;
 
-uint32_t obtener_direccion(int* parametros, int posicion);
-uint32_t obtener_numero(int* parametros, int posicion);
-int32_t obtener_registro(int* parametros, int posicion);
+void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux);
+void obtener_numero(char* parametros, int posicion,uint32_t* numero, char* aux);
+void obtener_registro(char* parametros, int posicion, char* registro);
 void copiar_tcb_a_registros();
 void copiar_registros_a_tcb();
 
