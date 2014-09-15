@@ -3,6 +3,7 @@
 	<name>MSP</name>
 	<comment></comment>
 	<projects>
+		<project>MiniGral_lib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
