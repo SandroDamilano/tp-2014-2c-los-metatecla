@@ -10,9 +10,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "ConsolaMSP.h"
+#include <pthread.h>
+
 
 int main(void) {
-	printf("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+	pthread_t consola;
+
+	pthread_create(&consola, NULL, inciarConsola, NULL);
+	printf("Probando si no se bloquea");
+	pthread_join(consola, NULL);
 	return EXIT_SUCCESS;
 }
-/* probando con tincho */
+
