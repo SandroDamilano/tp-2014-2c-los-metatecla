@@ -15,7 +15,8 @@ void ejecutarLinea(int* bytecode){
 	aux = malloc(sizeof(uint32_t));
 	param = malloc(sizeof(uint32_t)+2*sizeof(char)); //El maximo de parametros que me puede llegar es un numero y dos registros
 	char reg1, reg2;
-	uint32_t numero, direccion;
+	int32_t numero;
+	uint32_t direccion;
 
 	//siempre antes de hacer nada, tengo que:
 	//mandar socket a MSP pidiendo los parametros
@@ -28,6 +29,8 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &numero);
 
+		registros_cpu.registros_programacion[elegirRegistro(reg1)] = numero;
+
 		ejecucion_instruccion("LOAD",parametros);
 
 
@@ -38,6 +41,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+
+		//TODO ACA VENDRIA ALGO COMO LO DE MOVR, PERO EN ESTE CASO TENGO UN PUNTERO
 
 		ejecucion_instruccion("GETM",parametros);
 
@@ -52,6 +57,8 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		memcpy(&registros_cpu.registros_programacion[elegirRegistro(reg1)],&registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+
 		ejecucion_instruccion("SETM",parametros);
 
 
@@ -62,6 +69,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+
+		registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 		ejecucion_instruccion("MOVR",parametros);
 
@@ -74,6 +83,8 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
+
 		ejecucion_instruccion("ADDR",parametros);
 
 
@@ -84,6 +95,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+
+		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] - registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 		ejecucion_instruccion("SUBR",parametros);
 
@@ -96,6 +109,8 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] * registros_cpu.registros_programacion[elegirRegistro(reg2)];
+
 		ejecucion_instruccion("MULR",parametros);
 
 
@@ -106,6 +121,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+
+		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] % registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 		ejecucion_instruccion("MODR",parametros);
 
@@ -118,6 +135,13 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		if(registros_cpu.registros_programacion[elegirRegistro(reg2)] == 0){
+			printf("division por cero");
+			//TODO ABORTAR POR DIVISION POR CERO
+		} else {
+			registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] / registros_cpu.registros_programacion[elegirRegistro(reg2)];
+		}
+
 		ejecucion_instruccion("DIVR",parametros);
 
 
@@ -127,6 +151,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
 
+		registros_cpu.registros_programacion[elegirRegistro(reg1)] += 1;
+
 		ejecucion_instruccion("INCR",parametros);
 
 
@@ -135,6 +161,8 @@ void ejecutarLinea(int* bytecode){
 	case DECR:
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
+
+		registros_cpu.registros_programacion[elegirRegistro(reg1)] -= 1;
 
 		ejecucion_instruccion("DECR",parametros);
 
@@ -147,6 +175,8 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
+
 		ejecucion_instruccion("COMP",parametros);
 
 
@@ -157,6 +187,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+
+		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] >= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
 
 		ejecucion_instruccion("CGEQ",parametros);
 
@@ -169,6 +201,8 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] <= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
+
 		ejecucion_instruccion("CLEQ",parametros);
 
 
@@ -177,6 +211,8 @@ void ejecutarLinea(int* bytecode){
 	case GOTO:
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
+
+		registros_cpu.P = registros_cpu.registros_programacion[elegirRegistro(reg1)];
 
 		ejecucion_instruccion("GOTO",parametros);
 
@@ -187,6 +223,10 @@ void ejecutarLinea(int* bytecode){
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
 
+		if(registros_cpu.registros_programacion[0] == 0){
+			registros_cpu.P = direccion;
+		}
+
 		ejecucion_instruccion("JMPZ",parametros);
 
 
@@ -195,6 +235,10 @@ void ejecutarLinea(int* bytecode){
 	case JPNZ:
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
+
+		if(registros_cpu.registros_programacion[0] != 0){
+					registros_cpu.P = direccion;
+		}
 
 		ejecucion_instruccion("JPNZ",parametros);
 
@@ -205,13 +249,9 @@ void ejecutarLinea(int* bytecode){
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
 
+		//TODO INTE
+
 		ejecucion_instruccion("INTE",parametros);
-
-
-		list_clean(parametros);
-		break;
-	case FLCL:
-		ejecucion_instruccion("JMPZ",parametros);
 
 
 		list_clean(parametros);

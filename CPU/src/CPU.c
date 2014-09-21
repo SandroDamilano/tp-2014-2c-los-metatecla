@@ -10,12 +10,15 @@
 
 #include "libs/funcionesCPU.h"
 
-#include "commons/collections/list.h"
+#include "commons/bitarray.h"
+#include <math.h>
 
 t_hilo* tcb;
 char* PATH;
 
 int main(int argc, char** argv) {
+
+
 
 	PATH = argv[1];
 	inicializar_configuracion();

@@ -19,7 +19,6 @@ void copiar_tcb_a_registros(){
 	registros_cpu.registros_programacion[2] = tcb->registros[2];
 	registros_cpu.registros_programacion[3] = tcb->registros[3];
 	registros_cpu.registros_programacion[4] = tcb->registros[4];
-	//Creo que falta el flag F que se olvidaron de ponerlo
 }
 
 void copiar_registros_a_tcb(){
@@ -40,14 +39,37 @@ void obtener_registro(char* parametros, int posicion, char* registro){
 	memcpy(registro, parametros + posicion, sizeof(char));
 }
 
-void obtener_numero(char* parametros, int posicion, uint32_t* numero, char* aux){
-	memcpy(aux,parametros,sizeof(uint32_t));
+void obtener_numero(char* parametros, int posicion, int32_t* numero, char* aux){
+	memcpy(aux,parametros,sizeof(int32_t));
 	int num = atoi(aux);
-	memcpy(numero,&num,sizeof(uint32_t));
+	memcpy(numero,&num,sizeof(int32_t));
 }
 
 void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux){
-	obtener_numero(parametros,posicion,direccion , aux);
+	memcpy(aux,parametros,sizeof(uint32_t));
+	int num = atoi(aux);
+	memcpy(direccion,&num,sizeof(uint32_t));}
+
+int elegirRegistro(char registro){
+	int posicion_registros;
+	switch(registro){
+	case 'A':
+		posicion_registros = 0;
+		break;
+	case 'B':
+		posicion_registros = 1;
+		break;
+	case 'C':
+		posicion_registros = 2;
+		break;
+	case 'D':
+		posicion_registros = 3;
+		break;
+	case 'E':
+		posicion_registros = 4;
+		break;
+	}
+	return posicion_registros;
 }
 
 int convertirAString(int* byte){
@@ -124,10 +146,6 @@ int convertirAString(int* byte){
 
 	if(string_equals_ignore_case(bytecode,"INTE")){
 			bytecodeLetras = INTE;
-		}
-
-	if(string_equals_ignore_case(bytecode,"FLCL")){
-			bytecodeLetras = FLCL;
 		}
 
 	if(string_equals_ignore_case(bytecode,"SHIF")){

@@ -21,10 +21,11 @@ int quantum;
 int cantidad_lineas_ejecutadas;
 
 void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux);
-void obtener_numero(char* parametros, int posicion,uint32_t* numero, char* aux);
+void obtener_numero(char* parametros, int posicion,int32_t* numero, char* aux);
 void obtener_registro(char* parametros, int posicion, char* registro);
 void copiar_tcb_a_registros();
 void copiar_registros_a_tcb();
+int elegirRegistro(char registro);
 
 enum bytecodes{
 	LOAD,
