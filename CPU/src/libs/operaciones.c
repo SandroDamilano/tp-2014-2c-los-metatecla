@@ -24,19 +24,21 @@ void ejecutarLinea(int* bytecode){
 
 	switch(bytecodeLetras){
 	case LOAD:
+		ejecucion_instruccion("LOAD",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_numero(param,1,&numero,aux);
 		list_add(parametros,&reg1);
 		list_add(parametros, &numero);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = numero;
-
-		ejecucion_instruccion("LOAD",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case GETM:
+		ejecucion_instruccion("GETM",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
@@ -44,12 +46,13 @@ void ejecutarLinea(int* bytecode){
 
 		//TODO ACA VENDRIA ALGO COMO LO DE MOVR, PERO EN ESTE CASO TENGO UN PUNTERO
 
-		ejecucion_instruccion("GETM",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case SETM:
+		ejecucion_instruccion("SETM",parametros);
+
 		obtener_numero(param,0,&numero,aux);
 		obtener_registro(param,4,&reg1);
 		obtener_registro(param,5,&reg2);
@@ -58,78 +61,78 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros, &reg2);
 
 		memcpy(&registros_cpu.registros_programacion[elegirRegistro(reg1)],&registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
-
-		ejecucion_instruccion("SETM",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case MOVR:
+		ejecucion_instruccion("MOVR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
-
-		ejecucion_instruccion("MOVR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case ADDR:
+		ejecucion_instruccion("ADDR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
-
-		ejecucion_instruccion("ADDR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case SUBR:
+		ejecucion_instruccion("SUBR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] - registros_cpu.registros_programacion[elegirRegistro(reg2)];
-
-		ejecucion_instruccion("SUBR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case MULR:
+		ejecucion_instruccion("MULR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] * registros_cpu.registros_programacion[elegirRegistro(reg2)];
-
-		ejecucion_instruccion("MULR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case MODR:
+		ejecucion_instruccion("MODR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] % registros_cpu.registros_programacion[elegirRegistro(reg2)];
-
-		ejecucion_instruccion("MODR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case DIVR:
+		ejecucion_instruccion("DIVR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
@@ -141,85 +144,84 @@ void ejecutarLinea(int* bytecode){
 		} else {
 			registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] / registros_cpu.registros_programacion[elegirRegistro(reg2)];
 		}
-
-		ejecucion_instruccion("DIVR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case INCR:
+		ejecucion_instruccion("INCR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] += 1;
-
-		ejecucion_instruccion("INCR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case DECR:
+		ejecucion_instruccion("DECR",parametros);
+
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] -= 1;
-
-		ejecucion_instruccion("DECR",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case COMP:
+		ejecucion_instruccion("COMP",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
-
-		ejecucion_instruccion("COMP",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case CGEQ:
+		ejecucion_instruccion("CGEQ",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] >= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
-
-		ejecucion_instruccion("CGEQ",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case CLEQ:
+		ejecucion_instruccion("CLEQ",parametros);
+
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] <= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
-
-		ejecucion_instruccion("CLEQ",parametros);
-
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case GOTO:
+		ejecucion_instruccion("GOTO",parametros);
+
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
 
 		registros_cpu.P = registros_cpu.registros_programacion[elegirRegistro(reg1)];
 
-		ejecucion_instruccion("GOTO",parametros);
-
-
 		list_clean(parametros);
 		break;
 	case JMPZ:
+		ejecucion_instruccion("JMPZ",parametros);
+
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
 
@@ -227,12 +229,11 @@ void ejecutarLinea(int* bytecode){
 			registros_cpu.P = direccion;
 		}
 
-		ejecucion_instruccion("JMPZ",parametros);
-
-
 		list_clean(parametros);
 		break;
 	case JPNZ:
+		ejecucion_instruccion("JPNZ",parametros);
+
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
 
@@ -240,64 +241,80 @@ void ejecutarLinea(int* bytecode){
 					registros_cpu.P = direccion;
 		}
 
-		ejecucion_instruccion("JPNZ",parametros);
-
-
 		list_clean(parametros);
 		break;
 	case INTE:
+		ejecucion_instruccion("INTE",parametros);
+
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
 
-		//TODO INTE
-
-		ejecucion_instruccion("INTE",parametros);
-
+		//TODO INTE.  TENER EN CUENTA EL PROGRAM COUNTER
 
 		list_clean(parametros);
 		break;
 	case SHIF:
+		ejecucion_instruccion("SHIF",parametros);
+
 		obtener_numero(param,0,&numero,aux);
 		obtener_registro(param,4,&reg1);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 
-		ejecucion_instruccion("SHIF",parametros);
-
+		//TODO SHIF.  TENER EN CUENTA EL PROGRAM COUNTER
 
 		list_clean(parametros);
 		break;
 	case NOPP:
 		ejecucion_instruccion("NOPP",parametros);
 
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case PUSH:
+		ejecucion_instruccion("PUSH",parametros);
+
 		obtener_numero(param,0,&numero,aux);
 		obtener_registro(param,4,&reg1);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 
-		ejecucion_instruccion("PUSH",parametros);
+		int32_t auxiliar_copiar;
+		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
 
+		//socket a MSP enviando auxiliar_copiar con la direccion del cursor de stack
+
+		registros_cpu.S += numero;
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case TAKE:
+		ejecucion_instruccion("TAKE",parametros);
+
 		obtener_numero(param,0,&numero,aux);
 		obtener_registro(param,4,&reg1);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 
-		ejecucion_instruccion("TAKE",parametros);
 
+		//registros_cpu.registros_programacion[elegirRegistro(reg1)]=socket a MSP con el numero y la direccion del cursor de stack.
+
+		registros_cpu.P += 1;
 
 		list_clean(parametros);
 		break;
 	case XXXX:
 		ejecucion_instruccion("XXXX",parametros);
 
+		copiar_registros_a_tcb();
+		tcb->cola = EXIT;
+		free(bytecode);
+
+		//socket a Kernel enviandole el tcb
+
+		fin_ejecucion();
 
 		list_clean(parametros);
 		break;

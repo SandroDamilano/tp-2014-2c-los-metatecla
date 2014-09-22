@@ -19,6 +19,7 @@ void copiar_tcb_a_registros(){
 	registros_cpu.registros_programacion[2] = tcb->registros[2];
 	registros_cpu.registros_programacion[3] = tcb->registros[3];
 	registros_cpu.registros_programacion[4] = tcb->registros[4];
+	//que onda con la t_cola? lo cambio a EXEC?
 }
 
 void copiar_registros_a_tcb(){
