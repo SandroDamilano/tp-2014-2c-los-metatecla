@@ -13,14 +13,13 @@ void ejecutarLinea(int* bytecode){
 	char* aux;
 	char* param;
 	aux = malloc(sizeof(uint32_t));
-	param = malloc(sizeof(uint32_t)+2*sizeof(char)); //El maximo de parametros que me puede llegar es un numero y dos registros
+	param = malloc(sizeof(int32_t)+2*sizeof(char)); //El maximo de parametros que me puede llegar es un numero y dos registros
 	char reg1, reg2;
 	int32_t numero;
 	uint32_t direccion;
 
-	//siempre antes de hacer nada, tengo que:
-	//mandar socket a MSP pidiendo los parametros
-	//recibir socket de MSP con los parametros
+	//socket a MSP pidiendo parametros
+	//socket de MSP recibiendolos
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -310,11 +309,6 @@ void ejecutarLinea(int* bytecode){
 
 		copiar_registros_a_tcb();
 		tcb->cola = EXIT;
-		free(bytecode);
-
-		//socket a Kernel enviandole el tcb
-
-		fin_ejecucion();
 
 		list_clean(parametros);
 		break;
@@ -385,30 +379,3 @@ void ejecutarLinea(int* bytecode){
 	free(param);
 }
 
-
-
-void ejecutar(){
-	//socket a MSP con PC de tcb
-	//socket de MSP con bytecode
-	int* bytecode = malloc(sizeof(uint32_t));
-	cantidad_lineas_ejecutadas = 0;
-	copiar_tcb_a_registros();
-	comienzo_ejecucion(tcb,quantum);
-
-	while(1){
-	ejecutarLinea(bytecode);
-	cantidad_lineas_ejecutadas++;
-
-	if(cantidad_lineas_ejecutadas == quantum){
-		//actualizo campo de tcb para informar que sale por quantum (habria que consultar a ayudante que se puede agregar eso)
-		//socket a Kernel con el tcb
-		//a la funcion "terminar_ejecucion" que haga posteriormente, le tengo que pasar el bytecode como parametro y hacerle free()
-		fin_ejecucion();
-		break;
-	} else{
-		//socket a MSP con PC
-		//socket de MSP con codigo
-		return;
-	}
-	}
-}

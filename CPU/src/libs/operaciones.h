@@ -12,7 +12,6 @@
 
 int* param;
 
-void ejecutar(void);
 void ejecutarLinea(int codigo[]);
 int convertirAString(int* bytecode);
 
