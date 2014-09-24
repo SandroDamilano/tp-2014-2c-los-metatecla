@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+
 int puertoMSP = 0, tamanio_mem_ppal = 0, cant_mem_swap = 0;
 char* alg_sustitucion;
 

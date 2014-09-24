@@ -47,6 +47,7 @@ void leerConfiguracion(){
 
 }
 void *reservarBloquePpal(int tamanioMemoria){
+
      void *unaMemoria = malloc(tamanioMemoria);
      if(NULL == unaMemoria){
     	 //log "no se pudo crear memoria principal"
@@ -56,5 +57,8 @@ void *reservarBloquePpal(int tamanioMemoria){
      memset(unaMemoria, '\0', tamanioMemoria );
      return unaMemoria;
 }
+void dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
+	int cant_marcos = (tamanioMemoria*1024)/256;
+	//Estamos pensando en esto......
 
-
+}
