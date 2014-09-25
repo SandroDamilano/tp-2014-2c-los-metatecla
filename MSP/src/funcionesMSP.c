@@ -7,10 +7,11 @@
 #include "funcionesMSP.h"
 
 t_config* archConfigMSP;
-
-
+int puertoMSP, tamanio_mem_ppal, cant_mem_swap;
+char* alg_sustitucion;
 
 void leerConfiguracion(){
+
 
 	archConfigMSP= config_create("config.cfg");
 
@@ -22,7 +23,7 @@ void leerConfiguracion(){
 				exit(0);
 			}
 	if(config_has_property(archConfigMSP, "PUERTO")){
-			puertoMSP = config_get_int_value(config_file, "PUERTO");}
+			puertoMSP = config_get_int_value(archConfigMSP, "PUERTO");}
 	else {
 			printf("No esta definido el puerto en el archivo\n");
 			exit(0);
@@ -54,11 +55,20 @@ void *reservarBloquePpal(int tamanioMemoria){
          //liberar recursos
     	 exit(0);
      }
-     memset(unaMemoria, '\0', tamanioMemoria );
      return unaMemoria;
 }
-void dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
+t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
+	t_marco *marco;
+	(*marco).memoria=NULL;
+	(*marco).marco_libre= false;
+	t_list *lista_marcos = list_create();
 	int cant_marcos = (tamanioMemoria*1024)/256;
-	//Estamos pensando en esto......
-
+	int i ;
+	for(i=0; i<cant_marcos; i++)
+	{
+		(*marco).memoria = memoria + i*256;
+		list_add(lista_marcos, marco);
+		(*marco).memoria = NULL;
+	}
+return lista_marcos;
 }
