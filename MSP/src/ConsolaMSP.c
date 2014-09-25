@@ -11,6 +11,7 @@ void *inciarConsola(void *param1){
 
 	char command;
 	uint32_t baseSeg, direcVir;
+	int terminarConsola = 1;
 
 	printf("\nConsola MSP inciada(exit para cerrar)\n");
     printf("Introduzca numero de comando elegido:\n"
@@ -22,7 +23,7 @@ void *inciarConsola(void *param1){
     		"6. Tabla de paginas\n"
     		"7. Listar marcos\n"
     		"8. Exit\n");
-	while (1){
+	while (terminarConsola){
 	scanf("%c",&command);
 	switch(command){
 	case '1': printf("El comando elegido fue: Crear Segmento\n"
@@ -35,13 +36,13 @@ void *inciarConsola(void *param1){
 				"Ingrese un PID:\n");
 				// definir que tipo de dato es el PID
 				printf("Ingrese base del segmento:");
-				scanf("%i",&baseSeg);
+				scanf("%d",&baseSeg);
 	break;
 	case '3': printf("El comando elegido fue: Escribir Memoria\n"
 				"Ingrese un PID:\n");
 				// definir que tipo de dato es el PID
 				printf("Ingrese direccion virtual:\n");
-				scanf("%i", &direcVir);
+				scanf("%d", &direcVir);
 				printf("Ingrese un tamaño:\n");
 				// definir tamaño de bytes
 				printf("Ingrese un texto:\n");
@@ -52,7 +53,7 @@ void *inciarConsola(void *param1){
 				"Ingrese un PID:\n");
 				// definir que tipo de dato es el PID
 				printf("Ingrese una direccion virtual:\n");
-				scanf("%i", &direcVir);
+				scanf("%d", &direcVir);
 				printf("Ingrese un tamaño:\n");
 				// definir tamaño de bytes
 	break;
@@ -62,9 +63,10 @@ void *inciarConsola(void *param1){
 				// definir que tipo de dato es el PID\n");
 	break;
 	case '7': printf("El comando elegido fue: Listar marcos\n"); break;
-	case '8': pthread_exit((void*) "Termino el hilo"); break;/* No se si esta bien implementado el pthread_exit */
+	case '8': terminarConsola=0; break;
 	}
 	}
+pthread_exit((void*) "Termino el hilo Consola");	/* No se si esta bien implementado el pthread_exit */
 // Falta ajustar cada case a lo que el comando pida: definir que funcion se llama de la MSP, definir tipos y liberar memoria
 return NULL;
 }
