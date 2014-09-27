@@ -8,7 +8,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include src/subdir.mk
+-include sockets/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -23,28 +23,22 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: Kernel
-
-dependents:
-	-cd /home/utnso/workspace/ansisop-panel/Release && $(MAKE) all
-	-cd /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release && $(MAKE) all
+all: libMiniGral_lib.so
 
 # Tool invocations
-Kernel: $(OBJS) $(USER_OBJS) /home/utnso/workspace/ansisop-panel/Release/libansisop-panel.so /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release/libMiniGral_lib.so
+libMiniGral_lib.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release" -L"/home/utnso/workspace/ansisop-panel/Release" -o "Kernel" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "libMiniGral_lib.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) Kernel
+	-$(RM) $(OBJS)$(C_DEPS)$(LIBRARIES) libMiniGral_lib.so
 	-@echo ' '
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/workspace/ansisop-panel/Release/libansisop-panel.so:
-/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release/libMiniGral_lib.so:
 
 -include ../makefile.targets

@@ -4,26 +4,20 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/libs/auxiliares.c \
-../src/libs/funcionesCPU.c \
-../src/libs/operaciones.c 
+../sockets/enviar_recibir_paquete.c 
 
 OBJS += \
-./src/libs/auxiliares.o \
-./src/libs/funcionesCPU.o \
-./src/libs/operaciones.o 
+./sockets/enviar_recibir_paquete.o 
 
 C_DEPS += \
-./src/libs/auxiliares.d \
-./src/libs/funcionesCPU.d \
-./src/libs/operaciones.d 
+./sockets/enviar_recibir_paquete.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/libs/%.o: ../src/libs/%.c
+sockets/%.o: ../sockets/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -I"/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib" -I"/home/utnso/workspace/ansisop-panel" -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	gcc -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

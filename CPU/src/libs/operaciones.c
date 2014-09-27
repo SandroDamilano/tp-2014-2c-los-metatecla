@@ -315,12 +315,17 @@ void ejecutarLinea(int* bytecode){
 	case MALC:
 		ejecucion_instruccion("MALC",parametros);
 
+		//socket a MSP enviando registros_cpu.registros_programacion['A'] con el protocolo de comunicacion
+		//indicado para que entienda crear segmento
+		//registros_cpu.registros_programacion['A'] = socket de MSP con direccion del nuevo segmento
 
 		list_clean(parametros);
 		break;
 	case FREE:
 		ejecucion_instruccion("FREE",parametros);
 
+		//socket a MSP enviando registros_cpu.registros_programacion['A'] con el protocolo de comunicacion
+		//indicado para que entienda destruir segmento
 
 		list_clean(parametros);
 		break;

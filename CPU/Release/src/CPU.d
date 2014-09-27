@@ -3,7 +3,8 @@ src/CPU.d: ../src/CPU.c ../src/libs/funcionesCPU.h \
  /home/utnso/workspace/ansisop-panel/ansisop-panel/cpu.h \
  /home/utnso/workspace/ansisop-panel/ansisop-panel/panel.h \
  /home/utnso/workspace/ansisop-panel/ansisop-panel/collections/list.h \
- /home/utnso/workspace/ansisop-panel/ansisop-panel/collections/node.h
+ /home/utnso/workspace/ansisop-panel/ansisop-panel/collections/node.h \
+ /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/sockets/enviar_recibir_paquete.h
 
 ../src/libs/funcionesCPU.h:
 
@@ -18,3 +19,5 @@ src/CPU.d: ../src/CPU.c ../src/libs/funcionesCPU.h \
 /home/utnso/workspace/ansisop-panel/ansisop-panel/collections/list.h:
 
 /home/utnso/workspace/ansisop-panel/ansisop-panel/collections/node.h:
+
+/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/sockets/enviar_recibir_paquete.h:

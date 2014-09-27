@@ -36,6 +36,8 @@
 
 #include "enviar_recibir_paquete.h"
 
+/*************************************** FUNCIONES PARA ENVIAR Y RECIBIR ***************************************************/
+
 int endianess() {
 	unsigned i = 1;
 	return ((*(char*)&i) == 1)? 1 : 0;
@@ -114,3 +116,144 @@ void send_msg_to(int socket, int idMensaje, char *mensaje, int tamanho) {
     	exit(1);
     }
 }
+
+/*********************************** FUNCIONES PARA CREAR Y CONECTAR CLIENTES Y SERVIDORES ***********************/
+/*
+ * Nombre: socket_crearCliente/0
+ * Argumentos:
+ * 		- NINGUNO
+ *
+ * Devuelve:
+ * 		int (Descriptor al socket creado), en caso de error, devuelve -1.
+ *
+ *
+ * Funcion: Crea el socket para un cliente.
+ */
+int socket_crearCliente(void){
+
+	int sockfd;
+
+	if((sockfd = socket(AF_INET,SOCK_STREAM,0)) == -1){
+		perror("Error al crear socket");//Crear log para este error.
+		return -1;
+	}
+
+	return sockfd;
+
+}
+
+/*Nombre: socket_conectarCliente/3
+ * Argumentos:
+ * 		- sockfd (int), (descriptor del socket cliente).
+ * 		- serverIp (char*),(IP del server a conectar)
+ * 		- serverPort (int), (puerto del server a conectar)
+ *
+ * Devuelve:
+ * 		int (Descriptor al socket que se va a conectar, devuelve -1 si hay error).
+ *
+ * Funcion: Conectarme a un server con su IP y puerto.
+ *
+ */
+int socket_conectarCliente(int sockfd,char *serverIp, int serverPort){
+
+		struct sockaddr_in socketInfo;
+
+		//INICIALIZACION DE SOCKETINFO
+		socketInfo.sin_family = AF_INET;
+		socketInfo.sin_port = htons(serverPort); //host to network short
+		socketInfo.sin_addr.s_addr = inet_addr(serverIp);
+		memset(&(socketInfo.sin_zero),'\0',8); // PONGO A 0 EL RESTO DE LA ESTRUCTURA
+		// ME CONECTO CON LA DIRECCIÓN DE SOCKETINFO
+		//SIEMPRE VERIFICANDO QUE NO DEN -1 LAS FUNCIONES O 0 EN CASO DE RECV() -- SOLO PARA SERVER IGUAL :)
+
+		if(connect(sockfd , (struct sockaddr *)&socketInfo , sizeof(socketInfo)) == -1){
+			perror("Falló la conexión"); // Cambiar esto por un log.
+			return -1;
+		}
+
+		return sockfd;
+}
+
+/*Nombre: socket_crearYConectarCliente/2
+ * Argumentos:
+ * 		- serverIp (char*),(IP del server a conectar)
+ * 		- serverPort (int), (puerto del server a conectar)
+ *
+ * Devuelve:
+ * 		int (Descriptor al socket que se va a conectar).
+ *
+ * Funcion: Crear y conectar un nuevo cliente a un server con su IP y puerto.
+ *
+ */
+int socket_crearYConectarCliente(char *serverIp, int serverPort){
+	int sockfd;
+	sockfd = socket_crearCliente();
+	if (sockfd < 0)
+		return -1;
+
+	sockfd = socket_conectarCliente( sockfd,(char*)serverIp, serverPort);
+
+	return sockfd;
+}
+
+/*Nombre: socket_crearServidor/2
+ * Argumentos:
+ * 		- serverIp (char*),(IP del server)
+ * 		- serverPort (int), (puerto del server)
+ *
+ * Devuelve:
+ * 		int (Descriptor al socket del server).
+ *
+ * Funcion: Crear un nuevo servidor.
+ *
+ */
+int socket_crearServidor(char *ip, int port){
+	int socketEscucha;
+	struct sockaddr_in miSocket;//ESTE ES EL SOCKET CON LA DRECCION IP
+
+	if((socketEscucha = socket(AF_INET,SOCK_STREAM,0)) == -1){
+		perror("Error al crear socket");
+		return -1;
+	}
+
+	miSocket.sin_family = AF_INET;
+	miSocket.sin_port = htons(port);
+	miSocket.sin_addr.s_addr = inet_addr(ip);
+	memset(&(miSocket.sin_zero),'\0',8); // PONGO A 0 EL RESTO DE LA ESTRUCTURA
+
+	int yes = 1;
+	if (setsockopt(socketEscucha, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+		perror("setsockopt");
+		exit(1);
+	}
+
+	if(bind(socketEscucha,(struct sockaddr*)&miSocket, sizeof(miSocket)) == -1){
+		perror ("Error al bindear el socket escucha");
+		return -1;
+	}
+
+	if (listen(socketEscucha, MAX_CONNECTION_SERVER) == -1){
+		perror("Error en la puesta de escucha");
+		return -1;
+	}
+
+	return socketEscucha;
+
+}
+
+/******************************** CERRAR CONEXION *************************************/
+/*
+ * Nombre: socket_cerrarConexion/1
+ *
+ * Argumentos:
+ * 		- socket
+ *
+ * Devuelve:
+ * 		int (-1-> si se cerro ok, 0-> si hubo problemas).
+ *
+ * Funcion: cerrar el socket
+ */
+int socket_cerrarConexion(int socket){
+	return close(socket);
+}
+

@@ -9,6 +9,7 @@
 #define OPERACIONES_H_
 
 #include "auxiliares.h"
+#include <sockets/enviar_recibir_paquete.h>
 
 int* param;
 

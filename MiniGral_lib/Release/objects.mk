@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lansisop-panel -lcommons -lMiniGral_lib
+LIBS :=
 
