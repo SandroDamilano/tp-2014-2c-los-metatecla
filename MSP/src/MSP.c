@@ -11,9 +11,11 @@
 #include "MSP.h"
 #include "ConsolaMSP.h"
 #include "funcionesMSP.h"
+#include <sockets/enviar_recibir_paquete.h>
 
 
 int main(void) {
+
 	//Variables de Memoria Principal
 	void *memoria_ppal = NULL;
 	t_list *lista_marcos = NULL;

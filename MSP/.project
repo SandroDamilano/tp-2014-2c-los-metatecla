@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>MiniGral_lib</project>
+		<project>ansisop-panel</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

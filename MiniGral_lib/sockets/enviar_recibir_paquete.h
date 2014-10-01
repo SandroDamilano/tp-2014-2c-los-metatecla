@@ -43,6 +43,7 @@
 	int socket_conectarCliente(int sockfd,char *serverIp, int serverPort);
 	int socket_crearYConectarCliente(char *serverIp, int serverPort);
 	int socket_crearServidor(char *ip, int port);
+	int socket_aceptarCliente(int socketEscucha);
 	int socket_cerrarConexion(int socket);
 
 

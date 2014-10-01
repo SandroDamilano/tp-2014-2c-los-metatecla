@@ -9,8 +9,8 @@
 #define FUNCIONESMSP_H_
 #include <stdio.h>
 #include <stdlib.h>
-#include <commons/config.h>
-#include <commons/collections/list.h>
+#include "commons/config.h"
+#include "commons/collections/list.h"
 #include <stdbool.h>
 
 typedef struct marco{

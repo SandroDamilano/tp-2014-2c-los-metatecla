@@ -241,6 +241,30 @@ int socket_crearServidor(char *ip, int port){
 
 }
 
+/*Nombre: socket_aceptarCliente/1
+ * Argumentos:
+ * 		- socketEscucha (int),(descriptor del socket del server para escuchar conexiones)
+ *
+ * Devuelve:
+ * 		int (Descriptor al socket de la nueva conexión).
+ *
+ * Funcion: Aceptar un cliente que está siendo previamente escuchado.
+ *
+ */
+int socket_aceptarCliente(int socketEscucha){
+	int socketNuevaConexion;
+	unsigned int size_sockAddrIn;
+	struct sockaddr_in suSocket;
+	size_sockAddrIn = sizeof(struct sockaddr_in);
+	socketNuevaConexion = accept(socketEscucha, (struct sockaddr *)&suSocket, &size_sockAddrIn);
+	if(socketNuevaConexion < 0) {
+		perror("Error al aceptar conexion entrante");
+		return -1;
+	}
+	return socketNuevaConexion;
+}
+
+
 /******************************** CERRAR CONEXION *************************************/
 /*
  * Nombre: socket_cerrarConexion/1

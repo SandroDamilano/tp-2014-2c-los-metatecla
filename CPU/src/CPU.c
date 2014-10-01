@@ -19,6 +19,10 @@ char* PATH;
 t_config* config_cpu;
 t_config_cpu config_struct_cpu;
 
+typedef struct{
+	int32_t numero_struct;
+} __attribute__ ((__packed__)) t_numero;
+
 int main(int argc, char** argv) {
 
 	PATH = argv[1];
@@ -27,7 +31,7 @@ int main(int argc, char** argv) {
 	//Abrir conexion de sockets con Kernel y MSP.
 	//Recibir quantum del Kernel
 
-	//socket a Kernel pidiendo tcb
+		//socket a Kernel pidiendo tcb
 	//socket de Kernel con tcb
 
 	int* bytecode = malloc(sizeof(uint32_t));
