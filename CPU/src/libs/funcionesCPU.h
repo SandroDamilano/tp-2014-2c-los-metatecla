@@ -13,11 +13,20 @@
 #include <sys/stat.h>
 #include "operaciones.h"
 
+typedef struct{
+	int puerto_kernel;
+	int puerto_msp;
+	char* ip_kernel;
+	char* ip_msp;
+	int retardo;
+}t_config_cpu;
+
 extern char* PATH;
 extern int retardo;
 extern int quantum;
 extern t_log* log_cpu;
 extern t_config* config_cpu;
+extern t_config_cpu config_struct_cpu;
 extern int sock_kernel;
 extern int sock_msp;
 

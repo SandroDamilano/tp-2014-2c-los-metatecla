@@ -16,6 +16,8 @@
 
 t_hilo* tcb;
 char* PATH;
+t_config* config_cpu;
+t_config_cpu config_struct_cpu;
 
 int main(int argc, char** argv) {
 

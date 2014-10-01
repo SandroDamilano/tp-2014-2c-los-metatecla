@@ -8,8 +8,8 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include src/libs/subdir.mk
--include src/subdir.mk
+-include ansisop-panel/collections/subdir.mk
+-include ansisop-panel/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -24,28 +24,22 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: CPU
-
-dependents:
-	-cd /home/utnso/workspace/ansisop-panel/Debug && $(MAKE) all
-	-cd /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug && $(MAKE) all
+all: libansisop-panel.so
 
 # Tool invocations
-CPU: $(OBJS) $(USER_OBJS) /home/utnso/workspace/ansisop-panel/Debug/libansisop-panel.so /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so
+libansisop-panel.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/workspace/ansisop-panel/Debug" -L"/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug" -o "CPU" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "libansisop-panel.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) CPU
+	-$(RM) $(OBJS)$(C_DEPS)$(LIBRARIES) libansisop-panel.so
 	-@echo ' '
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/workspace/ansisop-panel/Debug/libansisop-panel.so:
-/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so:
 
 -include ../makefile.targets

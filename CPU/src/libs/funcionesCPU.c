@@ -7,7 +7,6 @@
 
 #include "funcionesCPU.h"
 
-t_config* config_cpu;
 t_log* log_cpu;
 int retardo;
 
@@ -25,6 +24,9 @@ void leer_configuracion(){
 	dictionary_put(config_cpu->properties,"IP_KERNEL",direccion_ip_kernel);
 	dictionary_put(config_cpu->properties,"PUERTO_KERNEL",&puerto_kernel);
 
+	config_struct_cpu.ip_kernel = direccion_ip_kernel;
+	config_struct_cpu.puerto_kernel = puerto_kernel;
+
 	direccion_ip_msp = config_get_string_value(config_cpu, "IP_MSP");
 	puerto_msp = config_get_int_value(config_cpu,"PUERTO_MSP");
 	//log_info(log_cpu,"La direccion IP de la MSP es:%s",direccion_ip_msp);
@@ -33,10 +35,15 @@ void leer_configuracion(){
 	dictionary_put(config_cpu->properties,"IP_MSP",direccion_ip_msp);
 	dictionary_put(config_cpu->properties,"PUERTO_MSP",&puerto_msp);
 
+	config_struct_cpu.ip_msp = direccion_ip_msp;
+	config_struct_cpu.puerto_msp = puerto_msp;
+
 	ret = config_get_int_value(config_cpu,"RETARDO");
 	//log_info(log_cpu,"El retardo es:%d",ret);
 	retardo = ret;
 	dictionary_put(config_cpu->properties,"RETARDO",&ret);
+
+	config_struct_cpu.retardo = retardo;
 
 }
 

@@ -40,7 +40,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1284176255" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.paths.1326305529" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MiniGral_lib/Release}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MiniGral_lib/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ansisop-panel/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.745795524" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
@@ -78,7 +78,7 @@
 				<externalSettings containerId="MiniGral_lib;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/MiniGral_lib"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MiniGral_lib/Release"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MiniGral_lib/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="MiniGral_lib" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
@@ -119,13 +119,13 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.release.1257376879" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.release">
 								<option id="gnu.c.link.option.libs.482795661" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="ansisop-panel"/>
-									<listOptionValue builtIn="false" value="commons"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="MiniGral_lib"/>
+									<listOptionValue builtIn="false" value="commons"/>
 								</option>
 								<option id="gnu.c.link.option.implname.1091968443" name="Import Library name (-Wl,--out-implib=)" superClass="gnu.c.link.option.implname" value="" valueType="string"/>
 								<option id="gnu.c.link.option.paths.362400762" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MiniGral_lib/Release}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ansisop-panel/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MiniGral_lib/Debug}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1312717917" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -158,7 +158,7 @@
 				<externalSettings containerId="MiniGral_lib;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/MiniGral_lib"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MiniGral_lib/Release"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MiniGral_lib/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="MiniGral_lib" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
