@@ -5,6 +5,8 @@
  *      Author: utnso
  */
 #include "funcionesMSP.h"
+#include <commons/config.h>
+#include <commons/collections/list.h>
 
 t_config* archConfigMSP;
 int puertoMSP, tamanio_mem_ppal, cant_mem_swap;

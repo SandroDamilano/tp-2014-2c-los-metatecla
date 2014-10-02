@@ -11,25 +11,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <commons/config.h>
+#include "commons/config.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <sockets/enviar_recibir_paquete.h>
 
-
-typedef struct lista_procesos{
-	int pid;
-	int *lista_Segmentos;
-} t_lista_procesos;
+typedef struct  lista_paginas{
+	int numeroPagina;
+	void *direccion_memoria_ppal;
+	bool swap;
+	}t_lista_paginas;
 
 typedef struct  lista_segmentos{
-	int *lista_Paginas;
+	int numeroSegmento;
+	t_lista_paginas *lista_Paginas;
 
 }t_lista_segmentos;
 
-typedef struct  lista_paginas{
-	int *direccion_memoria_ppal;
-	bool swap;
-	}t_lista_paginas;
+typedef struct lista_procesos{
+	int pid;
+	t_lista_segmentos *lista_Segmentos;
+} t_lista_procesos;
+
+
+
+
 
 	//Estructuras sujetas a posibles cambio y arreglos mas adelante
 
