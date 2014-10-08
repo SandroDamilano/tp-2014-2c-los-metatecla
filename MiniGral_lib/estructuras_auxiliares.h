@@ -19,7 +19,11 @@
 
 	#include <sockets/enviar_recibir_paquete.h>
 
-	// vars globales ( referenciada por todos los procesos)
+	typedef struct Stream {
+		char* data;
+	} stream_t;
+
+	// Vars globales ( referenciada por todos los procesos)
 	t_config* config_file;
 	t_log* logger;
 

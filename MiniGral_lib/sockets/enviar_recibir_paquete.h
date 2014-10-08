@@ -2,13 +2,16 @@
 #ifndef ENVIAR_RECIBIR_PAQUETE_H_
 #define ENVIAR_RECIBIR_PAQUETE_H_
 
+//Esto lo agrego para el kernel o la MSP. Se usa en socket_crearServidor
+#define MAX_CONNECTION_SERVER 60 //VAMOS A ATENDER DE A 60 CONEXIONES COMO MAXIMO A LA VEZ
+
+
 	#include <stdlib.h>
 	#include <stdio.h>
 	#include <stdint.h>
 	#include <string.h>
 	#include <sys/socket.h>
 	#include <errno.h>
-
 	#include <netinet/in.h>
 	#include <sys/types.h>
 	#include <arpa/inet.h>
@@ -16,19 +19,17 @@
 	#include <string.h>
 	#include <sys/epoll.h>
 	#include <sys/ioctl.h>
+
 	#include "commons/string.h"
 
-//Esto lo agrego para el kernel o la MSP. Se usa en socket_crearServidor
-#define MAX_CONNECTION_SERVER 60 //VAMOS A ATENDER DE A 60 CONEXIONES COMO MAXIMO A LA VEZ
+	typedef struct Stream {
+		char* data;
+	} stream_t;
 
 	typedef struct Cabecera {
 		uint32_t id;		/* ID de operacion */
 		uint32_t longitud; /* Longitud del mensaje, en bytes */
 	} cabecera_t;
-
-	typedef struct Stream {
-		char* data;
-	} stream_t;
 
 	extern int RETARDO;
 
