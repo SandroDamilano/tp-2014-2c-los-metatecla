@@ -6,25 +6,16 @@
 #define MAX_CONNECTION_SERVER 60 //VAMOS A ATENDER DE A 60 CONEXIONES COMO MAXIMO A LA VEZ
 
 
-	#include <stdlib.h>
-	#include <stdio.h>
-	#include <stdint.h>
-	#include <string.h>
-	#include <sys/socket.h>
-	#include <errno.h>
 	#include <netinet/in.h>
 	#include <sys/types.h>
 	#include <arpa/inet.h>
 	#include <unistd.h>
-	#include <string.h>
 	#include <sys/epoll.h>
 	#include <sys/ioctl.h>
 
 	#include "commons/string.h"
 
-	typedef struct Stream {
-		char* data;
-	} stream_t;
+	#include "../estructuras_auxiliares.h"
 
 	typedef struct Cabecera {
 		uint32_t id;		/* ID de operacion */

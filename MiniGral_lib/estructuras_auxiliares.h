@@ -13,11 +13,15 @@
 #ifndef ESTRUCTURAS_AUXILIARES_H_
 #define ESTRUCTURAS_AUXILIARES_H_
 
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#include <sys/socket.h>
+	#include <errno.h>
 	#include <stdint.h>
+
 	#include <commons/log.h>
 	#include <commons/config.h>
-
-	#include <sockets/enviar_recibir_paquete.h>
 
 	typedef struct Stream {
 		char* data;
