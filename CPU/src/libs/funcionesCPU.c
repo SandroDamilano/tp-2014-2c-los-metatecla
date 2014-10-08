@@ -57,7 +57,7 @@ void inicializar_configuracion(){
 		leer_configuracion();
 	}
 
-	inicializar_panel(CPU,"/home/utnso/tp-2014-2c-los-metatecla/CPU\n");
+	inicializar_panel(CPU,"/home/utnso/tp-2014-2c-los-metatecla/CPU");
 }
 
 

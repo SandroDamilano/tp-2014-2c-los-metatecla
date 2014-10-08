@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <commons/string.h>
 #include <string.h>
-#include "ansisop-panel/cpu.h"
+#include <panel/cpu.h>
 
 extern t_hilo* tcb;
 t_registros_cpu registros_cpu;
