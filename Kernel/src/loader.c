@@ -26,6 +26,7 @@ int sockfd_cte, numbytes_clt;
 struct addrinfo hints_clt, *servinfo_clt, *p_clt;
 int rv_clt;
 char s_clt[INET6_ADDRSTRLEN];
+//----------------------------------------------------
 
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -83,44 +84,332 @@ int crear_listener(const char *ip, const char *puerto)
 	return listener;
 }
 
-int atender_Proceso(uint32_t socket,uint32_t tamanio_stack)
+// --------------------------------------
+// to RECEIVE
+
+int handleFileLine(char* datos)
 {
-	/*	PASOS
-	* 2- Recibir BESO file
-	* 4- Solicitar memoria a la UMV
-	* 5- Crear TCB
-	* 6- Encolar proceso.
-	*/
+	mensaje *msg = undo_struct_mensaje(datos);
+	char* dirty_file;
+	char* file = "";
+
+	dirty_file = msg->out;
+	file = malloc(strlen(dirty_file));
+
+	//Limpio el archivo ?
+	int i,j = 0;
+	for (i = 0; i <= strlen(dirty_file); i++){
+		if (dirty_file[i] != '\t')
+		{
+			file[j] = dirty_file[i];
+			//printf("El archivo va quedando...: %d -> [%c] \n",j, file[j]);	//only for debug purpose
+			j++;
+		}
+	}
+
+//	printf("El archivo finalmente quedo: %s \n", file);
+
+	free(msg->out);
+	free(msg);
 
 	return 0;
 }
 
-void* main_LOADER(void* parametros)
+int handleFileEOF(char *datos)
 {
-/* El LOADER siempre acepta procesos.
+	return 0;
+}
+
+int handleHandshakeMSP(char *datos)
+{
+	mensaje* deserializado = undo_struct_mensaje(datos);
+
+	printf("%s\n", deserializado->out);
+	free(deserializado->out);
+	free(deserializado);
+
+	return 0;
+}
+
+int handleMemoriaSuccess(char* datos)
+{
+	paq_res_SolicitudMemoria *deserializado = deserialize_struct_res_SolicitudMemoria(datos);
+
+	return deserializado->posicion;
+}
+
+int handleMemoriaFail(char* datos)
+{	//TODO: ver que hacer aca cuando la MSP no da memoria.
+
+	return 0;
+}
+
+int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
+{
+	int res; // Resultado de cada handler
+
+	recv_msg_from(socket, (int*)op, &paquete);
+
+	switch(*op) {
+		case FILE_LINE:
+			res = handleFileLine(paquete);
+			break;
+		case FILE_EOF:
+			res = handleFileEOF(paquete);
+			break;
+		case HANDSHAKE_MSP_SUCCESS: case HANDSHAKE_MSP_FAIL:
+			res = handleHandshakeMSP(paquete);
+			break;
+		case MEMORIA_MSP_SUCCESS:
+			res = handleMemoriaSuccess(paquete);
+			return res;
+			break;
+		case MEMORIA_MSP_FAIL:
+			res = handleMemoriaFail(paquete);
+			break;
+		default:
+			return -1;
+			break;
+	}
+
+	// Se libera el mensaje  cuando ya no lo necesitamos
+	if (paquete != NULL) {
+		free (paquete);
+		paquete = NULL;
+	}
+	return res;
+}
+
+// --------------------------------------
+// to SEND
+
+stream_t* do_struct_mensaje(stream_t* datos, int* size)
+{
+	stream_t *serializado = serialize_struct_mensaje(datos, size);
+
+	return serializado;
+}
+
+stream_t* do_struct_solicitud_memoria(paq_SolicitudMemoria* datos, int *size)
+{
+	stream_t *serializado = serialize_struct_solicitud_memoria(datos,size);
+
+	return serializado;
+}
+
+stream_t *handleHandshake(stream_t* datos, int* size)
+{
+	return do_struct_mensaje(datos, size);
+}
+
+stream_t *handleFileRecvResult(stream_t *datos, int *size)
+{
+	return do_struct_mensaje(datos, size);
+}
+
+stream_t *handleEndProgram(stream_t *datos, int *size)
+{
+	 return do_struct_mensaje(datos, size);
+}
+
+stream_t *handleSolicitudMemoria(paq_SolicitudMemoria* datos, int *size)
+{
+	return do_struct_solicitud_memoria(datos, size);
+}
+
+int preparar_paquete(u_int32_t socket, t_operaciones op, void* estructura)
+{
+	int tamanho = 0;
+	stream_t *paquete = NULL;
+
+	switch(op)
+	{
+		case HANDSHAKE_SUCCESS: case HANDSHAKE_FAIL:
+			paquete = handleHandshake((stream_t*)estructura, &tamanho);
+			break;
+		case BESO_FILE_RECV_SUCCESS: case BESO_FILE_RECV_FAIL:
+			paquete = handleFileRecvResult((stream_t*)estructura, &tamanho);
+			break;
+		case END_PROGRAM:
+			paquete = handleEndProgram((stream_t*)estructura, &tamanho);
+			break;
+		case SOLICITAR_MEMORIA_MSP:
+			paquete = handleSolicitudMemoria((paq_SolicitudMemoria*)estructura, &tamanho);
+			break;
+		default:
+			break;
+	}
+
+	send_msg_to(socket, op, paquete->data , tamanho);
+
+	free(paquete->data);
+	free(paquete);
+
+	return 0;
+}
+
+int recibir_BESO_file(u_int32_t socket)
+{
+	mensaje msg;
+	t_operaciones operacion;
+	char *buffer = NULL;
+
+	while (analizar_paquete(socket, buffer, &operacion) == 0)
+	{
+		if (operacion == FILE_EOF) {
+			break;
+		}
+	}
+
+	msg.out = "[Kernel-LDR]: BESO file recibido correctamente.";
+	log_info(logger,"BESO file recibido correctamente.");
+
+	preparar_paquete(socket, BESO_FILE_RECV_SUCCESS, &msg);
+
+	return 0;
+}
+
+int solicitarMemoria(u_int32_t pid, u_int32_t size, char* datos)
+{
+	int res;
+	paq_SolicitudMemoria solicitud;
+	t_operaciones resultadoSolicitudMemoria;
+
+	printf("\n================\n pid [%d], size [%d], datos[%s]\n",pid,size,datos);	// only for debug purpose
+	solicitud.id_proceso = pid;
+	solicitud.size = size;
+	//Falta el malloc?
+	solicitud.datos = datos;
+
+	if((preparar_paquete(sockfd_cte, SOLICITAR_MEMORIA_MSP, &solicitud)) != 0) {	// Envia los datos para solicitar memoria
+		perror("[Kernel-LDR]: Error al enviar solicitud de memoria a la MSP.");
+		return 1;
+	}
+
+	res = analizar_paquete(sockfd_cte, bufferMSP, &resultadoSolicitudMemoria);
+
+	if(resultadoSolicitudMemoria == MEMORIA_MSP_FAIL) {
+		perror("[Kernel-LDR]: la MSP nego espacio en memoria.");
+		return 1;
+	}
+
+	return res;
+}
+
+t_hilo *crear_TCB(u_int32_t pid ,u_int32_t tid, t_hilo *mem_result)
+{
+	/*
+	 * Guardo en el TCB la dir logica (ficticia), asi lo abstraemos de los posibles movimientos en la MSP
+	 * TODO: Ver como tratar los ID's de los campos
+	 *
+	 * NOTA: A la MSP JAMAS le paso el TCB
+	 */
+	t_hilo *tcb = (t_hilo*)malloc(sizeof(t_hilo));
+
+	tcb->pid = pid;
+	tcb->tid = tid;
+	tcb->kernel_mode = false;	// teniendo en cuenta que TODOS los que vengan por aca seran programas de usuario
+//		tcb->segmento_codigo =
+//		tcb->segmento_codigo_size =
+		tcb->puntero_instruccion = tcb->segmento_codigo;	// se inicializa con la base del segmento de codigo (segun enunciado)
+//		tcb->base_stack =
+	tcb->cursor_stack = 0; // TODO: Consultar con ayudante si esta bien
+	tcb->registros = (0,0,0,0,0);
+	tcb->cola = NEW;
+
+//		pcb->indiceDeEtiquetas = mem_result->indiceDeEtiquetas;
+
+	return tcb;
+}
+
+int atender_Proceso(uint32_t socket,uint32_t tamanio_stack)
+{
+	/*	PASOS
+	* 1- Recibir BESO file
+	* 2- Asignar nuevo PID
+	* 3- Asignar nuevo TID
+	* 3- Solicitar memoria a la MSP
+	* 4- Crear TCB e Init del PC (IP)
+	* 5- Encolar proceso (segun BBNP)
+	*/
+
+	u_int32_t pid_Proceso, long_beso_file;
+	char* beso_file = "";
+
+	//1- Recibir BESO file
+
+	if(recibir_BESO_file(socket) != 0) {
+		msg.out = "[Kernel-LDR]: Fallo la recepcion del BESO code. Se cierra la conexion.";
+		preparar_paquete(socket, BESO_FILE_RECV_FAIL, &msg);
+		free(msg.out);
+		FD_CLR(socket, &master);
+		close(socket);
+		return 1;
+	}
+
+	//2- Asignar nuevo PID
+	pid.identificador = process_getpid();	// returns the process ID of the calling process. These functions are always successful.
+
+	//2- Asignar TID
+	tid.identificador = process_get_thread_id();	// In single threaded code both PID & TID are same.
+
+	//3- Solicitar memoria a la MSP
+	// TODO: Evaluar si hay necesidad de contar con un dictionary de procesos(programas)
+	pid_Proceso = pid.identificador;
+	long_beso_file = strlen(beso_file);
+
+		// CODE segment
+	if((info_mem_MSP.segmento_codigo = solicitarMemoria(pid_Proceso, long_beso_file, beso_file)) < 0)	{
+		msg.out = "[Kernel-LDR]: Fallo en la solicitud de memoria a la MSP. Se cierra la conexion.";
+		preparar_paquete(socket, END_PROGRAM, &msg);
+		free(msg.out);
+		FD_CLR(socket, &master);
+		close(socket);
+		return 2;
+	}
+
+		// STACK segment
+	if((info_mem_MSP.base_stack = solicitarMemoria(pid_Proceso, tamanio_stack, "")) < 0) {
+		msg.out = "[Kernel-LDR]: Fallo en la solicitud de memoria a la UMV. Se cierra la conexion.";
+		preparar_paquete(socket, END_PROGRAM, &msg);
+		free(msg.out);
+		FD_CLR(socket, &master);
+		close(socket);
+		return 2;
+	}
+
+	//4- Crear TCB e Init del PC (IP)
+	t_hilo *crear_TCB(u_int32_t pid, u_int32_t tid, t_hilo *mem_result)
+
+	//5- Encolar proceso (segun BBNP)
+
+	return 0;
+}
+
+void* main_LOADER(void* parametros) {
+/* El LOADER siempre acepta procesos, jamas rechaza.
  * TODO los programas nuevos se rechazan SOLAMENTE cuando falla un intento de reservarle un espacio de memoria.
  * CICLO
  *
  * 1- CONECTAR A MSP
  * 2- PONER SOCKETS A LA ESCUCHA DE PROGRAMAS
  * 3- ATENDER PROCESO
- * 3.1- Asignar nuevo PID
- * 3.2- Recibir BESO Code
- * 3.4- Solicitar memoria a la MSP
- * 3.5- Crear TCB e Init del PC
- * 3.6- Encolar proceso (segun BBNP)
+ * 	3.1- Recibir BESO file
+ * 	3.2- Asignar nuevo PID
+ * 	3.4- Solicitar memoria a la MSP
+ * 	3.5- Crear TCB e Init del PC (IP)
+ * 	3.6- Encolar proceso (segun BBNP)
 */
 
 	// parametros recibidos del Kernel
-	logger = ((arg_LOADER *)parametros)->ptrLogger;
+	logger = ((arg_LOADER *)parametros)->logger;
 //	ip_kernel = ((arg_LOADER *)parametros)->ipKernel;
 //	puerto_consola = ((arg_LOADER *)parametros)->puertoConsola;
-	ip_msp = ((arg_LOADER *)parametros)->ipMSP;
-	puerto_msp = ((arg_LOADER *)parametros)->puertoMSP;
-	tamanio_stack = ((arg_LOADER *)parametros)->tamanioStack;
+	ip_msp = ((arg_LOADER *)parametros)->ip_msp;
+	puerto_msp = ((arg_LOADER *)parametros)->puerto_msp;
+	tamanio_stack = ((arg_LOADER *)parametros)->tamanio_stack;
 
-
-	log_trace(logger,"INICIO de registro de actividades del Hilo PLP.");
+	log_trace(logger,"INICIO de registro de actividades del Hilo LOADER.");
 
 	// creacion de estructuras
 	cola_new = queue_create();
@@ -135,7 +424,7 @@ void* main_LOADER(void* parametros)
 	tv.tv_usec = DELAY_CHECK_NEW_READY_USEC;
 
 	//1- Conectarse a MSP
-	conectar_a_UMV(ip_msp, puerto_msp);
+	conectar_a_MSP(ip_msp, puerto_msp);
 
 	//2- Socket de escucha para Programas
 	crear_listener(ip_kernel, puerto_consola);
@@ -146,7 +435,7 @@ void* main_LOADER(void* parametros)
 		while((select_result = select(fdmax+1, &read_fds, NULL, NULL, &tv)) <= 0)
 		{
 			if (select_result == -1) {
-				perror("[Kernel-PLP]: Error on 'select()' function.");
+				perror("[Kernel-LDR]: Error on 'select()' function.");
 				exit(4);
 			} else
 				if(select_result == 0) {

@@ -5,7 +5,17 @@
  ============================================================================
  *	CICLO DEL PROCESO KERNEL
  *
- *	TODO terminar definiendo orden de este ciclo previa consulta con ayudante
+ * 1- Inicializar panel ansisop
+ * 2- Crear/Abrir file log del programa para el registro de actividades
+ * 3- Leer archivo de configuracion y asignar valores
+ * 4- Cargar argumentos para hilos LOADER y PLANIFICADOR
+ * 5- Conectar a MSP
+ * 6- Levantar HILOS
+ * 	6.1- Hilo KERNEL
+ * 	6.2- Hilo LOADER
+ * 	6.3- Hilo PLANIFICADOR
+ *
+ *	TODO VER necesidad de almacenar vars en contenido del config_file (dictionary) PARECE SER INNECESARIO
  *
  */
 
@@ -129,7 +139,7 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 int main(int argc, char **argv){
 
 	// 1- Inicializar panel ansisop
-	inicializar_panel(KERNEL, "/home/utnso/git/tp-2014-2c-los-metatecla");
+	inicializar_panel(KERNEL, "/home/utnso/git/tp-2014-2c-los-metatecla/Kernel");
 
 	// 2- Crear/Abrir file log del programa para el registro de actividades
 	logger = log_create("kernel.log", "KERNEL", false, LOG_LEVEL_TRACE);
@@ -155,7 +165,7 @@ int main(int argc, char **argv){
 		exit(EXIT_FAILURE);
 	}
 
-		//6.2- Levantar HILO LOADER
+		//6.2- Levantar Hilo LOADER
 	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
 	{
 		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d\n", ret_LOADER);
@@ -164,7 +174,7 @@ int main(int argc, char **argv){
 		exit(EXIT_FAILURE);
 	}
 
-		//6.3- Levantar HILO PLANIFICADOR
+		//6.3- Levantar Hilo PLANIFICADOR
 	if((ret_PLANIFICADOR = pthread_create(&thread_PLANIFICADOR, NULL, (void*)&main_PLANIFICADOR, &param_PLANIFICADOR)))
 	{
 		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo PLANIFICADOR: %d\n", ret_PLANIFICADOR);
