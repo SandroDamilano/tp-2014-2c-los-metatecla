@@ -5,8 +5,6 @@
  *      Author: utnso
  */
 #include "funcionesMSP.h"
-#include <commons/config.h>
-#include <commons/collections/list.h>
 
 t_config* archConfigMSP;
 int puertoMSP, tamanio_mem_ppal, cant_mem_swap;
@@ -45,7 +43,7 @@ void leerConfiguracion(){
 					exit(0);
 			}
 
-	//Faltan logs y alguna que otra validacion
+	//TODO Faltan logs y alguna que otra validacion
 
 
 }
@@ -53,8 +51,8 @@ void *reservarBloquePpal(int tamanioMemoria){
 
      void *unaMemoria = malloc(tamanioMemoria);
      if(NULL == unaMemoria){
-    	 //log "no se pudo crear memoria principal"
-         //liberar recursos
+    	 //TODO log "no se pudo crear memoria principal"
+         //TODO liberar recursos
     	 exit(0);
      }
      return unaMemoria;

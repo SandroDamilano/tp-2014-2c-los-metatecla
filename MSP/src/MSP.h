@@ -12,9 +12,10 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include "commons/config.h"
+#include "commons/collections/list.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include <sockets/enviar_recibir_paquete.h>
+#include "sockets/enviar_recibir_paquete.h"
 
 typedef struct  lista_paginas{
 	int numeroPagina;
@@ -43,7 +44,7 @@ typedef struct lista_procesos{
 uint32_t crearSegmento(int PID, int tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
 void destruirSegmento(int PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
 void solicitarMemoria(int PID, uint32_t direccion_log, int tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
-//no estamos seguros de que devuelta esta funcion. Consultar
+//TODO no estamos seguros de que devuelta esta funcion. Consultar
 void escribirMemoria(int PID, uint32_t direcc_log, int bytes_escribir, int tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 
 
