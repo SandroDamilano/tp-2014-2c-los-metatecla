@@ -10,8 +10,6 @@
 	#include <sys/types.h>
 	#include <arpa/inet.h>
 	#include <unistd.h>
-	#include <sys/epoll.h>
-	#include <sys/ioctl.h>
 
 	#include "commons/string.h"
 
