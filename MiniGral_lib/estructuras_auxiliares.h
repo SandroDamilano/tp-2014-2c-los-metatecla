@@ -23,12 +23,48 @@
 	#include <commons/log.h>
 	#include <commons/config.h>
 
-	typedef struct Stream {
-		char* data;
-	} stream_t;
-
-	// Vars globales ( referenciada por todos los procesos)
+// Vars globales ( referenciada por todos los procesos)
 	t_config* config_file;
 	t_log* logger;
+
+// Estructuras necesarias para serializar
+	typedef struct Stream {
+		int length;
+		char* data;
+	} t_stream;
+
+
+	enum{
+		D_STRUCT_NUMERO=0,
+		D_STRUCT_DIRECCION=1,
+		D_STRUCT_CHAR=2,
+		D_STRUCT_STRING=3,
+	};
+
+	// Header de stream
+	typedef struct {
+		uint8_t tipoEstructura;
+		uint16_t length;
+	} __attribute__ ((__packed__)) t_header;
+
+
+// Estructuras segun tipo de datos a enviar por sockets
+
+	typedef struct struct_numero {
+		int32_t numero;
+	} __attribute__ ((__packed__)) t_struct_numero;
+
+	typedef struct struct_direccion {
+		uint32_t numero;
+	} __attribute__ ((__packed__)) t_struct_direccion;
+
+	typedef struct struct_char {
+		char letra;
+	} __attribute__ ((__packed__)) t_struct_char;
+
+	typedef struct struct_string {
+		char * string;
+	} __attribute__ ((__packed__)) t_struct_string;
+
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */
