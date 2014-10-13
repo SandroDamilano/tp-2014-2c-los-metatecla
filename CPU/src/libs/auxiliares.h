@@ -13,12 +13,22 @@
 #include <stdint.h>
 #include <commons/string.h>
 #include <string.h>
-#include <panel/cpu.h>
+#include <ansisop-panel/cpu.h>
+#include <unistd.h>
+
+typedef struct{
+	int puerto_kernel;
+	int puerto_msp;
+	char* ip_kernel;
+	char* ip_msp;
+	int retardo;
+}t_config_cpu;
 
 extern t_hilo* tcb;
 t_registros_cpu registros_cpu;
 int quantum;
 int cantidad_lineas_ejecutadas;
+t_config_cpu config_struct_cpu;
 
 void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux);
 void obtener_numero(char* parametros, int posicion,int32_t* numero, char* aux);
@@ -26,6 +36,7 @@ void obtener_registro(char* parametros, int posicion, char* registro);
 void copiar_tcb_a_registros();
 void copiar_registros_a_tcb();
 int elegirRegistro(char registro);
+void esperar_retardo();
 
 enum bytecodes{
 	LOAD,

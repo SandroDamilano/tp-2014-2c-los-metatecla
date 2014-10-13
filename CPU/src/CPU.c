@@ -98,6 +98,9 @@ int main(int argc, char** argv) {
 			ejecutarLinea(bytecode);
 			}
 		}
+
+	esperar_retardo();
+
 	}
 
 	free(bytecode);

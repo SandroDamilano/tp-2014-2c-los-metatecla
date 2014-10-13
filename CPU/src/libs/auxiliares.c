@@ -73,6 +73,11 @@ int elegirRegistro(char registro){
 	return posicion_registros;
 }
 
+void esperar_retardo(){
+	int retardo = config_struct_cpu.retardo * 1000;
+	usleep(retardo);
+}
+
 int convertirAString(int* byte){
 	char* bytecode = byte;
 	int bytecodeLetras;
