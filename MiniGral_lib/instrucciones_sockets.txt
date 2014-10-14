@@ -1,0 +1,38 @@
+Intrucciones para enviar y recibir paquetes a traves de los sockets:
+
+/************************* ENVIAR *******************************************/
+
+1) Insertar el dato a enviar en la estructura correspondiente. Ejemplo:
+
+t_struct_numero* paquete_numero = malloc(sizeof(t_struct_numero));
+paquete_numero->numero = -934;
+
+2) Enviar por socket. Ejemplo:
+
+socket_enviar(sockReceptor, D_STRUCT_NUMERO, paquete_numero);  //socket_enviar serializa el mensaje internamente, liberando la memoria correspondiente
+
+4) Liberar memoria. Ejemplo:
+
+free(paquete_numero);
+
+
+/************************* RECIBIR *******************************************/
+
+1) Definir las estructuras que van a tener nuestros datos. Ejemplo:
+
+void * structRecibido;
+t_tipoEstructura tipoStruct;
+
+2) Recibir por socket. Ejemplo:
+	
+socket_recibir(sockUMV, &tipoStruct, &structRecibido); //socket_recibir deserializar internamente, liberando la memoria correspondiente
+
+3) Verificar que es el tipo de dato correcto. Opcional pero recomendable. Ejemplo:
+
+if (tipoStruct != D_STRUCT_NUMERO) {
+	printf("Respuesta en dereferenciar incorrecta\n");
+}
+
+4) Liberar memoria. Ejemplo:
+
+free(structRecibido);

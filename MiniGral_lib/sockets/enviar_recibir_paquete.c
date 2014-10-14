@@ -38,85 +38,68 @@
 
 /*************************************** FUNCIONES PARA ENVIAR Y RECIBIR ***************************************************/
 
-int endianess() {
-	unsigned i = 1;
-	return ((*(char*)&i) == 1)? 1 : 0;
-}
+int socket_enviar(int socketReceptor, t_tipoEstructura tipoEstructura, void* estructura){
+	int cantBytesEnviados;
 
-//int recvall(int socket, void *buf, int *len)
-//{
-//
-//	return 0;
-//}
+	t_stream * paquete = serialize(tipoEstructura, estructura);
 
-void recv_msg_from(int socket, int *idMensaje, char **mensaje) {
-    cabecera_t cabecera;
-    *mensaje = NULL;  /* Ponemos el mensaje a NULL por defecto */
-    int nbytes;
-
-    if((nbytes = recv(socket, &cabecera, sizeof(cabecera), 0)) == -1) /* Se lee la cabecera */
-    {
-		perror("Error on 'recv_msg_from()' function at MiniGral_lib");
-		exit(1);
-    }
-
-    /* Rellenamos el identificador para devolverlo */
-    *idMensaje = cabecera.id;
-
-    /* Si hay que leer una estructura detrás */
-    if (cabecera.longitud > 0) {
-        *mensaje = malloc (cabecera.longitud);  /* Se reserva espacio para leer el mensaje */
-        recv(socket, *mensaje, cabecera.longitud, 0);
-    }
-}
-
-// Envia todos los bytes del buffer a traves de varios SEND's si es necesario.
-int sendall(int socket, void *buf, int *len) {
-	int n;
-	int total = 0;			// how many bytes we've sent
-	int bytesleft = *len;	// how many we have left to send
-
-	while(total < *len) {
-		n = send(socket, buf+total, bytesleft, 0);
-		if (n == -1) { break; }
-		total += n;
-		bytesleft -= n;
+	cantBytesEnviados = send(socketReceptor, paquete->data, paquete->length, 0);
+	free(paquete->data);
+	free(paquete);
+	if( cantBytesEnviados == -1){
+		perror("Server no encontrado\n");
+		return 0;
 	}
-	*len = total;			// return number actually sent here
-	return n == -1 ? -1 : 0;// return -1 on failure, 0 on success
+	else {
+		return 1;
+	}
 }
 
-// Enviamos la cabecera (id,length) y luego el cuerpo (mensaje)
-void send_msg_to(int socket, int idMensaje, char *mensaje, int tamanho) {
+int socket_recibir(int socketEmisor, t_tipoEstructura * tipoEstructura, void** estructura){
+	int cantBytesRecibidos;
+	t_header header;
+	char* buffer;
+	char* bufferHeader;
 
-    cabecera_t cabecera;	//	Se declara y rellena la cabecera
-    int bytesEnviados = 0;
+	bufferHeader = malloc(sizeof(t_header));
 
-    cabecera.id = idMensaje;
-    cabecera.longitud = tamanho;
-    bytesEnviados = sizeof(cabecera);
+	cantBytesRecibidos = recv(socketEmisor, bufferHeader, sizeof(t_header), MSG_WAITALL);	//Recivo por partes, primero el header.
+	if(cantBytesRecibidos == -1){
+		free(bufferHeader);
+		perror("Error al recibir datos\n");
+		return 0;
+	}
 
-    /* Se envía la cabecera */
-    if(sendall(socket, &cabecera, &bytesEnviados) == -1) {
-    	perror("Error on 'send_msg_to()' function at MiniGral_lib.");
-    	printf("Solo se enviaron [%d] bytes a causa del error.", bytesEnviados);
-    	exit(1);
-    }
+	header = despaquetizarHeader(bufferHeader);
+	free(bufferHeader);
 
-    /* Si el mensaje no tiene cuerpo, hemos terminado */
-    if ((mensaje == NULL) || (tamanho == 0))
-        return;
+	if (tipoEstructura != NULL) {
+		*tipoEstructura = header.tipoEstructura;
+	}
 
-    /* Se envía el cuerpo */
-    bytesEnviados = tamanho;
-    if(sendall(socket, mensaje, &bytesEnviados) == -1)
-    {
-    	perror("Error on 'send_msg_to()' function at MiniGral_lib.");
-    	printf("Solo se enviaron [%d] bytes a causa del error.", bytesEnviados);
-    	exit(1);
-    }
+	if(header.length == 0){	//Si recivo mensaje con length 0 retorno 1 y *estructura NULL.
+		if (estructura != NULL) {
+			*estructura = NULL;
+		}
+		return 1;
+	}
+
+	buffer = malloc(header.length);
+	cantBytesRecibidos = recv(socketEmisor, buffer, header.length, MSG_WAITALL);	//Recivo el resto del mensaje con el tamaño justo de buffer.
+	if(cantBytesRecibidos == -1){
+		free(buffer);
+		perror("Error al recibir datos\n");
+		return 0;
+	}
+
+	if(estructura != NULL) {
+		*estructura = deserialize(header.tipoEstructura, buffer, header.length);
+	}
+
+	free(buffer);
+
+	return 1;
 }
-
 /*********************************** FUNCIONES PARA CREAR Y CONECTAR CLIENTES Y SERVIDORES ***********************/
 /*
  * Nombre: socket_crearCliente/0

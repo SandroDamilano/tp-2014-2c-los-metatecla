@@ -28,6 +28,9 @@
 	t_log* logger;
 
 // Estructuras necesarias para serializar
+
+	typedef uint8_t t_tipoEstructura;
+
 	typedef struct Stream {
 		int length;
 		char* data;

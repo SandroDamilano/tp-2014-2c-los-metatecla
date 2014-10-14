@@ -14,6 +14,7 @@
 	#include "commons/string.h"
 
 	#include "../estructuras_auxiliares.h"
+	#include "../serialize/functions.h"
 
 	typedef struct Cabecera {
 		uint32_t id;		/* ID de operacion */
@@ -24,10 +25,8 @@
 
 	//Funciones de proposito Gral
 
-	int endianess();
-	int sendall(int socket, void *buf, int *len);
-	void recv_msg_from(int socket, int *idMensaje, char **mensaje);			//analizar_paquete()
-	void send_msg_to(int socket, int idMensaje, char *mensaje, int tamanho);//preparar_paquete()
+	int socket_enviar(int socketReceptor, t_tipoEstructura tipoEstructura, void* estructura);
+	int socket_recibir(int socketEmisor, t_tipoEstructura * tipoEstructura, void** estructura);
 
 	int socket_crearCliente(void);
 	int socket_conectarCliente(int sockfd,char *serverIp, int serverPort);
