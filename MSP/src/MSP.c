@@ -9,19 +9,19 @@
  */
 
 #include "MSP.h"
-#include "ConsolaMSP.h"
-#include "funcionesMSP.h"
 
 
-
-
-int main(int argc, char *argv[]) {
+	//Variables de Archivos
+	t_log *logMSP = NULL;
+	t_config *archConfigMSP = NULL;
 
 	//Variables de Memoria Principal
 	void *memoria_ppal = NULL;
+	int memoriaSwapActual = 0;
+	int memoriaPpalActual = 0;
 
 	//Variables de estructuras administrativas
-	t_list *listaProcesos = list_create();
+	t_list *listaProcesos = NULL;
 	t_list *lista_marcos = NULL;
 
 	//Variables para hilos
@@ -31,9 +31,14 @@ int main(int argc, char *argv[]) {
 	int socketServidorMSP;
 	bool escuchandoConexiones = true;
 
-	//1.Leer archivo de configuracion
 
-	leerConfiguracion();
+
+int main(int argc, char *argv[]) {
+
+	//1.Leer archivo de configuracion y archivo de log
+	crear_logger(logMSP);
+	leerConfiguracion(archConfigMSP, argv[1]);
+
 
 	//2. Reservar bloque de memoria principal
 
@@ -44,6 +49,9 @@ int main(int argc, char *argv[]) {
 	//3. Generar estructuras administrativas
 
 	lista_marcos=dividirMemoriaEnMarcos(memoria_ppal, tamanio_mem_ppal);
+	memoriaPpalActual=tamanio_mem_ppal;
+	memoriaSwapActual=cant_mem_swap;
+	listaProcesos = list_create();
 
 	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
 
@@ -89,3 +97,51 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_SUCCESS;
 }
+
+uint32_t crearSegmento(int PID, int tamanio_segmento){
+	//1.Verifica si hay memoria disponible
+	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;
+	if(tamanio_segmento > cant_mem_actual){
+		printf("Error Memoria llena");
+		log_error(logMSP,"Error Memoria Llena");
+		return 0;
+	}
+	//2.Se fija si se existe el proceso
+
+	t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
+	proceso = list_find(listaProcesos, (*proceso).pid == PID); //FIXME el segundo parametro no sabemos como ponerlo.
+	//3.Crea o agrega nuevo segmento
+	if(proceso==NULL){
+		(*proceso).pid=PID;
+		(*proceso).lista_Segmentos=list_create();
+		if(list_size(listaProcesos)<4096){
+		list_add(listaProcesos,proceso);
+		log_info(logMSP,"Se creo el nuevo segmento del proceso: %d",PID);}
+		else { log_error(logMSP,"Supera El Maximo de segmentos por programa");}
+	}
+	int tamanioListaSeg=list_size((*proceso).lista_Segmentos);
+
+	t_lista_segmentos *nuevoSegmento = malloc(sizeof(t_lista_segmentos));
+	(*nuevoSegmento).lista_Paginas=list_create();
+	(*nuevoSegmento).numeroSegmento=tamanioListaSeg;
+	(*nuevoSegmento).tamanio=tamanio_segmento;
+	list_add((*proceso).lista_Segmentos, nuevoSegmento);
+	//4.Crea tabla de paginas
+	int cantPaginas=div(tamanio_segmento,256);
+	if ((tamanio_segmento%256) > 0){ cantPaginas++;}
+	int numeroPag=0;
+	while(cantPaginas>0){
+		t_lista_paginas *pagina= malloc(sizeof(t_lista_paginas));
+		(*pagina).swap=0;
+		(*pagina).marcoEnMemPpal=0;
+		(*pagina).numeroPagina=numeroPag;
+		list_add((*nuevoSegmento).lista_Paginas, pagina);
+		numeroPag++;
+		cantPaginas=cantPaginas-1;
+	}
+
+	//TODO hacer los FREE()
+	//TODO Ver como imprimir direccion base del segmento
+	return direccionBaseDelSegmento;
+}
+

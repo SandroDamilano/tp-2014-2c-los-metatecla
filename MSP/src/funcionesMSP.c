@@ -6,14 +6,14 @@
  */
 #include "funcionesMSP.h"
 
-t_config* archConfigMSP;
+
 int puertoMSP, tamanio_mem_ppal, cant_mem_swap;
 char* alg_sustitucion;
 
-void leerConfiguracion(){
+void leerConfiguracion(t_config *archConfigMSP, char *path){
 
 
-	archConfigMSP= config_create("config.cfg");
+	archConfigMSP= config_create(path);
 
 
 	if(config_has_property(archConfigMSP, "CANTIDAD_MEMORIA")){
@@ -58,17 +58,20 @@ void *reservarBloquePpal(int tamanioMemoria){
      return unaMemoria;
 }
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
-	t_marco *marco;
-	(*marco).memoria=NULL;
-	(*marco).marco_libre= false;
 	t_list *lista_marcos = list_create();
 	int cant_marcos = (tamanioMemoria*1024)/256;
 	int i ;
 	for(i=0; i<cant_marcos; i++)
 	{
+		t_marco *marco = malloc(sizeof(t_marco));
 		(*marco).memoria = memoria + i*256;
 		list_add(lista_marcos, marco);
 		(*marco).memoria = NULL;
 	}
 return lista_marcos;
+}
+void crear_logger(t_log *logger){
+	if ((logger = log_create("logMSP.log","MSP",false,LOG_LEVEL_DEBUG)) == NULL) {
+		printf("No se pudo crear el logger\n");
+	}
 }
