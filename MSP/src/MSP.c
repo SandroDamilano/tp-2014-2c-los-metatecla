@@ -37,12 +37,12 @@
 
 int main(int argc, char *argv[]) {
 
-	inicializar_semaforos();
 
-	//1.Leer archivo de configuracion y archivo de log
+
+	//1.Leer archivo de configuracion, archivo de log y iniciar semaforos
 	crear_logger(logMSP);
 	leerConfiguracion(archConfigMSP, argv[1]);
-
+	inicializar_semaforos();
 
 	//2. Reservar bloque de memoria principal
 
@@ -130,6 +130,14 @@ uint32_t crearSegmento(int PID, int tamanio_segmento){
 
 	//1.Verifica si hay memoria disponible
 	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;
+	if (tamanio_segmento > 1048576){
+		pthread_mutex_lock(&mutex_log);
+		printf("Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
+		log_error(logMSP,"Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
+		pthread_mutex_unlock(&mutex_log);
+		return 0;
+	}
+
 	if(tamanio_segmento > cant_mem_actual){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error Memoria llena");
@@ -140,42 +148,69 @@ uint32_t crearSegmento(int PID, int tamanio_segmento){
 	//2.Se fija si se existe el proceso
 
 	t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
-	proceso = list_find(listaProcesos, (void*) (*mismoPID) ((*proceso).pid, PID)); //FIXME el segundo parametro no sabemos como ponerlo.
-	//3.Crea o agrega nuevo segmento
+	proceso = list_find(listaProcesos, (void*) (*mismoPID) ((*proceso).pid, PID));
+
+	//3. Se fija donde crear el segmento
+	int segmentoEnSwap = 0;
+	int segmentoEnMP = 0;
+
+	if(tamanio_segmento<=memoriaSwapActual){
+		segmentoEnSwap=tamanio_segmento;
+		memoriaSwapActual=memoriaSwapActual-tamanio_segmento;
+	} else { if(memoriaSwapActual>0){
+				segmentoEnSwap = memoriaSwapActual;
+				tamanio_segmento=tamanio_segmento-memoriaSwapActual;
+				memoriaSwapActual = 0;
+				segmentoEnMP=tamanio_segmento;
+				memoriaPpalActual= memoriaPpalActual-tamanio_segmento;
+	} else { segmentoEnMP=tamanio_segmento;
+			 memoriaPpalActual= memoriaPpalActual-tamanio_segmento;}
+	}
+
+	//4.Crea lista de segmentos o agrega nuevo segmento
 	if(proceso==NULL){
 		(*proceso).pid=PID;
 		(*proceso).lista_Segmentos=list_create();
-		if(list_size(listaProcesos)<4096){
-		pthread_mutex_lock(&mutex_log);
-		list_add(listaProcesos,proceso);
-		log_info(logMSP,"Se creo el nuevo segmento del proceso: %d",PID);
-		pthread_mutex_unlock(&mutex_log);
-		} else {
-			log_error(logMSP,"Supera El Maximo de segmentos por programa");
-			pthread_mutex_unlock(&mutex_log);
-		}
-	}
-	int tamanioListaSeg=list_size((*proceso).lista_Segmentos);
+		list_add(listaProcesos,proceso);}
 
+	int tamanioListaSeg=list_size((*proceso).lista_Segmentos);
 	t_lista_segmentos *nuevoSegmento = malloc(sizeof(t_lista_segmentos));
-	(*nuevoSegmento).lista_Paginas=list_create();
-	(*nuevoSegmento).numeroSegmento=tamanioListaSeg;
-	(*nuevoSegmento).tamanio=tamanio_segmento;
-	list_add((*proceso).lista_Segmentos, nuevoSegmento);
-	//4.Crea tabla de paginas
-	int cantPaginas= tamanio_segmento/256; //no hace falta usar div, porque cantPaginas se queda con la parte entera por ser int
-	if ((tamanio_segmento%256) > 0){ cantPaginas++;}
+	if(tamanioListaSeg<4096){
+		(*nuevoSegmento).lista_Paginas=list_create();
+		(*nuevoSegmento).numeroSegmento=tamanioListaSeg;
+		(*nuevoSegmento).tamanio=segmentoEnSwap+segmentoEnMP;
+		pthread_mutex_lock(&mutex_log);
+		list_add((*proceso).lista_Segmentos, nuevoSegmento);
+		log_info(logMSP,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,segmentoEnSwap+segmentoEnMP);
+		pthread_mutex_unlock(&mutex_log);
+	} else {
+		pthread_mutex_lock(&mutex_log);
+		log_error(logMSP,"Se supera el maximo de segmentos por programa");
+		pthread_mutex_unlock(&mutex_log);
+		return 0;
+	}
+	//5.Crea tabla de paginas
+	int cantPaginas= (segmentoEnSwap+segmentoEnMP)/256; //no hace falta usar div, porque cantPaginas se queda con la parte entera por ser int
+	if (((segmentoEnSwap+segmentoEnMP)%256) > 0){ cantPaginas++;}
 	int numeroPag=0;
 	while(cantPaginas>0){
 		t_lista_paginas *pagina= malloc(sizeof(t_lista_paginas));
 		(*pagina).swap=0;
 		(*pagina).marcoEnMemPpal=0;
 		(*pagina).numeroPagina=numeroPag;
-		list_add((*nuevoSegmento).lista_Paginas, pagina);
+		list_add( (*nuevoSegmento).lista_Paginas , pagina);
 		numeroPag++;
 		cantPaginas=cantPaginas-1;
 	}
-
+    //6. Carga paginas en memoria principal si es necesario
+	 if(segmentoEnMP>0){
+		 int cantPagCargar=segmentoEnMP/256;
+		 if ((segmentoEnMP%256) > 0){ cantPagCargar++;}
+		 while(cantPagCargar>0){
+			 	//carga paginas en MP funcion a definir cuando se haga el EscribirMemoria y algoritmos de reemplazo
+			 cantPagCargar=cantPagCargar-1;
+		 }
+	 }
 	//TODO hacer los FREE()
 	//TODO Ver como imprimir direccion base del segmento
 	return direccionBaseDelSegmento;
