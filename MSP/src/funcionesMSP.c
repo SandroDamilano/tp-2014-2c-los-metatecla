@@ -47,6 +47,8 @@ void leerConfiguracion(t_config *archConfigMSP, char *path){
 
 
 }
+
+
 void *reservarBloquePpal(int tamanioMemoria){
 
      void *unaMemoria = malloc(tamanioMemoria);
@@ -57,6 +59,8 @@ void *reservarBloquePpal(int tamanioMemoria){
      }
      return unaMemoria;
 }
+
+
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 	t_list *lista_marcos = list_create();
 	int cant_marcos = (tamanioMemoria*1024)/256;
@@ -70,6 +74,8 @@ t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 	}
 return lista_marcos;
 }
+
+
 void crear_logger(t_log *logger){
 	if ((logger = log_create("logMSP.log","MSP",false,LOG_LEVEL_DEBUG)) == NULL) {
 		printf("No se pudo crear el logger\n");

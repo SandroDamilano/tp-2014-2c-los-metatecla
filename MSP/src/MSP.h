@@ -17,6 +17,8 @@
 #include "ConsolaMSP.h"
 #include "funcionesMSP.h"
 
+extern pthread_mutex_t mutex_consola;
+extern pthread_mutex_t mutex_log;
 
 typedef struct  lista_paginas{
 	int numeroPagina;
@@ -49,5 +51,5 @@ void solicitarMemoria(int PID, uint32_t direccion_log, int tamanio_mem); //muest
 //TODO no estamos seguros de que devuelta esta funcion. Consultar
 void escribirMemoria(int PID, uint32_t direcc_log, int bytes_escribir, int tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 
-
+int inicializar_semaforos();
 #endif /* MSP_H_ */

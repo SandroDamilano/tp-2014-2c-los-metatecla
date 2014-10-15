@@ -40,10 +40,9 @@ extern char* alg_sustitucion;
 
 
 
-
-
 void leerConfiguracion(t_config *config, char *path); //levanta archivo de configuracion y asigna a las variables correspodientes
 void crear_logger(t_log *logger);//Crea archivos de logeo
 void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
+
 #endif /* FUNCIONESMSP_H_ */

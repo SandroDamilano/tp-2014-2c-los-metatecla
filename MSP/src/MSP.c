@@ -27,13 +27,17 @@
 	//Variables para hilos
 	pthread_t consola;
 
+	//Semaforos
+	pthread_mutex_t mutex_consola;
+	pthread_mutex_t mutex_log;
+
 	//Variables para Sockets
 	int socketServidorMSP;
 	bool escuchandoConexiones = true;
 
-
-
 int main(int argc, char *argv[]) {
+
+	inicializar_semaforos();
 
 	//1.Leer archivo de configuracion y archivo de log
 	crear_logger(logMSP);
@@ -98,26 +102,58 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
+int mismo_pid(int pid1, int pid2){
+	return pid1==pid2;
+}
+
+int inicializar_semaforos(){
+
+	if(pthread_mutex_init(&mutex_consola,NULL) != 0){
+		printf("mutex_consola failed");
+		return EXIT_FAILURE;
+	}
+
+	if(pthread_mutex_init(&mutex_log,NULL) != 0){
+		printf("mutex_log failed");
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 uint32_t crearSegmento(int PID, int tamanio_segmento){
+	uint32_t direccionBaseDelSegmento;
+
+	//Puntero a funcion mismo_pid
+	int (*mismoPID) (int p1, int p2);
+	mismoPID = &mismo_pid;
+
 	//1.Verifica si hay memoria disponible
 	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;
 	if(tamanio_segmento > cant_mem_actual){
+		pthread_mutex_lock(&mutex_log);
 		printf("Error Memoria llena");
 		log_error(logMSP,"Error Memoria Llena");
+		pthread_mutex_unlock(&mutex_log);
 		return 0;
 	}
 	//2.Se fija si se existe el proceso
 
 	t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
-	proceso = list_find(listaProcesos, (*proceso).pid == PID); //FIXME el segundo parametro no sabemos como ponerlo.
+	proceso = list_find(listaProcesos, (void*) (*mismoPID) ((*proceso).pid, PID)); //FIXME el segundo parametro no sabemos como ponerlo.
 	//3.Crea o agrega nuevo segmento
 	if(proceso==NULL){
 		(*proceso).pid=PID;
 		(*proceso).lista_Segmentos=list_create();
 		if(list_size(listaProcesos)<4096){
+		pthread_mutex_lock(&mutex_log);
 		list_add(listaProcesos,proceso);
-		log_info(logMSP,"Se creo el nuevo segmento del proceso: %d",PID);}
-		else { log_error(logMSP,"Supera El Maximo de segmentos por programa");}
+		log_info(logMSP,"Se creo el nuevo segmento del proceso: %d",PID);
+		pthread_mutex_unlock(&mutex_log);
+		} else {
+			log_error(logMSP,"Supera El Maximo de segmentos por programa");
+			pthread_mutex_unlock(&mutex_log);
+		}
 	}
 	int tamanioListaSeg=list_size((*proceso).lista_Segmentos);
 
@@ -127,7 +163,7 @@ uint32_t crearSegmento(int PID, int tamanio_segmento){
 	(*nuevoSegmento).tamanio=tamanio_segmento;
 	list_add((*proceso).lista_Segmentos, nuevoSegmento);
 	//4.Crea tabla de paginas
-	int cantPaginas=div(tamanio_segmento,256);
+	int cantPaginas= tamanio_segmento/256; //no hace falta usar div, porque cantPaginas se queda con la parte entera por ser int
 	if ((tamanio_segmento%256) > 0){ cantPaginas++;}
 	int numeroPag=0;
 	while(cantPaginas>0){
