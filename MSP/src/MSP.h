@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include "sockets/enviar_recibir_paquete.h"
 #include "ConsolaMSP.h"
 #include "funcionesMSP.h"

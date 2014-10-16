@@ -11,10 +11,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "commons/config.h"
 #include "commons/collections/list.h"
 #include "commons/log.h"
+#include "commons/txt.h"
+#include "commons/string.h"
 
+
+typedef struct pagina{
+	uint32_t PID;
+	uint32_t num_pag;
+	uint32_t num_segmento;
+}t_pagina;
 
 typedef struct marco{
 	void *memoria;
@@ -44,5 +53,6 @@ void leerConfiguracion(t_config *config, char *path); //levanta archivo de confi
 void crear_logger(t_log *logger);//Crea archivos de logeo
 void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
+void crear_archivo_swap_out(t_pagina pagina, char* path);
 
 #endif /* FUNCIONESMSP_H_ */

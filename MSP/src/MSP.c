@@ -10,7 +10,6 @@
 
 #include "MSP.h"
 
-
 	//Variables de Archivos
 	t_log *logMSP = NULL;
 	t_config *archConfigMSP = NULL;
@@ -36,8 +35,6 @@
 	bool escuchandoConexiones = true;
 
 int main(int argc, char *argv[]) {
-
-
 
 	//1.Leer archivo de configuracion, archivo de log y iniciar semaforos
 	crear_logger(logMSP);

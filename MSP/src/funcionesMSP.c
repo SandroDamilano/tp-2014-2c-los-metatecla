@@ -81,3 +81,29 @@ void crear_logger(t_log *logger){
 		printf("No se pudo crear el logger\n");
 	}
 }
+
+void crear_archivo_swap_out(t_pagina pagina, char* path){
+	char* file_name = string_new();
+
+	string_append(&file_name, path);
+	string_append(&file_name, "PID:");
+	string_append(&file_name, string_itoa(pagina.PID));
+	string_append(&file_name, " PAG:");
+	string_append(&file_name, string_itoa(pagina.num_pag));
+	string_append(&file_name, " SEG:");
+	string_append(&file_name, string_itoa(pagina.num_segmento));
+
+	FILE* arch_swap = NULL;
+	arch_swap = txt_open_for_append(file_name);
+
+	txt_write_in_file(arch_swap, "PID: ");
+	txt_write_in_file(arch_swap, string_itoa(pagina.PID));
+	txt_write_in_file(arch_swap, "\n");
+	txt_write_in_file(arch_swap, "PAG: ");
+	txt_write_in_file(arch_swap, string_itoa(pagina.num_pag));
+	txt_write_in_file(arch_swap, "\n");
+	txt_write_in_file(arch_swap, "SEG: ");
+	txt_write_in_file(arch_swap, string_itoa(pagina.num_segmento));
+
+
+}
