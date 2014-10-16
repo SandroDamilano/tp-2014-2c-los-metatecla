@@ -61,5 +61,6 @@ void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
 void crear_archivo_swap_out(t_pagina pagina);
 t_pagina leer_y_destruir_archivo_swap_in(int pid);
+uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
 
 #endif /* FUNCIONESMSP_H_ */

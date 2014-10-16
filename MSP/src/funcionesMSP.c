@@ -68,9 +68,11 @@ t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 	for(i=0; i<cant_marcos; i++)
 	{
 		t_marco *marco = malloc(sizeof(t_marco));
+		(*marco).memoria= malloc(256);
 		(*marco).memoria = memoria + i*256;
 		list_add(lista_marcos, marco);
-		(*marco).memoria = NULL;
+		free((*marco).memoria);
+		free(marco);
 	}
 return lista_marcos;
 }
@@ -108,7 +110,7 @@ void crear_archivo_swap_out(t_pagina pagina){
 	txt_write_in_file(arch_swap, string_itoa(pagina.num_pag));
 	txt_write_in_file(arch_swap, "\n");
 	txt_write_in_file(arch_swap, "SEG:");
-	txt_write_in_file(arch_swap, string_itoa(pagina.num_segmento));
+	txt_write_in_file(arch_swap, string_itoa(pagina.num_segmento)); //FIXME Lo que va adentro del archivo no es esto, si no la info que esta en memoria
 
 	pthread_mutex_lock(&mutex_log);
 	log_debug(logMSP,"Creado el archivo %s",file_name);
@@ -203,4 +205,12 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 	}
 	closedir(dir);
 	return pag;
+}
+
+
+
+uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
+	// char* valorBinario = unaFuncion(numeroSegmento);
+	//TODO preugntar que funcion es
+	return 0;
 }
