@@ -35,6 +35,8 @@
 	bool escuchandoConexiones = true;
 
 int main(int argc, char *argv[]) {
+	//Defino path para poner los archivos del swap. Esta hardcodeado, deberia pasarse por parametro.
+	path_swap = "/home/utnso/archivos_swap/";
 
 	//1.Leer archivo de configuracion, archivo de log y iniciar semaforos
 	crear_logger(logMSP);

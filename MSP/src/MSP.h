@@ -18,6 +18,7 @@
 
 extern pthread_mutex_t mutex_consola;
 extern pthread_mutex_t mutex_log;
+extern char* path_swap;
 
 typedef struct  lista_paginas{
 	int numeroPagina;
