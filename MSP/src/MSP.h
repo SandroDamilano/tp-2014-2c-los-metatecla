@@ -10,15 +10,37 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include "sockets/enviar_recibir_paquete.h"
 #include "ConsolaMSP.h"
 #include "funcionesMSP.h"
 
+//Path para archivos swap
+extern char* path_swap;
+
+//Variables de Archivos
+extern t_log *logMSP;
+t_config *archConfigMSP = NULL;
+
+//Variables de Memoria Principal
+void *memoria_ppal = NULL;
+int memoriaSwapActual = 0;
+int memoriaPpalActual = 0;
+
+//Variables de estructuras administrativas
+t_list *listaProcesos = NULL;
+t_list *lista_marcos = NULL;
+
+//Variables para hilos
+pthread_t consola;
+
+//Semaforos
 extern pthread_mutex_t mutex_consola;
 extern pthread_mutex_t mutex_log;
-extern char* path_swap;
+
+//Variables para Sockets
+int socketServidorMSP;
+bool escuchandoConexiones = true;
 
 typedef struct  lista_paginas{
 	int numeroPagina;

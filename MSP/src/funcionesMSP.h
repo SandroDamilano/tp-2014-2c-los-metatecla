@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <dirent.h>
 #include <string.h>
+#include <pthread.h>
 #include "commons/config.h"
 #include "commons/collections/list.h"
 #include "commons/log.h"
@@ -21,6 +22,8 @@
 #include "commons/string.h"
 
 char* path_swap;
+t_log* logMSP;
+pthread_mutex_t mutex_log;
 
 typedef struct pagina{
 	uint32_t PID;

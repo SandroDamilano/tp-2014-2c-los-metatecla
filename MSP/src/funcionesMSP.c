@@ -110,6 +110,10 @@ void crear_archivo_swap_out(t_pagina pagina){
 	txt_write_in_file(arch_swap, "SEG:");
 	txt_write_in_file(arch_swap, string_itoa(pagina.num_segmento));
 
+	pthread_mutex_lock(&mutex_log);
+	log_debug(logMSP,"Creado el archivo %s",file_name);
+	pthread_mutex_unlock(&mutex_log);
+
 	free(file_name);
 
 }
@@ -124,7 +128,10 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 
 	dir = opendir(path_swap); //abro el directorio donde se encuentran los archivos
 	if(dir == NULL){
+		pthread_mutex_lock(&mutex_log);
 		printf("No se pudo abrir el directorio %s\n", path_swap);
+		log_error(logMSP,"No se pudo abrir el directorio %s\n", path_swap);
+		pthread_mutex_unlock(&mutex_log);
 		closedir(dir);
 		return pag; //Devuelvo t_pagina con valores negativos => Error
 	}
@@ -146,7 +153,10 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 
 					FILE* arch_swap = fopen(nombre_archivo, "r");
 					if(arch_swap == NULL){
-						printf("Error al abrir el archivo\n");
+						pthread_mutex_lock(&mutex_log);
+						printf("Error al abrir el archivo %s\n", dirent->d_name);
+						log_error(logMSP, "Error al abrir el archivo %s",dirent->d_name);
+						pthread_mutex_unlock(&mutex_log);
 						closedir(dir);
 						free(nombre_archivo);
 						return pag;
@@ -175,7 +185,14 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 					pag.num_segmento = atoi(secciones[1]);
 
 					if(remove(nombre_archivo) != 0){
-							printf("No se pudo eliminar el archivo\n");
+							pthread_mutex_lock(&mutex_log);
+							printf("No se pudo eliminar el archivo %s\n", dirent->d_name);
+							log_error(logMSP,"No se pudo eliminar el archivo %s\n", dirent->d_name);
+							pthread_mutex_unlock(&mutex_log);
+						} else {
+							pthread_mutex_lock(&mutex_log);
+							log_info(logMSP,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
+							pthread_mutex_unlock(&mutex_log);
 						}
 					free(nombre_archivo);
 					}
