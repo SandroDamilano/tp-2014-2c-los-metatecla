@@ -43,20 +43,20 @@ int socketServidorMSP;
 bool escuchandoConexiones = true;
 
 typedef struct  lista_paginas{
-	int numeroPagina;
-	int marcoEnMemPpal;
+	uint32_t numeroPagina;
+	uint32_t marcoEnMemPpal;
 	int swap;
 	}t_lista_paginas;
 
 typedef struct  lista_segmentos{
-	int numeroSegmento;
-	int tamanio;
+	uint32_t numeroSegmento;
+	uint32_t tamanio;
 	t_list *lista_Paginas;
 
 }t_lista_segmentos;
 
 typedef struct lista_procesos{
-	int pid;
+	uint32_t pid;
 	t_list *lista_Segmentos;
 } t_lista_procesos;
 
@@ -67,9 +67,9 @@ typedef struct lista_procesos{
 	//Estructuras sujetas a posibles cambio y arreglos mas adelante
 
 
-uint32_t crearSegmento(int PID, int tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
-void destruirSegmento(int PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
-void solicitarMemoria(int PID, uint32_t direccion_log, int tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
+uint32_t crearSegmento(uint32_t PID, int tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
+void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
+void solicitarMemoria(uint32_t PID, uint32_t direccion_log, int tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
 //TODO no estamos seguros de que devuelta esta funcion. Consultar
 void escribirMemoria(int PID, uint32_t direcc_log, int bytes_escribir, int tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 

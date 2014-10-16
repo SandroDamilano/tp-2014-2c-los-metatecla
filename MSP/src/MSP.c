@@ -81,9 +81,21 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
-int mismo_pid(int pid1, int pid2){
-	return pid1==pid2;
+int mismoElemento(int elemento1, int elemento2){
+	return elemento1==elemento2;
 }
+
+int asignarNumeroSegmento(int tamanioListaSegmentos, t_list *listaSegmentos){
+	t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+	int (*mismoSegmento) (uint32_t seg1, uint32_t seg2);
+	mismoSegmento= &mismoElemento;
+	while (list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento) ((*segmento).numeroSegmento,tamanioListaSegmentos)) == 0){
+		tamanioListaSegmentos=tamanioListaSegmentos+1;
+	}
+	free(segmento);
+	return tamanioListaSegmentos;
+}
+
 
 int inicializar_semaforos(){
 
@@ -100,12 +112,12 @@ int inicializar_semaforos(){
 	return EXIT_SUCCESS;
 }
 
-uint32_t crearSegmento(int PID, int tamanio_segmento){
-	uint32_t direccionBaseDelSegmento;
+uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
+	//TODO uint32_t direccionBaseDelSegmento;
 
 	//Puntero a funcion mismo_pid
-	int (*mismoPID) (int p1, int p2);
-	mismoPID = &mismo_pid;
+	int (*mismoPID) (uint32_t p1, uint32_t p2);
+	mismoPID = &mismoElemento;
 
 	//1.Verifica si hay memoria disponible
 	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;
@@ -127,7 +139,7 @@ uint32_t crearSegmento(int PID, int tamanio_segmento){
 	//2.Se fija si se existe el proceso
 
 	t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
-	proceso = list_find(listaProcesos, (void*) (*mismoPID) ((*proceso).pid, PID));
+	proceso = list_find(listaProcesos, (void*) (*mismoPID) ((*proceso).pid, PID)); //FIXME PREGUNTAR
 
 	//3. Se fija donde crear el segmento
 	int segmentoEnSwap = 0;
@@ -156,7 +168,7 @@ uint32_t crearSegmento(int PID, int tamanio_segmento){
 	t_lista_segmentos *nuevoSegmento = malloc(sizeof(t_lista_segmentos));
 	if(tamanioListaSeg<4096){
 		(*nuevoSegmento).lista_Paginas=list_create();
-		(*nuevoSegmento).numeroSegmento=tamanioListaSeg;
+		(*nuevoSegmento).numeroSegmento=asignarNumeroSegmento(tamanioListaSeg,(*proceso).lista_Segmentos);
 		(*nuevoSegmento).tamanio=segmentoEnSwap+segmentoEnMP;
 		pthread_mutex_lock(&mutex_log);
 		list_add((*proceso).lista_Segmentos, nuevoSegmento);
@@ -180,6 +192,7 @@ uint32_t crearSegmento(int PID, int tamanio_segmento){
 		list_add( (*nuevoSegmento).lista_Paginas , pagina);
 		numeroPag++;
 		cantPaginas=cantPaginas-1;
+		free(pagina);
 	}
     //6. Carga paginas en memoria principal si es necesario
 	 if(segmentoEnMP>0){
@@ -190,8 +203,15 @@ uint32_t crearSegmento(int PID, int tamanio_segmento){
 			 cantPagCargar=cantPagCargar-1;
 		 }
 	 }
-	//TODO hacer los FREE()
+	// TODO direccionBaseDelSegmento = obtenerDireccionBase((*nuevoSegmento).numeroSegmento);
+	free(mismoPID);
+	free(proceso);
+	free(nuevoSegmento);
+
 	//TODO Ver como imprimir direccion base del segmento
-	return direccionBaseDelSegmento;
+	return  0 ;//TODO direccionBaseDelSegmento;
 }
 
+void destruirSegmento(uint32_t PID, uint32_t direccBase){
+
+}
