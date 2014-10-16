@@ -38,6 +38,24 @@ int main(int argc, char *argv[]) {
 	//Defino path para poner los archivos del swap. Esta hardcodeado, deberia pasarse por parametro.
 	path_swap = "/home/utnso/archivos_swap/";
 
+	t_pagina pag;
+	pag.PID = 3;
+	pag.num_pag = 5;
+	pag.num_segmento = 9;
+
+	t_pagina pagi;
+	pagi.PID = 2;
+	pagi.num_pag = 4;
+	pagi.num_segmento = 8;
+
+	int pid = 2;
+	printf("le mando pid %d\n", pid);
+
+	crear_archivo_swap_out(pag);
+	crear_archivo_swap_out(pagi);
+	pag = leer_y_destruir_archivo_swap_in(pid);
+	printf("me llego pag: %d, pid:%d, seg:%d\n", pag.num_pag, pag.PID, pag.num_segmento);
+
 	//1.Leer archivo de configuracion, archivo de log y iniciar semaforos
 	crear_logger(logMSP);
 	leerConfiguracion(archConfigMSP, argv[1]);
