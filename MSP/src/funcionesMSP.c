@@ -207,10 +207,29 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 	return pag;
 }
 
-
-
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	// char* valorBinario = unaFuncion(numeroSegmento);
 	//TODO preugntar que funcion es
 	return 0;
+}
+
+t_direccion traducirDireccion(uint32_t unaDireccion){
+	t_direccion direccionTraducida;
+	char* direccionEnBinario = traducirABinario(unaDireccion); //FIXME definir funcion TraducirABinario
+	int i;
+	char* segmento, pagina, desplazamiento;
+	for(i=0 ;i<12; i++){
+		segmento[i]=direccionEnBinario[i];
+	}
+	for(i=12 ;i<23; i++){
+			pagina[i]=direccionEnBinario[i];
+		}
+	for(i=23 ;i<32; i++){
+				desplazamiento[i]=direccionEnBinario[i];
+			}
+	direccionTraducida.segmento=traducirADecimal(segmento);//FIXME definir funcion TraducirADecimal
+	direccionTraducida.pagina=traducirADecimal(pagina);
+	direccionTraducida.desplazamiento=traducirADecimal(desplazamiento);
+
+	return direccionTraducida;
 }

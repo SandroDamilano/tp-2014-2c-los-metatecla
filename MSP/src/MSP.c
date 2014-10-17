@@ -81,20 +81,20 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
-int mismoElemento(int elemento1, int elemento2){
-	return elemento1==elemento2;
-}
-
 int asignarNumeroSegmento(int tamanioListaSegmentos, t_list *listaSegmentos){
 	t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
-	int (*mismoSegmento) (uint32_t seg1, uint32_t seg2);
-	mismoSegmento= &mismoElemento;
-	while (list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento) ((*segmento).numeroSegmento,tamanioListaSegmentos)) == 0){
+
+	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
+				return numeroSegmento->numeroSegmento==tamanioListaSegmentos;
+			}
+
+	while (list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento)) == true){
 		tamanioListaSegmentos=tamanioListaSegmentos+1;
 	}
 	free(segmento);
 	return tamanioListaSegmentos;
 }
+
 
 
 int inicializar_semaforos(){
@@ -115,9 +115,10 @@ int inicializar_semaforos(){
 uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 	//TODO uint32_t direccionBaseDelSegmento;
 
-	//Puntero a funcion mismo_pid
-	int (*mismoPID) (uint32_t p1, uint32_t p2);
-	mismoPID = &mismoElemento;
+	//funcion local para fijarse el PID
+	bool mismoPID(t_lista_procesos *PIDEncontrado){
+			return PIDEncontrado->pid==PID;
+		}
 
 	//1.Verifica si hay memoria disponible
 	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;
@@ -138,8 +139,9 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 	}
 	//2.Se fija si se existe el proceso
 
+	//t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
 	t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
-	proceso = list_find(listaProcesos, (void*) (*mismoPID) ((*proceso).pid, PID)); //FIXME PREGUNTAR
+	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	//3. Se fija donde crear el segmento
 	int segmentoEnSwap = 0;
@@ -159,7 +161,7 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 	}
 
 	//4.Crea lista de segmentos o agrega nuevo segmento
-	if(proceso==NULL){
+	if(proceso==false){
 		(*proceso).pid=PID;
 		(*proceso).lista_Segmentos=list_create();
 		list_add(listaProcesos,proceso);}
@@ -213,5 +215,22 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 }
 
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
+	//1. Traduce direccion base
+	t_direccion direccionTraducida = traducirDireccion(direccBase);
+	//2. Se fija si la dirrecion base es correcta
+	bool mismoPID(t_lista_procesos *PIDEncontrado){
+				return PIDEncontrado->pid==PID;
+			}
+	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
+					return numeroSegmento->numeroSegmento==direccionTraducida.segmento;
+				}
+	bool mismoPagina(t_lista_paginas *numeropagina){
+						return numeropagina->numeroPagina==direccionTraducida.pagina;
+					}
+	if(list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento) & list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento)))
+
+	//3. Ingresa la tabla de segmentos del proceso PID y con la traduccion entra al segmento pedido
+	//4. Libera la memoria y elimina la entrada en la tabla de segmentos y su respectiva tabla de paginas
+
 
 }

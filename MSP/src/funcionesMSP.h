@@ -36,6 +36,12 @@ typedef struct marco{
 	bool marco_libre;
 } t_marco;
 
+typedef struct direccion{
+	uint32_t segmento;
+	uint32_t pagina;
+	uint32_t desplazamiento;
+} t_direccion;
+
 typedef struct info_memoria{
 	int tamanio_mem_ppal;
 	int tamanio_swap;
@@ -62,5 +68,6 @@ t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el b
 void crear_archivo_swap_out(t_pagina pagina);
 t_pagina leer_y_destruir_archivo_swap_in(int pid);
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
+t_direccion traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y la guarda en un struc nuevo
 
 #endif /* FUNCIONESMSP_H_ */
