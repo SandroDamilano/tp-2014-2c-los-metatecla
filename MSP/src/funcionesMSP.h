@@ -29,6 +29,7 @@ typedef struct pagina{
 	uint32_t PID;
 	uint32_t num_pag;
 	uint32_t num_segmento;
+	char* codigo;
 }t_pagina;
 
 typedef struct marco{
