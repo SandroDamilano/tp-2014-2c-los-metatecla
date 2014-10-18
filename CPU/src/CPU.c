@@ -19,14 +19,11 @@ char* PATH;
 t_config* config_cpu;
 t_config_cpu config_struct_cpu;
 
-typedef struct{
-	int32_t numero_struct;
-} __attribute__ ((__packed__)) t_numero;
-
 int main(int argc, char** argv) {
 
 	PATH = argv[1];
 	inicializar_configuracion();
+
 
 	//Abrir conexion de sockets con Kernel y MSP.
 	//Recibir quantum del Kernel

@@ -11,9 +11,13 @@
 	#include <commons/collections/queue.h>
 	#include <pthread.h>
 	#include <semaphore.h>
+	#include <ansisop-panel/kernel.h>
 
-	extern t_queue* cola_new, cola_exit;
-	extern sem_t* sem_new, sem_exit;
-	extern pthread_mutex_t* mutex_new, mutex_exit;
+	extern t_queue* cola_new;
+	extern t_queue* cola_exit;
+	extern sem_t* sem_new;
+	extern sem_t* sem_exit;
+	extern pthread_mutex_t* mutex_new;
+	extern pthread_mutex_t* mutex_exit;
 
 #endif /* GENERAL_KERNEL_H_ */

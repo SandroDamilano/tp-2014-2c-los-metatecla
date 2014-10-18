@@ -21,6 +21,57 @@
 
 #include "kernel.h"
 
+
+int main(int argc, char **argv){
+
+	// 1- Inicializar panel ansisop
+	inicializar_panel(KERNEL, "/home/utnso/git/tp-2014-2c-los-metatecla/Kernel");
+
+	// 2- Crear/Abrir file log del programa para el registro de actividades
+	logger = log_create("kernel.log", "KERNEL", false, LOG_LEVEL_TRACE);
+	log_info(logger,"Inicio de registro de actividades del Proceso KERNEL.");
+
+	// 3- Leer archivo de configuracion y asignar valores
+	leer_config();
+
+	// 4- Cargar argumentos para hilos LOADER y PLANIFICADOR
+	cargar_arg_LOADER(&param_LOADER);
+	cargar_arg_PLANIFICADOR(&param_PLANIFICADOR);
+
+//	// 5- Conectar a MSP
+//	conectar_a_MSP();
+
+	// 6- Levantar HILOS
+		//6.1- Levantar Hilo KERNEL
+	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL)))
+	{
+		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d\n", ret_KERNEL);
+		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d", ret_KERNEL);
+		log_error(logger, bufferLog);
+		exit(EXIT_FAILURE);
+	}
+
+		//6.2- Levantar Hilo LOADER
+	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
+	{
+		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d\n", ret_LOADER);
+		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d", ret_LOADER);
+		log_error(logger, bufferLog);
+		exit(EXIT_FAILURE);
+	}
+
+		//6.3- Levantar Hilo PLANIFICADOR
+	if((ret_PLANIFICADOR = pthread_create(&thread_PLANIFICADOR, NULL, (void*)&main_PLANIFICADOR, &param_PLANIFICADOR)))
+	{
+		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo PLANIFICADOR: %d\n", ret_PLANIFICADOR);
+		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo PLANIFICADOR: %d", ret_PLANIFICADOR);
+		log_error(logger, bufferLog);
+		exit(EXIT_FAILURE);
+	}
+
+	return 0;
+}
+
 void leer_config()
 {
 	config_file = config_create("config.cfg");
@@ -134,54 +185,4 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 	arg->syscalls_path = syscalls_path;
 	arg->puerto = puerto;	// parece que puede tratarse de cualquiera (CPU/Consola)
 	arg->logger = logger;
-}
-
-int main(int argc, char **argv){
-
-	// 1- Inicializar panel ansisop
-	inicializar_panel(KERNEL, "/home/utnso/git/tp-2014-2c-los-metatecla/Kernel");
-
-	// 2- Crear/Abrir file log del programa para el registro de actividades
-	logger = log_create("kernel.log", "KERNEL", false, LOG_LEVEL_TRACE);
-	log_info(logger,"Inicio de registro de actividades del Proceso KERNEL.");
-
-	// 3- Leer archivo de configuracion y asignar valores
-	leer_config();
-
-	// 4- Cargar argumentos para hilos LOADER y PLANIFICADOR
-	cargar_arg_LOADER(&param_LOADER);
-	cargar_arg_PLANIFICADOR(&param_PLANIFICADOR);
-
-//	// 5- Conectar a MSP
-//	conectar_a_MSP();
-
-	// 6- Levantar HILOS
-		//6.1- Levantar Hilo KERNEL
-	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL)))
-	{
-		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d\n", ret_KERNEL);
-		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d", ret_KERNEL);
-		log_error(logger, bufferLog);
-		exit(EXIT_FAILURE);
-	}
-
-		//6.2- Levantar Hilo LOADER
-	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
-	{
-		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d\n", ret_LOADER);
-		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d", ret_LOADER);
-		log_error(logger, bufferLog);
-		exit(EXIT_FAILURE);
-	}
-
-		//6.3- Levantar Hilo PLANIFICADOR
-	if((ret_PLANIFICADOR = pthread_create(&thread_PLANIFICADOR, NULL, (void*)&main_PLANIFICADOR, &param_PLANIFICADOR)))
-	{
-		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo PLANIFICADOR: %d\n", ret_PLANIFICADOR);
-		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo PLANIFICADOR: %d", ret_PLANIFICADOR);
-		log_error(logger, bufferLog);
-		exit(EXIT_FAILURE);
-	}
-
-	return 0;
 }

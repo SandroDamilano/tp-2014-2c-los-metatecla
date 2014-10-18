@@ -10,7 +10,7 @@
 
 	#include <ansisop-panel/panel.h>
 	#include <commons/log.h>
-	#include <general_kernel.h>
+	#include "general_kernel.h"
 
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;

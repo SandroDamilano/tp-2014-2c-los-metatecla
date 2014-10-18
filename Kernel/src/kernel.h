@@ -24,8 +24,7 @@
 
 	#include "loader.h"
 	#include "planificador.h"
-	#include <panel/kernel.h>
-	#include <panel/panel.h>
+	#include <ansisop-panel/kernel.h>
 	#include <estructuras_auxiliares.h>
 
 	// Vars de config

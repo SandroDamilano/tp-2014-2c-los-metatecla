@@ -22,7 +22,7 @@ t_hilo* obtener_tcb_a_ejecutar(){
 
 //tid y recurso pueden ser NULL dependiendo del tipo de evento
 void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t tid, uint32_t recurso){
-	data_nodo_block* data = malloc(sizeof(data_nodo_block));
+	t_data_nodo_block* data = malloc(sizeof(t_data_nodo_block));
 	data->tcb = tcb;
 	data->evento = evento;
 	data->tid = tid;
@@ -37,7 +37,7 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 	copia->registros = original->registros;
 };
 
-bool es_el_tcbkernel(void* data){
+bool es_el_tcbkernel(t_data_nodo_block* data){
 	return (data->evento == TCBKM);
 };
 

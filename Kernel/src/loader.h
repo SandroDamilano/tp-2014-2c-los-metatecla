@@ -27,7 +27,7 @@
 	#include <sockets/enviar_recibir_paquete.h>
 	#include <estructuras_auxiliares.h>
 	#include <serialize/functions.h>
-	#include <general_kernel.h>
+	#include "general_kernel.h"
 
 	typedef struct arg_LOADER {	// Estructura para pasar argumentos al hilo
 		uint32_t puerto;

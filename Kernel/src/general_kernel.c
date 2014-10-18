@@ -5,7 +5,7 @@
  *      Author: utnso
  */
 
-#include <general_kernel.h>
+#include "general_kernel.h"
 
 void inicializar_semaforos(){
 	pthread_mutex_init(mutex_new, NULL);
