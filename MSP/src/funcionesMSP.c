@@ -97,36 +97,33 @@ void crear_archivo_swap_out(t_pagina pagina){
 	string_append(&file_name, "-");
 	string_append(&file_name, "PAG:");
 	string_append(&file_name, string_itoa(pagina.num_pag));
+	string_append(&file_name, ".bc");
 
 	//Abro un nuevo archivo
 	FILE* arch_swap = NULL;
 	arch_swap = txt_open_for_append(file_name);
 
 	//Pongo la informacion necesaria en el archivo
-	txt_write_in_file(arch_swap, "PID:");
-	txt_write_in_file(arch_swap, string_itoa(pagina.PID));
-	txt_write_in_file(arch_swap, "\n");
-	txt_write_in_file(arch_swap, "PAG:");
-	txt_write_in_file(arch_swap, string_itoa(pagina.num_pag));
-	txt_write_in_file(arch_swap, "\n");
-	txt_write_in_file(arch_swap, "SEG:");
-	txt_write_in_file(arch_swap, string_itoa(pagina.num_segmento)); //FIXME Lo que va adentro del archivo no es esto, si no la info que esta en memoria
 
-	pthread_mutex_lock(&mutex_log);
+	txt_write_in_file(arch_swap, pagina.codigo);
+
+	/*pthread_mutex_lock(&mutex_log);
 	log_debug(logMSP,"Creado el archivo %s",file_name);
-	pthread_mutex_unlock(&mutex_log);
+	pthread_mutex_unlock(&mutex_log);*/
 
 	free(file_name);
 
 }
 
 t_pagina leer_y_destruir_archivo_swap_in(int pid){
+
 	struct dirent *dirent;
 	DIR* dir;
 	t_pagina pag;
 	pag.PID = -1;
 	pag.num_pag = -1;
 	pag.num_segmento = -1;
+	pag.codigo = "";
 
 	dir = opendir(path_swap); //abro el directorio donde se encuentran los archivos
 	if(dir == NULL){
@@ -164,27 +161,28 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 						return pag;
 					}
 
+					//PID, pagina y segmento para completar la t_pagina
+					pag.PID = atoi(partes2[1]);
 
-					char buffer[100];//Numero arbitrario de caracteres maximo que puede tener el archivo
+					char** partes3 = string_split(partes_nombre_archivo[i+1], ":");
+					pag.num_segmento = atoi(partes3[1]);
 
-					char c;
-					int j = 0;
-					while((c = fgetc(arch_swap)) != EOF){ //copio todoo el archivo al buffer
-						buffer[j]=c;
-						j++;
-					}
-					buffer[j] = '\n';
+					partes3 = string_split(partes_nombre_archivo[i+2], ":");
+					pag.num_pag = atoi(partes3[1]);
 
-					char** lineas = string_split(buffer,"\n");//dividio al buffer por lineas
+					//Recupero codigo
+					fseek(arch_swap, 0L, SEEK_END); //Averiguo tamaño del archivo
+					long tamanio_archivo = ftell(arch_swap);
+					fseek(arch_swap, 0L, SEEK_SET);
 
-					char** secciones = string_split(lineas[0], ":");//divido cada linea segun el separador ":"
-					pag.PID = atoi(secciones[1]);
+					char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
+					int k = 0;
+					while(k < tamanio_archivo){
+					fread(buffer, 1, sizeof(buffer), arch_swap);
+					k++;}
+					buffer[tamanio_archivo]= '\0';
 
-					secciones = string_split(lineas[1],":");
-					pag.num_pag = atoi(secciones[1]);
-
-					secciones = string_split(lineas[2],":");
-					pag.num_segmento = atoi(secciones[1]);
+					pag.codigo = strdup(buffer); //Actualizo la t_pagina con el codigo
 
 					if(remove(nombre_archivo) != 0){
 							pthread_mutex_lock(&mutex_log);
@@ -192,9 +190,9 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 							log_error(logMSP,"No se pudo eliminar el archivo %s\n", dirent->d_name);
 							pthread_mutex_unlock(&mutex_log);
 						} else {
-							pthread_mutex_lock(&mutex_log);
+							/*pthread_mutex_lock(&mutex_log);
 							log_info(logMSP,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
-							pthread_mutex_unlock(&mutex_log);
+							pthread_mutex_unlock(&mutex_log);*/
 						}
 					free(nombre_archivo);
 					}
@@ -206,7 +204,6 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 	closedir(dir);
 	return pag;
 }
-
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	// char* valorBinario = unaFuncion(numeroSegmento);
 	//TODO preugntar que funcion es
