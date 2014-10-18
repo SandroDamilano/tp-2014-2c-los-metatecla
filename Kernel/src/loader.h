@@ -22,11 +22,12 @@
 	#include <commons/collections/queue.h>
 	#include <commons/process.h>
 	#include <commons/log.h>
-	#include <panel/panel.h>
+	#include <ansisop-panel/panel.h>
 
 	#include <sockets/enviar_recibir_paquete.h>
 	#include <estructuras_auxiliares.h>
 	#include <serialize/functions.h>
+	#include <general_kernel.h>
 
 	typedef struct arg_LOADER {	// Estructura para pasar argumentos al hilo
 		uint32_t puerto;
@@ -45,7 +46,7 @@
 	} mensaje;
 
 	// Vars globales LOADER
-	t_queue* cola_new, cola_ready, cola_exit;
+//	t_queue* cola_new, cola_ready, cola_exit; Los puse en general_kernel.h
 	mensaje msg;
 	t_hilo info_mem_MSP;
 	t_id pid, tid;

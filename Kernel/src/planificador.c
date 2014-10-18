@@ -58,8 +58,34 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 
 // TODO Desbloquear un proceso. Depende de la cantidad de colas de bloqueados que haya.
 
+void inicializar_ready_block(){
+	cola_ready = list_create();
+	cola_block = list_create();
+}
+
+void pop_new(t_hilo* tcb){
+	void* nuevo = queue_pop(cola_new);
+	*tcb = *nuevo;
+}
+
+//Este hilo se queda haciendo loop hasta que termine la ejecución
+void poner_new_a_ready(){
+	while(1){
+		t_hilo* tcb;
+		consumir_tcb(pop_new, sem_new, mutex_new, tcb);
+		encolar_en_ready(tcb);
+	}
+};
+
 void* main_PLANIFICADOR(void* parametros)
 {
+	inicializar_ready_block();
+	pthread_t thr_consumidor_new;
+	pthread_create(&thr_consumidor_new, NULL, poner_new_a_ready, NULL);
+
+	// TODO: Boot
+
+	pthread_join(thr_consumidor_new, NULL);
 
 return 0;
 }
