@@ -14,6 +14,7 @@
 	char * crearDataConHeader(uint8_t tipoEstructura, int length);
 	t_stream * serialize(int tipoEstructura, void * estructuraOrigen);
 
+	t_stream * serializeStruct_signal(t_struct_signal * estructuraOrigen);
 	t_stream * serializeStruct_numero(t_struct_numero * estructuraOrigen);
 	t_stream * serializeStruct_direccion(t_struct_direccion * estructuraOrigen);
 	t_stream * serializeStruct_char(t_struct_char * estructuraOrigen);
@@ -22,6 +23,7 @@
 	t_header despaquetizarHeader(char * header);
 	void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length);
 
+	t_struct_signal * deserializeStruct_signal(char * dataPaquete, uint16_t length);
 	t_struct_numero * deserializeStruct_numero(char * dataPaquete, uint16_t length);
 	t_struct_direccion * deserializeStruct_direccion(char * dataPaquete, uint16_t length);
 	t_struct_char * deserializeStruct_char(char * dataPaquete, uint16_t length);

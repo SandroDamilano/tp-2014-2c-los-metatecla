@@ -55,6 +55,17 @@ int socket_enviar(int socketReceptor, t_tipoEstructura tipoEstructura, void* est
 	}
 }
 
+int socket_enviarSignal(int socketReceptor, uint32_t signal){
+	t_struct_signal *structSignal = malloc(sizeof(t_struct_signal));
+
+	structSignal->signal = signal;
+
+	int seEnvio = socket_enviar(socketReceptor, D_STRUCT_SIGNAL, (void*)structSignal);
+
+	free(structSignal);
+	return seEnvio;
+}
+
 int socket_recibir(int socketEmisor, t_tipoEstructura * tipoEstructura, void** estructura){
 	int cantBytesRecibidos;
 	t_header header;
@@ -98,6 +109,26 @@ int socket_recibir(int socketEmisor, t_tipoEstructura * tipoEstructura, void** e
 
 	free(buffer);
 
+	return 1;
+}
+
+int socket_recibirSignal(int socketEmisor, uint32_t *signal){
+	void * estructuraRecibida;
+	t_tipoEstructura tipoRecibido;
+
+	int recibio = socket_recibir(socketEmisor,&tipoRecibido, &estructuraRecibida);
+	if(!recibio) {
+		*signal = S_ERROR;
+		return 0;
+	}
+
+	if (tipoRecibido != D_STRUCT_SIGNAL){
+		*signal = S_ERROR;
+		return 0;
+	}
+
+	*signal = ((t_struct_signal*) estructuraRecibida)->signal;
+	free(estructuraRecibida);
 	return 1;
 }
 /*********************************** FUNCIONES PARA CREAR Y CONECTAR CLIENTES Y SERVIDORES ***********************/

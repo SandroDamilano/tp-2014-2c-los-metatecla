@@ -26,7 +26,9 @@
 	//Funciones de proposito Gral
 
 	int socket_enviar(int socketReceptor, t_tipoEstructura tipoEstructura, void* estructura);
+	int socket_enviarSignal(int socketReceptor, uint32_t signal);
 	int socket_recibir(int socketEmisor, t_tipoEstructura * tipoEstructura, void** estructura);
+	int socket_recibirSignal(int socketEmisor, uint32_t *signal);
 
 	int socket_crearCliente(void);
 	int socket_conectarCliente(int sockfd,char *serverIp, int serverPort);

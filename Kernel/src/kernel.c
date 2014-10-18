@@ -43,7 +43,7 @@ int main(int argc, char **argv){
 
 	// 6- Levantar HILOS
 		//6.1- Levantar Hilo KERNEL
-	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL)))
+	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL))) //TODO: definir main_KERNEL
 	{
 		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d\n", ret_KERNEL);
 		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d", ret_KERNEL);

@@ -23,6 +23,8 @@
 	#include <commons/log.h>
 	#include <commons/config.h>
 
+	#define S_ERROR 99	// Utilizada en socket_recibirSeñal, para decir que lo que se recibio no era una señal
+
 // Vars globales ( referenciada por todos los procesos)
 	t_config* config_file;
 	t_log* logger;
@@ -38,11 +40,22 @@
 
 
 	enum{
-		D_STRUCT_NUMERO=0,
-		D_STRUCT_DIRECCION=1,
-		D_STRUCT_CHAR=2,
-		D_STRUCT_STRING=3,
-	};
+		D_STRUCT_SIGNAL=0,
+		D_STRUCT_NUMERO=1,
+		D_STRUCT_DIRECCION=2,
+		D_STRUCT_CHAR=3,
+		D_STRUCT_STRING=4,
+
+		//comunicacion entre kernel y consola
+		HANDSHAKE_SUCCESS = 100,// TODO: serializar segun estas señales
+		HANDSHAKE_FAIL = 101,
+		ENVIAR_IMPRIMIR_TEXTO = 102,
+		FILE_LINE = 103,
+		FILE_EOF = 104,
+		FILE_RECV_SUCCESS = 105,
+		FILE_RECV_FAIL = 106,
+		END_PROGRAM = 107,
+	} t_operaciones;
 
 	// Header de stream
 	typedef struct {
@@ -68,6 +81,10 @@
 	typedef struct struct_string {
 		char * string;
 	} __attribute__ ((__packed__)) t_struct_string;
+
+	typedef struct struct_signal {
+		uint32_t signal;
+	} __attribute__ ((__packed__)) t_struct_signal;
 
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */

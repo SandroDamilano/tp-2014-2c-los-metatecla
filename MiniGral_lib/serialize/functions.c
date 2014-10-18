@@ -43,6 +43,9 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 	t_stream * paquete=NULL;
 
 	switch (tipoEstructura){
+			case D_STRUCT_SIGNAL:
+				paquete = serializeStruct_signal((t_struct_signal *) estructuraOrigen);
+				break;
 			case D_STRUCT_NUMERO:
 				paquete = serializeStruct_numero((t_struct_numero *) estructuraOrigen);
 				break;
@@ -62,6 +65,20 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 }
 
 /********************* SERIALIZACIONES POR TIPO DE DATO **********************/
+t_stream * serializeStruct_signal(t_struct_signal * estructuraOrigen){
+
+	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_signal);
+
+	char * data = crearDataConHeader(D_STRUCT_SIGNAL, paquete->length); //creo el data
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_signal));	//copio a data la estructura.
+
+	paquete->data = data;
+
+	return paquete;
+}
 
 t_stream * serializeStruct_numero(t_struct_numero * estructuraOrigen){
 
@@ -148,7 +165,9 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 	void * estructuraDestino;
 
 	switch (tipoEstructura){
-
+			case D_STRUCT_SIGNAL:
+				estructuraDestino = deserializeStruct_signal(dataPaquete, length);
+				break;
 			case D_STRUCT_NUMERO:
 				estructuraDestino = deserializeStruct_numero(dataPaquete, length);
 				break;
@@ -167,6 +186,13 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 }
 
 /************************ DESERIALIZACIONES POR TIPO DE DATO ***********************/
+t_struct_signal * deserializeStruct_signal(char * dataPaquete, uint16_t length){
+	t_struct_signal * estructuraDestino = malloc(sizeof(t_struct_signal));
+
+	memcpy(estructuraDestino, dataPaquete, sizeof(t_struct_signal)); //copio el data del paquete a la estructura
+
+	return estructuraDestino;
+}
 
 t_struct_numero * deserializeStruct_numero(char * dataPaquete, uint16_t length){
 	t_struct_numero * estructuraDestino = malloc(sizeof(t_struct_numero));
