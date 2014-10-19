@@ -33,6 +33,10 @@ if (tipoStruct != D_STRUCT_NUMERO) {
 	printf("Respuesta en dereferenciar incorrecta\n");
 }
 
+4) Usar lo recibido.  Ejemplo:
+
+int a = ((t_struct_numero*) structRecibido)->numero
+
 4) Liberar memoria. Ejemplo:
 
 free(structRecibido);

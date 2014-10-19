@@ -45,6 +45,9 @@
 		D_STRUCT_DIRECCION=2,
 		D_STRUCT_CHAR=3,
 		D_STRUCT_STRING=4,
+		D_STRUCT_SOL_BYTES=5,
+		D_STRUCT_RESPUESTA_MSP=6,
+		D_STRUCT_ENV_BYTES=7,
 
 		//comunicacion entre kernel y consola
 		HANDSHAKE_SUCCESS = 100,// TODO: serializar segun estas señales
@@ -85,6 +88,24 @@
 	typedef struct struct_signal {
 		uint32_t signal;
 	} __attribute__ ((__packed__)) t_struct_signal;
+
+	typedef struct struct_sol_bytes{
+		uint32_t base;
+		uint32_t offset;
+		uint32_t tamanio;
+	}__attribute__ ((__packed__)) t_struct_sol_bytes;
+
+	typedef struct struct_env_bytes{
+		uint32_t base;
+		uint32_t offset;
+		uint32_t tamanio;
+		void* buffer;
+	}__attribute__ ((__packed__)) t_struct_env_bytes;
+
+	typedef struct struct_respuesta_msp{
+		void* buffer;
+		uint32_t tamano_buffer;
+	}__attribute__((__packed__)) t_struct_respuesta_msp;
 
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */

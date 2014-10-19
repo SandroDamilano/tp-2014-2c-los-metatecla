@@ -6,6 +6,7 @@
  */
 
 #include "operaciones.h"
+#include <estructuras_auxiliares.h>
 
 void ejecutarLinea(int* bytecode){
 	int bytecodeLetras = convertirAString(bytecode);
@@ -18,11 +19,16 @@ void ejecutarLinea(int* bytecode){
 	int32_t numero;
 	uint32_t direccion;
 
+	//t_struct_sol_bytes* param_recibidos = malloc(sizeof(t_struct_sol_bytes));
+
 	//socket a MSP pidiendo parametros
 	//socket de MSP recibiendolos
 
 	switch(bytecodeLetras){
 	case LOAD:
+
+
+
 		ejecucion_instruccion("LOAD",parametros);
 
 		obtener_registro(param,0,&reg1);

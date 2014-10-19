@@ -19,6 +19,9 @@
 	t_stream * serializeStruct_direccion(t_struct_direccion * estructuraOrigen);
 	t_stream * serializeStruct_char(t_struct_char * estructuraOrigen);
 	t_stream * serializeStruct_string(t_struct_string * estructuraOrigen);
+	t_stream * serializeStruct_sol_bytes(t_struct_sol_bytes * estructuraOrigen);
+	t_stream * serializeStruct_env_bytes(t_struct_env_bytes * estructuraOrigen);
+	t_stream * serializeStruct_respuestaMSP(t_struct_respuesta_msp * estructuraOrigen);
 
 	t_header despaquetizarHeader(char * header);
 	void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length);
@@ -28,6 +31,8 @@
 	t_struct_direccion * deserializeStruct_direccion(char * dataPaquete, uint16_t length);
 	t_struct_char * deserializeStruct_char(char * dataPaquete, uint16_t length);
 	t_struct_string * deserializeStruct_string(char * dataPaquete, uint16_t length);
+	t_struct_sol_bytes * deserializeStruct_sol_bytes(char * dataPaquete, uint16_t length);
+	t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint16_t length);
 
 
 

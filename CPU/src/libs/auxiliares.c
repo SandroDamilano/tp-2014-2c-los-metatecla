@@ -78,6 +78,10 @@ void esperar_retardo(){
 	usleep(retardo);
 }
 
+void incrementar_pc(int cant_bytes){
+	registros_cpu.P += 4 + cant_bytes; //4 por el bytecode y cant_bytes segun los parametros de la operacion
+}
+
 int convertirAString(int* byte){
 	char* bytecode = byte;
 	int bytecodeLetras;

@@ -37,6 +37,7 @@ void copiar_tcb_a_registros();
 void copiar_registros_a_tcb();
 int elegirRegistro(char registro);
 void esperar_retardo();
+void incrementar_pc(int cant_bytes);
 
 enum bytecodes{
 	LOAD,
