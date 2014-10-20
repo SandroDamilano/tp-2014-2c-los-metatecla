@@ -101,16 +101,15 @@ void crear_archivo_swap_out(t_pagina pagina){
 
 	//Abro un nuevo archivo
 	FILE* arch_swap = NULL;
-	arch_swap = txt_open_for_append(file_name);
+	arch_swap = fopen(file_name, "wb");
 
 	//Pongo la informacion necesaria en el archivo
-
-	txt_write_in_file(arch_swap, pagina.codigo);
+	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
 
 	/*pthread_mutex_lock(&mutex_log);
 	log_debug(logMSP,"Creado el archivo %s",file_name);
 	pthread_mutex_unlock(&mutex_log);*/
-
+	fclose(arch_swap);
 	free(file_name);
 
 }
@@ -123,7 +122,7 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 	pag.PID = -1;
 	pag.num_pag = -1;
 	pag.num_segmento = -1;
-	pag.codigo = "";
+	pag.codigo = NULL;
 
 	dir = opendir(path_swap); //abro el directorio donde se encuentran los archivos
 	if(dir == NULL){
@@ -151,6 +150,11 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 					string_append(&nombre_archivo,dirent->d_name);
 
 					FILE* arch_swap = fopen(nombre_archivo, "r");
+
+					if(arch_swap == NULL){
+						printf("no se pudo abrir el archivo\n");
+					}
+
 					if(arch_swap == NULL){
 						pthread_mutex_lock(&mutex_log);
 						printf("Error al abrir el archivo %s\n", dirent->d_name);
@@ -175,14 +179,18 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 					long tamanio_archivo = ftell(arch_swap);
 					fseek(arch_swap, 0L, SEEK_SET);
 
-					char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
-					int k = 0;
-					while(k < tamanio_archivo){
-					fread(buffer, 1, sizeof(buffer), arch_swap);
-					k++;}
+					char buffer[tamanio_archivo+1];//Copio el contenido del archivo al buffer
+
+					while(!feof(arch_swap)){
+						fread(buffer, 1, tamanio_archivo, arch_swap);
+					}
 					buffer[tamanio_archivo]= '\0';
 
-					pag.codigo = strdup(buffer); //Actualizo la t_pagina con el codigo
+					pag.tamanio_buffer = tamanio_archivo;//Actualizo la estructura t_pagina
+					pag.codigo = malloc(pag.tamanio_buffer);
+					memcpy(pag.codigo, buffer, pag.tamanio_buffer);
+
+					fclose(arch_swap);
 
 					if(remove(nombre_archivo) != 0){
 							pthread_mutex_lock(&mutex_log);
@@ -204,13 +212,14 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 	closedir(dir);
 	return pag;
 }
+
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	// char* valorBinario = unaFuncion(numeroSegmento);
 	//TODO preugntar que funcion es
 	return 0;
 }
 
-t_direccion traducirDireccion(uint32_t unaDireccion){
+/*t_direccion traducirDireccion(uint32_t unaDireccion){
 	t_direccion direccionTraducida;
 	char* direccionEnBinario = traducirABinario(unaDireccion); //FIXME definir funcion TraducirABinario
 	int i;
@@ -230,3 +239,11 @@ t_direccion traducirDireccion(uint32_t unaDireccion){
 
 	return direccionTraducida;
 }
+
+char* traducirABinario(uint32_t unaDireccion){
+	return "hola";
+}
+
+uint32_t* traducirADecimal(char* segmento){
+	return 1;
+}*/

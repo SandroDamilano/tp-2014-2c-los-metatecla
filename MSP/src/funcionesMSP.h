@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/stat.h>
 #include "commons/config.h"
 #include "commons/collections/list.h"
 #include "commons/log.h"
@@ -30,6 +31,7 @@ typedef struct pagina{
 	uint32_t num_pag;
 	uint32_t num_segmento;
 	char* codigo;
+	uint32_t tamanio_buffer;
 }t_pagina;
 
 typedef struct marco{
