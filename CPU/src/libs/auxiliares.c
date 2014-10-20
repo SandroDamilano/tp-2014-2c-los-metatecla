@@ -40,16 +40,28 @@ void obtener_registro(char* parametros, int posicion, char* registro){
 	memcpy(registro, parametros + posicion, sizeof(char));
 }
 
+void obtener_reg(void* parametros, int posicion, char* registro){
+	memcpy(registro, parametros + posicion, sizeof(char));
+}
+
 void obtener_numero(char* parametros, int posicion, int32_t* numero, char* aux){
 	memcpy(aux,parametros,sizeof(int32_t));
 	int num = atoi(aux);
 	memcpy(numero,&num,sizeof(int32_t));
 }
 
+void obtener_num(void* parametros, int posicion, int32_t* numero){
+	memcpy(numero,parametros + posicion,sizeof(int32_t));
+}
+
 void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux){
 	memcpy(aux,parametros,sizeof(uint32_t));
 	int num = atoi(aux);
 	memcpy(direccion,&num,sizeof(uint32_t));}
+
+void obtener_direc(void* parametros, int posicion, uint32_t* direccion){
+	memcpy(direccion, parametros + posicion, sizeof(uint32_t));
+}
 
 int elegirRegistro(char registro){
 	int posicion_registros;
@@ -79,7 +91,19 @@ void esperar_retardo(){
 }
 
 void incrementar_pc(int cant_bytes){
-	registros_cpu.P += 4 + cant_bytes; //4 por el bytecode y cant_bytes segun los parametros de la operacion
+	registros_cpu.P += cant_bytes;
+}
+
+void controlar_struct_recibido(int struct_recibido, int struct_posta){
+	if(struct_recibido != struct_posta){
+		printf("Se debia recibir %d, pero llego %d\n", struct_posta, struct_recibido);
+	}
+}
+
+void controlar_envio(int resultado, int tipo){
+	if(resultado == 1){
+		printf("Se envio correctamente el mensaje de tipo %d\n", tipo);
+	}
 }
 
 int convertirAString(int* byte){

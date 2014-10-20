@@ -24,11 +24,10 @@ int main(int argc, char** argv) {
 	PATH = argv[1];
 	inicializar_configuracion();
 
-
 	//Abrir conexion de sockets con Kernel y MSP.
 	//Recibir quantum del Kernel
 
-		//socket a Kernel pidiendo tcb
+	//socket a Kernel pidiendo tcb
 	//socket de Kernel con tcb
 
 	int* bytecode = malloc(sizeof(uint32_t));

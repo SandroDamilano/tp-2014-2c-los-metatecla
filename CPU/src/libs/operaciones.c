@@ -18,8 +18,15 @@ void ejecutarLinea(int* bytecode){
 	char reg1, reg2;
 	int32_t numero;
 	uint32_t direccion;
+	int resultado;
 
-	//t_struct_sol_bytes* param_recibidos = malloc(sizeof(t_struct_sol_bytes));
+	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
+	t_struct_env_bytes* datos_enviados = malloc(sizeof(t_struct_env_bytes));
+	void* datos_recibidos;
+	void * structRecibido;
+	t_tipoEstructura tipo_struct;
+
+	incrementar_pc(4); //corro el PC 4 lugares por el bytecode
 
 	//socket a MSP pidiendo parametros
 	//socket de MSP recibiendolos
@@ -27,36 +34,74 @@ void ejecutarLinea(int* bytecode){
 	switch(bytecodeLetras){
 	case LOAD:
 
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 4; //registro + numero
 
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
-		ejecucion_instruccion("LOAD",parametros);
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
 
-		obtener_registro(param,0,&reg1);
-		obtener_numero(param,1,&numero,aux);
+		datos_recibidos = malloc(sizeof(int32_t)+sizeof(char)); //registro + numero
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
+
+		obtener_reg(datos_recibidos,0,&reg1);
+		obtener_num(datos_recibidos,1,&numero);
 		list_add(parametros,&reg1);
 		list_add(parametros, &numero);
 
+		ejecucion_instruccion("LOAD",parametros);
+
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = numero;
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char) + sizeof(int32_t)); //registro + numero
 
 		list_clean(parametros);
 		break;
 	case GETM:
-		ejecucion_instruccion("GETM",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
-		//TODO ACA VENDRIA ALGO COMO LO DE MOVR, PERO EN ESTE CASO TENGO UN PUNTERO
+		ejecucion_instruccion("GETM",parametros);
 
-		registros_cpu.P += 1;
+		registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
+
+		incrementar_cpu(2*sizeof(char)); //registro + registro
 
 		list_clean(parametros);
 		break;
 	case SETM:
-		ejecucion_instruccion("SETM",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 4 + 1 + 1; //numero + registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(sizeof(int32_t) + 2*sizeof(char)); //numero + registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_numero(param,0,&numero,aux);
 		obtener_registro(param,4,&reg1);
@@ -65,83 +110,175 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		ejecucion_instruccion("SETM",parametros);
+
 		memcpy(&registros_cpu.registros_programacion[elegirRegistro(reg1)],&registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(int32_t) + 2*sizeof(char));
 
 		list_clean(parametros);
 		break;
 	case MOVR:
-		ejecucion_instruccion("MOVR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		ejecucion_instruccion("MOVR",parametros);
+
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case ADDR:
-		ejecucion_instruccion("ADDR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		ejecucion_instruccion("ADDR",parametros);
+
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case SUBR:
-		ejecucion_instruccion("SUBR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		ejecucion_instruccion("SUBR",parametros);
+
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] - registros_cpu.registros_programacion[elegirRegistro(reg2)];
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case MULR:
-		ejecucion_instruccion("MULR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		ejecucion_instruccion("MULR",parametros);
+
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] * registros_cpu.registros_programacion[elegirRegistro(reg2)];
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case MODR:
-		ejecucion_instruccion("MODR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
+		ejecucion_instruccion("MODR",parametros);
+
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] % registros_cpu.registros_programacion[elegirRegistro(reg2)];
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case DIVR:
-		ejecucion_instruccion("DIVR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+
+		ejecucion_instruccion("DIVR",parametros);
 
 		if(registros_cpu.registros_programacion[elegirRegistro(reg2)] == 0){
 			printf("division por cero");
@@ -149,86 +286,183 @@ void ejecutarLinea(int* bytecode){
 		} else {
 			registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] / registros_cpu.registros_programacion[elegirRegistro(reg2)];
 		}
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case INCR:
-		ejecucion_instruccion("INCR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1; //registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(sizeof(char)); //registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
+		ejecucion_instruccion("INCR",parametros);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] += 1;
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char));
 
 		list_clean(parametros);
 		break;
 	case DECR:
-		ejecucion_instruccion("DECR",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1; //registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(sizeof(char)); //registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
+		ejecucion_instruccion("DECR",parametros);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] -= 1;
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char));
 
 		list_clean(parametros);
 		break;
 	case COMP:
-		ejecucion_instruccion("COMP",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+		ejecucion_instruccion("COMP",parametros);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case CGEQ:
-		ejecucion_instruccion("CGEQ",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+		ejecucion_instruccion("CGEQ",parametros);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] >= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case CLEQ:
-		ejecucion_instruccion("CLEQ",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1 + 1; //registro + registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		obtener_registro(param,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
+		ejecucion_instruccion("CLEQ",parametros);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] <= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
-		registros_cpu.P += 1;
+
+		incrementar_pc(sizeof(char)*2);
 
 		list_clean(parametros);
 		break;
 	case GOTO:
-		ejecucion_instruccion("GOTO",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1; //registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(sizeof(char)); //registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_registro(param,0,&reg1);
 		list_add(parametros,&reg1);
+		ejecucion_instruccion("GOTO",parametros);
 
 		registros_cpu.P = registros_cpu.registros_programacion[elegirRegistro(reg1)];
 
 		list_clean(parametros);
 		break;
 	case JMPZ:
-		ejecucion_instruccion("JMPZ",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1; //registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(sizeof(char)); //registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
+		ejecucion_instruccion("JMPZ",parametros);
 
 		if(registros_cpu.registros_programacion[0] == 0){
 			registros_cpu.P = direccion;
@@ -237,10 +471,23 @@ void ejecutarLinea(int* bytecode){
 		list_clean(parametros);
 		break;
 	case JPNZ:
-		ejecucion_instruccion("JPNZ",parametros);
+
+		datos_solicitados->base = registros_cpu.M;
+		datos_solicitados->base = registros_cpu.P;
+		datos_solicitados->tamanio = 1; //registro
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(sizeof(char)); //registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direccion(param,0,&direccion,aux);
 		list_add(parametros,&direccion);
+		ejecucion_instruccion("JPNZ",parametros);
 
 		if(registros_cpu.registros_programacion[0] != 0){
 					registros_cpu.P = direccion;
@@ -273,7 +520,7 @@ void ejecutarLinea(int* bytecode){
 	case NOPP:
 		ejecucion_instruccion("NOPP",parametros);
 
-		registros_cpu.P += 1;
+		incrementar_pc(1);
 
 		list_clean(parametros);
 		break;
@@ -386,6 +633,11 @@ void ejecutarLinea(int* bytecode){
 	}
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
+	free(((t_struct_respuesta_msp*) structRecibido)->buffer);
+	free(structRecibido);
+	free(datos_recibidos);
+	free(datos_solicitados);
+	free(datos_enviados);
 	free(aux);
 	free(param);
 }

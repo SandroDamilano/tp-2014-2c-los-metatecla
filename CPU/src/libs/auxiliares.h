@@ -29,15 +29,24 @@ t_registros_cpu registros_cpu;
 int quantum;
 int cantidad_lineas_ejecutadas;
 t_config_cpu config_struct_cpu;
+int sockMSP;
+int sockKernel;
 
 void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux);
 void obtener_numero(char* parametros, int posicion,int32_t* numero, char* aux);
 void obtener_registro(char* parametros, int posicion, char* registro);
+
+void obtener_reg(void* parametros, int posicion, char* registro);
+void obtener_num(void* parametros, int posicion, int32_t* numero);
+void obtener_direc(void* parametros, int posicion, uint32_t* direccion);
+
 void copiar_tcb_a_registros();
 void copiar_registros_a_tcb();
 int elegirRegistro(char registro);
 void esperar_retardo();
 void incrementar_pc(int cant_bytes);
+void controlar_struct_recibido(int struct_recibido, int struct_posta);
+void controlar_envio(int resultado, int tipo);
 
 enum bytecodes{
 	LOAD,
