@@ -61,6 +61,8 @@ int main(int argc, char *argv[]) {
 		(*informacion_memoria).lista_marcos=lista_marcos;
 		(*informacion_memoria).tamanio_mem_ppal=tamanio_mem_ppal;
 		(*informacion_memoria).tamanio_swap=cant_mem_swap;
+		(*informacion_memoria).memoriaPpalActual=memoriaPpalActual;
+		(*informacion_memoria).memoriaSwapActual=memoriaSwapActual;
 
 		t_conexion_entrante *nuevaConexion = malloc(sizeof(t_conexion_entrante)); //Informacion para el hilo de conexion
 		(*nuevaConexion).hiloDeConexion=hiloDeConexion;
@@ -205,7 +207,7 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 			 cantPagCargar=cantPagCargar-1;
 		 }
 	 }
-	// TODO direccionBaseDelSegmento = obtenerDireccionBase((*nuevoSegmento).numeroSegmento);
+	// TODO direccionBaseDelSegmento = obtenerDireccionBase((*nuevoSegmento).numeroSegmento,0);
 	free(mismoPID);
 	free(proceso);
 	free(nuevoSegmento);
@@ -216,21 +218,53 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
 	//1. Traduce direccion base
-	t_direccion direccionTraducida = traducirDireccion(direccBase);
+	t_direccion *direccionTraducida = traducirDireccion(direccBase);
 	//2. Se fija si la dirrecion base es correcta
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 				return PIDEncontrado->pid==PID;
 			}
 	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
-					return numeroSegmento->numeroSegmento==direccionTraducida.segmento;
+					return numeroSegmento->numeroSegmento==(*direccionTraducida).segmento;
 				}
-	bool mismoPagina(t_lista_paginas *numeropagina){
-						return numeropagina->numeroPagina==direccionTraducida.pagina;
-					}
-	if(list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento) & list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento)))
 
-	//3. Ingresa la tabla de segmentos del proceso PID y con la traduccion entra al segmento pedido
-	//4. Libera la memoria y elimina la entrada en la tabla de segmentos y su respectiva tabla de paginas
+	void liberarMemoria(t_lista_paginas *unaPagina){
+		if((*unaPagina).swap==0){
+			uint32_t numeroDeMarco = (*unaPagina).marcoEnMemPpal;
+			bool mismoMarco(t_marco *marco){
+									return marco->numeroMarco==numeroDeMarco;
+								}
+		t_marco *marcoEnMemoria=list_find(lista_marcos,(void*) (*mismoMarco));
+		(*marcoEnMemoria).marco_libre=true;
+		free((*marcoEnMemoria).memoria);
+		}
+		else {
+		//1. Creamos la direccion para destruir el archivo
+		uint32_t direccionCreada = crearDireccion((*direccionTraducida).segmento,(*unaPagina).numeroPagina);
+		//FIXME destruir_archivo_swap(PID,direccionCreada);
+
+	}
+	free(unaPagina);
+	}
+	t_lista_procesos *proceso = list_find(listaProcesos, (void*) (*mismoPID));
+	if(proceso != NULL){
+		//3. Ingresa la tabla de segmentos del proceso PID y con la traduccion entra al segmento pedido
+		t_lista_segmentos *segmento=list_find((*proceso).lista_Segmentos, (void*) (*mismoSegmento));
+		if(segmento != NULL){
+			//4. Libera la memoria y elimina la entrada en la tabla de segmentos y su respectiva tabla de paginas
+			list_iterate((*segmento).lista_Paginas, (void*) (*liberarMemoria));
+			//TODO Eliminar segmentos de la lista de segmentos y liberar la memoria;
+		} else {
+			pthread_mutex_lock(&mutex_log);
+			log_error(logMSP, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (*direccionTraducida).segmento);
+			pthread_mutex_unlock(&mutex_log);
+		}
+	} else {
+		pthread_mutex_lock(&mutex_log);
+		log_error(logMSP, "No existe el PID: %u en el sistema", PID);
+		pthread_mutex_unlock(&mutex_log);
+	}
+
+
 
 
 }

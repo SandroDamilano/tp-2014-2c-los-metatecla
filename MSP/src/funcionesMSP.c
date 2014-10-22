@@ -70,11 +70,12 @@ t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 		t_marco *marco = malloc(sizeof(t_marco));
 		(*marco).memoria= malloc(256);
 		(*marco).memoria = memoria + i*256;
+		(*marco).numeroMarco = i;
 		list_add(lista_marcos, marco);
 		free((*marco).memoria);
 		free(marco);
 	}
-return lista_marcos;
+return lista_marcos; //TODO Preguntar a ayudante
 }
 
 
@@ -114,7 +115,7 @@ void crear_archivo_swap_out(t_pagina pagina){
 
 }
 
-t_pagina leer_y_destruir_archivo_swap_in(int pid){
+t_pagina leer_y_destruir_archivo_swap_in(int pid, uint32_t direccionLogica){ //FIXME fijate antes de usar direccion hay que traducirla a fisica como lo hicimos hasta ahora en el destruirSegmento
 
 	struct dirent *dirent;
 	DIR* dir;
@@ -135,7 +136,7 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 	}
 
 	while((dirent = readdir(dir)) != NULL){ //mientras que el directorio tenga archivos para buscar
-
+																		//FIXME aca es donde deberia buscar el archivo que corresponde a la direccion que se pasa por parametro y destruir el archivo encontrado
 		char** partes_nombre_archivo = string_split(dirent->d_name, "-"); //agarro el nombre del archivo y divido por cada "-" que tiene el nombre
 														   	   	   	   	  //ejemplo: pid:3-pag:5-seg:6 => [pid:3, pag:5, seg:6]
 		int i = 0;
@@ -211,16 +212,16 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid){
 	}
 	closedir(dir);
 	return pag;
-}
-
+} //FIXME la funcion deberia tomar por parametro una direccion tambien para que sepa correctamente que segmento y que pagina de dicho segmento es la que se quiere destruir.
+  //FIXME necesitariamos que el leer este separado del destruir ya que para el destruir no necesitamos leer la pagina ni saber saber que tiene adentro
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	// char* valorBinario = unaFuncion(numeroSegmento);
 	//TODO preugntar que funcion es
 	return 0;
 }
 
-/*t_direccion traducirDireccion(uint32_t unaDireccion){
-	t_direccion direccionTraducida;
+/* t_direccion *traducirDireccion(uint32_t unaDireccion){
+	t_direccion *direccionTraducida;
 	char* direccionEnBinario = traducirABinario(unaDireccion); //FIXME definir funcion TraducirABinario
 	int i;
 	char* segmento, pagina, desplazamiento;
@@ -246,4 +247,4 @@ char* traducirABinario(uint32_t unaDireccion){
 
 uint32_t* traducirADecimal(char* segmento){
 	return 1;
-}*/
+} */
