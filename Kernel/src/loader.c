@@ -296,32 +296,6 @@ int solicitarMemoria(u_int32_t pid, u_int32_t size, char* datos)
 	return res;
 }
 
-t_hilo *crear_TCB(u_int32_t pid ,u_int32_t tid, t_hilo *mem_result)
-{
-	/*
-	 * Guardo en el TCB la dir logica (ficticia), asi lo abstraemos de los posibles movimientos en la MSP
-	 * TODO: Ver como tratar los ID's de los campos
-	 *
-	 * NOTA: A la MSP JAMAS le paso el TCB
-	 */
-	t_hilo *tcb = (t_hilo*)malloc(sizeof(t_hilo));
-
-	tcb->pid = pid;
-	tcb->tid = tid;
-	tcb->kernel_mode = false;	// teniendo en cuenta que TODOS los que vengan por aca seran programas de usuario
-//		tcb->segmento_codigo =
-//		tcb->segmento_codigo_size =
-		tcb->puntero_instruccion = tcb->segmento_codigo;	// se inicializa con la base del segmento de codigo (segun enunciado)
-//		tcb->base_stack =
-	tcb->cursor_stack = 0; // TODO: Consultar con ayudante si esta bien
-	tcb->registros = (0,0,0,0,0);
-	tcb->cola = NEW;
-
-//		pcb->indiceDeEtiquetas = mem_result->indiceDeEtiquetas;
-
-	return tcb;
-}
-
 int atender_Proceso(uint32_t socket,uint32_t tamanio_stack)
 {
 	/*	PASOS

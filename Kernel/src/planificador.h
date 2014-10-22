@@ -31,6 +31,8 @@
 	//Por ahora estas van aca porque el planificador es el único que las usa
 	t_list* cola_ready, cola_block; //Colas de planificación.
 
+	pthread_mutex_t* mutex_ready;
+
 	void* main_PLANIFICADOR(void* parametros);
 
 #endif /* PLANIFICADOR_H_ */
