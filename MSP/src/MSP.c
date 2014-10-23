@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
 	inicializar_semaforos();
 
 
+
 	//2. Reservar bloque de memoria principal
 
 	memoria_ppal=reservarBloquePpal(tamanio_mem_ppal);
@@ -216,7 +217,7 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
 	//1. Traduce direccion base
-	t_direccion *direccionTraducida = traducirDireccion(direccBase);
+	t_direccion *direccionTraducida;// = traducirDireccion(direccBase); //FIXME BORRAR COMMENT
 	//2. Se fija si la dirrecion base es correcta
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 				return PIDEncontrado->pid==PID;
@@ -237,7 +238,7 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		}
 		else {
 		//1. Creamos la direccion para destruir el archivo
-		uint32_t direccionCreada = crearDireccion((*direccionTraducida).segmento,(*unaPagina).numeroPagina);
+		uint32_t direccionCreada; // = crearDireccion((*direccionTraducida).segmento,(*unaPagina).numeroPagina); //FIXME BORRAR COMMENT
 		//FIXME destruir_archivo_swap(PID,direccionCreada);
 
 	}

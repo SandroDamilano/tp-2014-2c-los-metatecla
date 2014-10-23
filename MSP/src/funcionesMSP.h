@@ -63,7 +63,9 @@ typedef struct conexion_entrante{
 	//TODO Archivo de logeo
 } t_conexion_entrante;
 
-extern uint32_t puertoMSP, tamanio_mem_ppal, cant_mem_swap;
+extern uint32_t puertoMSP;
+extern uint32_t tamanio_mem_ppal;
+extern uint32_t cant_mem_swap;
 extern char* alg_sustitucion;
 
 
@@ -73,6 +75,7 @@ void crear_logger(t_log *logger);//Crea archivos de logeo
 void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
 void crear_archivo_swap_out(t_pagina pagina);
+void destruir_archivo(char* nombre_archivo, struct dirent* dirent);
 t_pagina leer_y_destruir_archivo_swap_in(int pid);
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
 t_direccion *traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y la guarda en un struc nuevo
