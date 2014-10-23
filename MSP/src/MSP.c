@@ -97,8 +97,6 @@ int asignarNumeroSegmento(int tamanioListaSegmentos, t_list *listaSegmentos){
 	return tamanioListaSegmentos;
 }
 
-
-
 int inicializar_semaforos(){
 
 	if(pthread_mutex_init(&mutex_consola,NULL) != 0){

@@ -7,8 +7,7 @@
 #include "funcionesMSP.h"
 
 
-int puertoMSP, tamanio_mem_ppal, cant_mem_swap;
-char* alg_sustitucion;
+
 
 void leerConfiguracion(t_config *archConfigMSP, char *path){
 
@@ -229,11 +228,31 @@ uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	return 0;
 }
 
-/* t_direccion *traducirDireccion(uint32_t unaDireccion){
+uint32_t *traducirABinario(uint32_t direccion) {
+
+	uint32_t *binNumInv = malloc(sizeof(uint32_t)*32);
+	uint32_t counter;
+	uint32_t *binNum= malloc(sizeof(uint32_t)*32) ;
+	uint32_t i;
+
+	for ( counter = 0; counter < 32; counter++ ) {
+	binNumInv[counter] = direccion % 2;
+	direccion = direccion / 2;
+	}
+	for (i=0;i<32;i++){
+		counter = counter -1;
+		binNum[counter]=binNumInv[i];
+
+	}
+	return binNum;
+	}
+
+ t_direccion *traducirDireccion(uint32_t unaDireccion){
 	t_direccion *direccionTraducida;
-	char* direccionEnBinario = traducirABinario(unaDireccion); //FIXME definir funcion TraducirABinario
+	uint32_t *direccionEnBinario = malloc(sizeof(uint32_t)*32);
+	direccionEnBinario=traducirABinario(unaDireccion);
 	int i;
-	char* segmento, pagina, desplazamiento;
+	uint32_t *segmento, *pagina, *desplazamiento;
 	for(i=0 ;i<12; i++){
 		segmento[i]=direccionEnBinario[i];
 	}
@@ -243,17 +262,15 @@ uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	for(i=23 ;i<32; i++){
 				desplazamiento[i]=direccionEnBinario[i];
 			}
-	direccionTraducida.segmento=traducirADecimal(segmento);//FIXME definir funcion TraducirADecimal
-	direccionTraducida.pagina=traducirADecimal(pagina);
-	direccionTraducida.desplazamiento=traducirADecimal(desplazamiento);
+	(*direccionTraducida).segmento=traducirADecimal(segmento);//FIXME definir funcion TraducirADecimal
+	(*direccionTraducida).pagina=traducirADecimal(pagina);
+	(*direccionTraducida).desplazamiento=traducirADecimal(desplazamiento);
 
 	return direccionTraducida;
 }
 
-char* traducirABinario(uint32_t unaDireccion){
-	return "hola";
-}
 
-uint32_t* traducirADecimal(char* segmento){
+
+uint32_t* traducirADecimal(uint32_t *binario){
 	return 1;
-} */
+}
