@@ -97,7 +97,7 @@ void boot(char* systcalls_path){
 	bloquear_tcb(tcb_kernel, TCBKM, -1,-1);
 }
 
-void* main_PLANIFICADOR(void* parametros)
+void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 {
 	inicializar_ready_block();
 	inicializar_semaforo_ready();
