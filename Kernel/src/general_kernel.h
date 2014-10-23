@@ -12,6 +12,7 @@
 	#include <pthread.h>
 	#include <semaphore.h>
 	#include <ansisop-panel/kernel.h>
+	#include <stdlib.h>
 
 	extern t_queue* cola_new;
 	extern t_queue* cola_exit;

@@ -110,9 +110,28 @@ void crear_archivo_swap_out(t_pagina pagina){
 	/*pthread_mutex_lock(&mutex_log);
 	log_debug(logMSP,"Creado el archivo %s",file_name);
 	pthread_mutex_unlock(&mutex_log);*/
+
+	paginas_en_disco++;
+
 	fclose(arch_swap);
 	free(file_name);
 
+}
+
+void destruir_archivo(char* nombre_archivo, struct dirent* dirent) {
+	if (remove(nombre_archivo) != 0) {
+		paginas_en_disco--;
+		pthread_mutex_lock(&mutex_log);
+		printf("No se pudo eliminar el archivo %s\n", dirent->d_name);
+		log_error(logMSP, "No se pudo eliminar el archivo %s\n",
+				dirent->d_name);
+		pthread_mutex_unlock(&mutex_log);
+	} else {
+		/*pthread_mutex_lock(&mutex_log);
+		 log_info(logMSP,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
+		 pthread_mutex_unlock(&mutex_log);*/
+	}
+	free(nombre_archivo);
 }
 
 t_pagina leer_y_destruir_archivo_swap_in(int pid, uint32_t direccionLogica){ //FIXME fijate antes de usar direccion hay que traducirla a fisica como lo hicimos hasta ahora en el destruirSegmento
@@ -180,7 +199,7 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid, uint32_t direccionLogica){ //F
 					long tamanio_archivo = ftell(arch_swap);
 					fseek(arch_swap, 0L, SEEK_SET);
 
-					char buffer[tamanio_archivo+1];//Copio el contenido del archivo al buffer
+					char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
 
 					while(!feof(arch_swap)){
 						fread(buffer, 1, tamanio_archivo, arch_swap);
@@ -193,17 +212,7 @@ t_pagina leer_y_destruir_archivo_swap_in(int pid, uint32_t direccionLogica){ //F
 
 					fclose(arch_swap);
 
-					if(remove(nombre_archivo) != 0){
-							pthread_mutex_lock(&mutex_log);
-							printf("No se pudo eliminar el archivo %s\n", dirent->d_name);
-							log_error(logMSP,"No se pudo eliminar el archivo %s\n", dirent->d_name);
-							pthread_mutex_unlock(&mutex_log);
-						} else {
-							/*pthread_mutex_lock(&mutex_log);
-							log_info(logMSP,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
-							pthread_mutex_unlock(&mutex_log);*/
-						}
-					free(nombre_archivo);
+					destruir_archivo(nombre_archivo, dirent);
 					}
 				}
 			i++;

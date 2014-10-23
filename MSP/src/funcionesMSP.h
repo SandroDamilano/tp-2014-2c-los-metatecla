@@ -25,6 +25,7 @@
 char* path_swap;
 t_log* logMSP;
 pthread_mutex_t mutex_log;
+int paginas_en_disco;
 
 typedef struct pagina{
 	uint32_t PID;

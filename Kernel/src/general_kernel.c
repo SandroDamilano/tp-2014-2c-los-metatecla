@@ -56,7 +56,12 @@ t_hilo *crear_TCB(int pid, uint32_t dir_codigo, uint32_t dir_stack, int tamanio_
 	tcb->puntero_instruccion = dir_codigo;	// se inicializa con la base del segmento de codigo (segun enunciado)
 	tcb->base_stack = dir_stack;
 	tcb->cursor_stack = 0; // TODO: Consultar con ayudante si esta bien
-	tcb->registros = (0,0,0,0,0);
+
+	int i;
+	for(i=0; i==4; i++){
+		tcb->registros[i] = 0;
+	}
+
 	tcb->cola = NEW;
 
 	return tcb;
