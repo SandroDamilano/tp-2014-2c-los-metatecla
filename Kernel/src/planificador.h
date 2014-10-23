@@ -33,6 +33,12 @@
 
 	pthread_mutex_t* mutex_ready;
 
+	//Estas 3 variables globales se usan para desbloquear los procesos
+	// (participan en la búsqueda del TCB que hay que desbloquear)
+	uint32_t tid_a_buscar;
+	uint32_t recurso_a_buscar;
+	t_evento evento_a_buscar;
+
 	void* main_PLANIFICADOR(void* parametros);
 
 #endif /* PLANIFICADOR_H_ */

@@ -22,7 +22,7 @@ t_hilo* obtener_tcb_a_ejecutar(){
 	return (t_hilo*) list_remove(cola_ready, 0);
 };
 
-//tid y recurso pueden ser -1 dependiendo del tipo de evento
+//Este bloquear es GENERAL. Para bloquear, usar los particulares.
 void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t tid, uint32_t recurso){
 	t_data_nodo_block* data = malloc(sizeof(t_data_nodo_block));
 	data->tcb = tcb;
@@ -32,6 +32,22 @@ void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t tid, uint32_t recurso){
 	list_add(cola_block, (void*)data);
 	tcb->cola = BLOCK;
 };
+
+void bloquear_tcbKernel(t_hilo* tcb){
+	bloquear_tcb(tcb, TCBKM, -1, -1);
+}
+
+void bloquear_tcbJoin(t_hilo* tcb, uint32_t tid){
+	bloquear_tcb(tcb, JOIN, tid, -1);
+}
+
+void bloquear_tcbSystcall(t_hilo* tcb, uint32_t tid){
+	bloquear_tcb(tcb, SYSTCALL, tid, -1);
+}
+
+void bloquear_tcbSemaforo(t_hilo* tcb, uint32_t sem){
+	bloquear_tcb(tcb, SEM, -1, sem);
+}
 
 void copiar_tcb(t_hilo* original, t_hilo* copia){
 	copia->tid = original->tid;
@@ -49,7 +65,7 @@ t_hilo* desbloquear_tcbkernel(){
 
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	t_hilo* tcb_kernel = desbloquear_tcbkernel();
-	bloquear_tcb(tcb, SYSTCALL, NULL, NULL);
+	bloquear_tcbSystcall(tcb, tcb->tid);
 	if (*tcb_kernel != NULL){
 		copiar_tcb(tcb, tcb_kernel);
 		tcb_kernel->puntero_instruccion = dir_systcall;
@@ -58,7 +74,27 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
 };
 
-// TODO Desbloquear un proceso. Depende de la cantidad de colas de bloqueados que haya.
+bool es_el_tcbBuscado(t_data_nodo_block* data){
+	return (data->tid == tid_a_buscar & data->recurso == recurso_a_buscar & data->evento == evento_a_buscar);
+};
+
+// Este desbloquear es GENERAL. Para desbloqear, hay que usar los particulares.
+void desbloquear_proceso(t_evento evento, uint32_t tid, uint32_t recurso){
+	t_hilo* tcb_desbloqueado;
+	tid_a_buscar = tid;
+	recurso_a_buscar = recurso;
+	evento_a_buscar = evento;
+	tcb_desbloqueado = list_remove_by_condition(cola_block, es_el_tcbBuscado);
+	encolar_en_ready(tcb_desbloqueado);
+}
+
+void desbloquear_por_tid(t_evento evento, uint32_t tid){
+	desbloquear_proceso(evento, tid, -1);
+}
+
+void desbloquear_por_semaforo(t_evento evento, uint32_t sem){
+	desbloquear_proceso(evento, -1, sem);
+}
 
 void inicializar_ready_block(){
 	cola_ready = list_create();
@@ -94,7 +130,7 @@ void boot(char* systcalls_path){
 	//dir_stack =
 	t_hilo* tcb_kernel = crear_TCB(obtener_pid(), dir_codigo, dir_stack, tamanio_codigo);
 	tcb_kernel->kernel_mode = true;
-	bloquear_tcb(tcb_kernel, TCBKM, -1,-1);
+	bloquear_tcbKernel(tcb_kernel);
 }
 
 void* main_PLANIFICADOR(void* parametros)
