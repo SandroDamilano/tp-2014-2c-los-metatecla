@@ -86,7 +86,9 @@ void crear_logger(t_log *logger){
 	}
 }
 
-void crear_archivo_swap_out(t_pagina pagina){
+/*********************************** FUNCIONES DE SWAP *******************************/
+
+void swap_out(t_pagina pagina){
 	char* file_name = string_new();
 
 	//Concateno el path donde se ubicaran los archivos, con el nombre del archivo en creacion
@@ -119,12 +121,55 @@ void crear_archivo_swap_out(t_pagina pagina){
 
 }
 
-void destruir_archivo(char* nombre_archivo, struct dirent* dirent) {
+t_pagina swap_in(int pid, int seg, int pagina){ //FIXME fijate antes de usar direccion hay que traducirla a fisica como lo hicimos hasta ahora en el destruirSegmento
+
+	//struct dirent *dirent;
+	DIR* dir;
+	t_pagina pag;
+	pag.PID = -1;
+	pag.num_pag = -1;
+	pag.num_segmento = -1;
+	pag.codigo = NULL;
+	pag.archivo = NULL;
+
+	dir = abrir_directorio_swap(); //abro el directorio donde se encuentran los archivos
+	if(dir == NULL){
+		return pag; //Devuelvo t_pagina con valores negativos => Error
+	}
+
+	pag = buscar_archivo(pid, seg, pagina, dir);
+
+	long int tamanio_archivo = calcular_tamanio_archivo(pag.archivo);
+
+	char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
+
+	char* code = leer_archivo(pag.archivo, tamanio_archivo);
+
+	memcpy(buffer,code, tamanio_archivo);
+
+
+	//Actualizo la estructura t_pagina con el codigo rescatado
+	pag.tamanio_buffer = tamanio_archivo;
+
+	pag.codigo = malloc(pag.tamanio_buffer);
+	memcpy(pag.codigo, buffer, pag.tamanio_buffer);
+
+	fclose(pag.archivo);
+
+	destruir_archivo(pag.nombre_archivo);
+	free(code);
+	closedir(dir);
+	return pag;
+}
+
+/**************** AUXILIARES DE SWAPPING *****************/
+
+void destruir_archivo(char* nombre_archivo) {
 	if (remove(nombre_archivo) != 0) {
 		paginas_en_disco--;
 		pthread_mutex_lock(&mutex_log);
-		printf("No se pudo eliminar el archivo %s\n", dirent->d_name);
-		log_error(logMSP, "No se pudo eliminar el archivo %s\n",dirent->d_name);
+		printf("No se pudo eliminar el archivo %s\n", nombre_archivo);
+		log_error(logMSP, "No se pudo eliminar el archivo %s\n",nombre_archivo);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		/*pthread_mutex_lock(&mutex_log);
@@ -134,13 +179,13 @@ void destruir_archivo(char* nombre_archivo, struct dirent* dirent) {
 	free(nombre_archivo);
 }
 
-FILE* abrir_archivo(char* nombre_archivo, struct dirent* dirent){
+FILE* abrir_archivo(char* nombre_archivo){
 	FILE* arch_swap = fopen(nombre_archivo, "r");
 
 	if(arch_swap == NULL){
 		pthread_mutex_lock(&mutex_log);
-		printf("Error al abrir el archivo %s\n", dirent->d_name);
-		log_error(logMSP, "Error al abrir el archivo %s",dirent->d_name);
+		printf("Error al abrir el archivo %s\n", nombre_archivo);
+		log_error(logMSP, "Error al abrir el archivo %s",nombre_archivo);
 		pthread_mutex_unlock(&mutex_log);
 		free(nombre_archivo);
 	}
@@ -149,7 +194,7 @@ FILE* abrir_archivo(char* nombre_archivo, struct dirent* dirent){
 }
 
 char* leer_archivo(FILE* arch_swap, long int tamanio_archivo){
-	char* codigo = NULL;
+	char* codigo = malloc(tamanio_archivo);
 
 	if(arch_swap == NULL){
 		return codigo; //Error
@@ -186,81 +231,68 @@ DIR* abrir_directorio_swap(){
 			closedir(dir);
 			return NULL;
 		}
+
 	return dir;
 }
 
-t_pagina leer_y_destruir_archivo_swap_in(int pid){ //FIXME fijate antes de usar direccion hay que traducirla a fisica como lo hicimos hasta ahora en el destruirSegmento
-
-	struct dirent *dirent;
-	DIR* dir;
+t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
+	struct dirent* dirent;
 	t_pagina pag;
 	pag.PID = -1;
 	pag.num_pag = -1;
 	pag.num_segmento = -1;
 	pag.codigo = NULL;
-
-	dir = abrir_directorio_swap(); //abro el directorio donde se encuentran los archivos
-	if(dir == NULL){
-		return pag; //Devuelvo t_pagina con valores negativos => Error
-	}
+	pag.nombre_archivo = NULL;
 
 	while((dirent = readdir(dir)) != NULL){ //mientras que el directorio tenga archivos para buscar
-																		//FIXME aca es donde deberia buscar el archivo que corresponde a la direccion que se pasa por parametro y destruir el archivo encontrado
-		char** partes_nombre_archivo = string_split(dirent->d_name, "-"); //agarro el nombre del archivo y divido por cada "-" que tiene el nombre
-														   	   	   	   	  //ejemplo: pid:3-pag:5-seg:6 => [pid:3, pag:5, seg:6]
-		int i = 0;
-		while(partes_nombre_archivo[i] != NULL){//mientras que no se me terminen las partes del nombre del archivo
-			char** partes2 = string_split(partes_nombre_archivo[i], ":");//Divido cada parte en otras si esta el separador ":"
+	char** partes_nombre_archivo = string_split(dirent->d_name, "-"); //agarro el nombre del archivo y divido por cada "-" que tiene el nombre
+																		//ejemplo: pid:3-pag:5-seg:6 => [pid:3, pag:5, seg:6]
+	int i = 0;
+	while(partes_nombre_archivo[i] != NULL){//mientras que no se me terminen las partes del nombre del archivo
+		char** partes2 = string_split(partes_nombre_archivo[i], ":");//Divido cada parte en otras si esta el separador ":"
 
-			if(string_starts_with(partes2[0],"PID")){
-				if(atoi(partes2[1]) == pid){ //Si el pid del nombre del archivo que estoy mirando es el que busco
+		if(string_starts_with(partes2[0],"PID")  && (atoi(partes2[1]) == PID)){
+			char** partes3 = string_split(partes_nombre_archivo[i+1], ":");
+
+			if(string_starts_with(partes3[0], "SEG") && (atoi(partes3[1]) == SEG)){
+				char** partes4 = string_split(partes_nombre_archivo[i+2], ":");
+				if(string_starts_with(partes4[0], "PAG") && (atoi(partes4[1]) == PAG)){
+
+					//PID, pagina y segmento para completar la t_pagina
+					pag.PID = atoi(partes2[1]);
+
+					pag.num_segmento = atoi(partes3[1]);
+
+					pag.num_pag = atoi(partes4[1]);
 
 					char* nombre_archivo = string_new();//Concateno el path con el nombre del archivo seleccionado
 					string_append(&nombre_archivo,path_swap);
 					string_append(&nombre_archivo,dirent->d_name);
 
-					FILE* arch_swap = abrir_archivo(nombre_archivo, dirent);
+					pag.nombre_archivo = nombre_archivo;
 
-					long int tamanio_archivo = calcular_tamanio_archivo(arch_swap);
+					FILE* arch_swap = abrir_archivo(nombre_archivo);
 
-					char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
+					pag.archivo = arch_swap;
 
-					memcpy(buffer,leer_archivo(arch_swap, tamanio_archivo), tamanio_archivo);
-
-					//PID, pagina y segmento para completar la t_pagina
-					pag.PID = atoi(partes2[1]);
-
-					char** partes3 = string_split(partes_nombre_archivo[i+1], ":");
-					pag.num_segmento = atoi(partes3[1]);
-
-					partes3 = string_split(partes_nombre_archivo[i+2], ":");
-					pag.num_pag = atoi(partes3[1]);
-
-					//Actualizo la estructura t_pagina con el codigo rescatado
-					pag.tamanio_buffer = tamanio_archivo;
-					pag.codigo = malloc(pag.tamanio_buffer);
-					memcpy(pag.codigo, buffer, pag.tamanio_buffer);
-
-					fclose(arch_swap);
-
-					destruir_archivo(nombre_archivo, dirent);
 					}
 				}
+			}
 			i++;
 		}
-
 	}
-	closedir(dir);
 	return pag;
-} //FIXME la funcion deberia tomar por parametro una direccion tambien para que sepa correctamente que segmento y que pagina de dicho segmento es la que se quiere destruir.
-  //FIXME necesitariamos que el leer este separado del destruir ya que para el destruir no necesitamos leer la pagina ni saber saber que tiene adentro
+}
+
+
+
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	// char* valorBinario = unaFuncion(numeroSegmento);
 	//TODO preugntar que funcion es
 	return 0;
 }
 
-/*uint32_t *traducirABinario(uint32_t direccion) {
+uint32_t *traducirABinario(uint32_t direccion) {
 
 	uint32_t *binNumInv = malloc(sizeof(uint32_t)*32);
 	uint32_t counter;
@@ -305,4 +337,4 @@ uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 
 uint32_t* traducirADecimal(uint32_t *binario){
 	return 1;
-}*/
+}
