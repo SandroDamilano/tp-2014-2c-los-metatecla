@@ -239,7 +239,8 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		//1. Creamos la direccion para destruir el archivo
 		uint32_t direccionCreada = crearDireccion((*direccionTraducida).segmento,(*unaPagina).numeroPagina);
 		//FIXME destruir_archivo_swap(PID,direccionCreada);
-
+		//FIXME Yo hice una funcion destruir_archivo_swap que le pasas el pid, segmento y pagina. No hace falta traducir la direccion!
+		destruir_archivo_swap(PID, (*direccionTraducida).segmento, (*unaPagina).numeroPagina);
 	}
 	free(unaPagina);
 	}
@@ -262,7 +263,8 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		pthread_mutex_unlock(&mutex_log);
 	}
 
+}
 
-
-
+uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //TODO hacer crearDireccion!
+	return 1;
 }

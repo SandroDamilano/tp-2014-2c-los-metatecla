@@ -179,6 +179,25 @@ void destruir_archivo(char* nombre_archivo) {
 	free(nombre_archivo);
 }
 
+void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina){
+	char* file_name = string_new();
+
+	string_append(&file_name, path_swap);
+	string_append(&file_name, "PID:");
+	string_append(&file_name, string_itoa(pid));
+	string_append(&file_name, "-");
+	string_append(&file_name, "SEG:");
+	string_append(&file_name, string_itoa(segmento));
+	string_append(&file_name, "-");
+	string_append(&file_name, "PAG:");
+	string_append(&file_name, string_itoa(pagina));
+	string_append(&file_name, ".bc");
+
+	destruir_archivo(file_name);
+
+	free(file_name);
+}
+
 DIR* abrir_directorio_swap(){
 	DIR* dir;
 
@@ -255,7 +274,7 @@ uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 
 uint32_t *traducirABinario(uint32_t direccion) {
 
-	uint32_t *binNumInv = malloc(sizeof(uint32_t)*32);
+	uint32_t *binNumInv = malloc(sizeof(uint32_t)*32); //FIXME por que multiplican 4 bytes * 32?
 	uint32_t counter;
 	uint32_t *binNum= malloc(sizeof(uint32_t)*32) ;
 	uint32_t i;

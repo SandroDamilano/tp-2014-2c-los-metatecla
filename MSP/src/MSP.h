@@ -72,6 +72,7 @@ void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segme
 void solicitarMemoria(uint32_t PID, uint32_t direccion_log, int tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
 //TODO no estamos seguros de que devuelta esta funcion. Consultar
 void escribirMemoria(int PID, uint32_t direcc_log, int bytes_escribir, int tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
+uint32_t crearDireccion(uint32_t segmento,uint32_t pagina);
 
 int inicializar_semaforos();
 #endif /* MSP_H_ */

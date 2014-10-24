@@ -79,13 +79,15 @@ void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
 t_direccion *traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y la guarda en un struc nuevo
+uint32_t *traducirABinario(uint32_t direccion);
+uint32_t* traducirADecimal(uint32_t *binario);
 
 void swap_out(t_pagina pagina);
 t_pagina swap_in(int pid, int seg, int pag);
-
 DIR* abrir_directorio_swap();
 t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
 
 void destruir_archivo(char* nombre_archivo);
+void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
 
 #endif /* FUNCIONESMSP_H_ */
