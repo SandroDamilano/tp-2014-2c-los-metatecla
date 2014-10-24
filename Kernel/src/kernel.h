@@ -24,6 +24,7 @@
 
 	#include "loader.h"
 	#include "planificador.h"
+	#include "general_kernel.h"
 	#include <ansisop-panel/kernel.h>
 	#include <estructuras_auxiliares.h>
 

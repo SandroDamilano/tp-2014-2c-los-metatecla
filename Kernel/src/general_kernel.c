@@ -13,6 +13,8 @@ void inicializar_semaforos(){
 	pthread_mutex_init(mutex_exit, NULL);
 	sem_init(sem_new, 0, 0);
 	sem_init(sem_exit, 0, 0);
+	pthread_mutex_init(mutex_PIDs, NULL);
+	pthread_mutex_init(mutex_TIDs, NULL);
 }
 
 //La idea seria usar estas funciones para hacer push y pop de las colas de new y ready
@@ -31,11 +33,17 @@ void consumir_tcb(void (*funcion)(t_hilo*), sem_t* sem, pthread_mutex_t* mutex, 
 };
 
 int obtener_pid(){
-	return cantidad_de_PIDs++;
+	pthread_mutex_lock(mutex_PIDs);
+	int pid = cantidad_de_PIDs++;
+	pthread_mutex_unlock(mutex_PIDs);
+	return pid;
 };
 
 int obtener_tid(){
-	return cantidad_de_TIDs++;
+	pthread_mutex_lock(mutex_TIDs);
+	int tid = cantidad_de_TIDs++;
+	pthread_mutex_unlock(mutex_TIDs);
+	return tid;
 };
 
 t_hilo *crear_TCB(int pid, uint32_t dir_codigo, uint32_t dir_stack, int tamanio_codigo)

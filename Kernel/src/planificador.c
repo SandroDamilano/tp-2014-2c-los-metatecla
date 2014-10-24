@@ -49,29 +49,8 @@ void bloquear_tcbSemaforo(t_hilo* tcb, uint32_t sem){
 	bloquear_tcb(tcb, SEM, -1, sem);
 }
 
-void copiar_tcb(t_hilo* original, t_hilo* copia){
-	copia->tid = original->tid;
-	copia->pid = original->pid;
-	copia->registros = original->registros;
-};
-
 bool es_el_tcbkernel(t_data_nodo_block* data){
 	return (data->evento == TCBKM);
-};
-
-t_hilo* desbloquear_tcbkernel(){
-	return list_remove_by_condition(cola_block, es_el_tcbkernel);
-};
-
-void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
-	t_hilo* tcb_kernel = desbloquear_tcbkernel();
-	bloquear_tcbSystcall(tcb, tcb->tid);
-	if (*tcb_kernel != NULL){
-		copiar_tcb(tcb, tcb_kernel);
-		tcb_kernel->puntero_instruccion = dir_systcall;
-		encolar_en_ready(tcb_kernel);
-	}
-	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
 };
 
 bool es_el_tcbBuscado(t_data_nodo_block* data){
@@ -87,6 +66,10 @@ void desbloquear_proceso(t_evento evento, uint32_t tid, uint32_t recurso){
 	tcb_desbloqueado = list_remove_by_condition(cola_block, es_el_tcbBuscado);
 	encolar_en_ready(tcb_desbloqueado);
 }
+
+t_hilo* desbloquear_tcbkernel(){
+	return list_remove_by_condition(cola_block, es_el_tcbkernel);
+};
 
 void desbloquear_por_tid(t_evento evento, uint32_t tid){
 	desbloquear_proceso(evento, tid, -1);

@@ -41,6 +41,9 @@ int main(int argc, char **argv){
 //	// 5- Conectar a MSP
 //	conectar_a_MSP();
 
+	// 5.5- Inicializar semáforos de uso global
+	inicializar_semaforos();
+
 	// 6- Levantar HILOS
 		//6.1- Levantar Hilo KERNEL
 	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL))) //TODO: definir main_KERNEL
