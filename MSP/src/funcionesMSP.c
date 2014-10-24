@@ -121,7 +121,7 @@ void swap_out(t_pagina pagina){
 
 }
 
-t_pagina swap_in(int pid, int seg, int pagina){ //FIXME fijate antes de usar direccion hay que traducirla a fisica como lo hicimos hasta ahora en el destruirSegmento
+t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros el segmento y la pagina. En un futuro, si quieren, pasan la direccion y la traducen adentro de la funcion
 
 	//struct dirent *dirent;
 	DIR* dir;
@@ -249,21 +249,22 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 																		//ejemplo: pid:3-pag:5-seg:6 => [pid:3, pag:5, seg:6]
 	int i = 0;
 	while(partes_nombre_archivo[i] != NULL){//mientras que no se me terminen las partes del nombre del archivo
-		char** partes2 = string_split(partes_nombre_archivo[i], ":");//Divido cada parte en otras si esta el separador ":"
+		char** partes_pid = string_split(partes_nombre_archivo[i], ":");//Divido cada parte en otras si esta el separador ":"
 
-		if(string_starts_with(partes2[0],"PID")  && (atoi(partes2[1]) == PID)){
-			char** partes3 = string_split(partes_nombre_archivo[i+1], ":");
+		if(string_starts_with(partes_pid[0],"PID")  && (atoi(partes_pid[1]) == PID)){
+			char** partes_seg = string_split(partes_nombre_archivo[i+1], ":");
 
-			if(string_starts_with(partes3[0], "SEG") && (atoi(partes3[1]) == SEG)){
-				char** partes4 = string_split(partes_nombre_archivo[i+2], ":");
-				if(string_starts_with(partes4[0], "PAG") && (atoi(partes4[1]) == PAG)){
+			if(string_starts_with(partes_seg[0], "SEG") && (atoi(partes_seg[1]) == SEG)){
+				char** partes_pag = string_split(partes_nombre_archivo[i+2], ":");
+
+				if(string_starts_with(partes_pag[0], "PAG") && (atoi(partes_pag[1]) == PAG)){
 
 					//PID, pagina y segmento para completar la t_pagina
-					pag.PID = atoi(partes2[1]);
+					pag.PID = atoi(partes_pid[1]);
 
-					pag.num_segmento = atoi(partes3[1]);
+					pag.num_segmento = atoi(partes_seg[1]);
 
-					pag.num_pag = atoi(partes4[1]);
+					pag.num_pag = atoi(partes_pag[1]);
 
 					char* nombre_archivo = string_new();//Concateno el path con el nombre del archivo seleccionado
 					string_append(&nombre_archivo,path_swap);
@@ -284,7 +285,7 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 	return pag;
 }
 
-
+/************************************************************/
 
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
 	// char* valorBinario = unaFuncion(numeroSegmento);
