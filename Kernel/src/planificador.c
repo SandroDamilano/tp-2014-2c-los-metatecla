@@ -114,9 +114,30 @@ void boot(char* systcalls_path){
 	tamanio_codigo = calcular_tamanio_archivo(syscalls_file);
 	char* syscalls_code = leer_archivo(syscalls_file, tamanio_codigo);
 
-	//TODO mandárselo a la MSP
-	//dir_codigo =
-	//dir_stack =
+	//Manda codigo de syscalls a la MSP y recibe las direcciones de segmento de codigo y stack
+	t_struct_string* paquete_syscalls = malloc(sizeof(t_struct_string));
+	paquete_syscalls->string = syscalls_code;
+
+	socket_enviar(sockMSP, D_STRUCT_STRING, paquete_syscalls);
+	free(paquete_syscalls);
+
+	void * structRecibido;
+	t_tipoEstructura tipoStruct;
+
+	socket_recibir(sockMSP, &tipoStruct, &structRecibido);
+	if (tipoStruct != D_STRUCT_RESPUESTA_MSP) {
+		printf("No se ha recibido correctamente direccion del codigo y direccion de stack\n");
+	}
+
+	void *datos_recibidos = malloc(2*sizeof(int32_t)); //direccion_codigo + direccion_stack
+	datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
+
+	memcpy(dir_codigo,datos_recibidos,sizeof(uint32_t));
+	memcpy(dir_stack,datos_recibidos + sizeof(uint32_t),sizeof(uint32_t));
+
+	free(datos_recibidos);
+
+	//Crea hilo en modo kernel y lo encola en bloqueados
 	t_hilo* tcb_kernel = crear_TCB(obtener_pid(), dir_codigo, dir_stack, tamanio_codigo);
 	tcb_kernel->kernel_mode = true;
 	bloquear_tcbKernel(tcb_kernel);

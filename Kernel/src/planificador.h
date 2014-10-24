@@ -13,6 +13,10 @@
 	#include "general_kernel.h"
 	#include "servicios_cpu.h"
 
+	int sockMSP;
+	int cantidad_de_PIDs;
+	int cantidad_de_TIDs;
+
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;
 		char* syscalls_path;
