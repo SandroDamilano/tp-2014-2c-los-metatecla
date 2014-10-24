@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
 	//3. Generar estructuras administrativas
 
 	lista_marcos=dividirMemoriaEnMarcos(memoria_ppal, tamanio_mem_ppal);
-	memoriaPpalActual=tamanio_mem_ppal;
-	memoriaSwapActual=cant_mem_swap;
+	*memoriaPpalActual=tamanio_mem_ppal;
+	*memoriaSwapActual=cant_mem_swap;
 	listaProcesos = list_create();
 
 	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
@@ -61,8 +61,8 @@ int main(int argc, char *argv[]) {
 		(*informacion_memoria).lista_marcos=lista_marcos;
 		(*informacion_memoria).tamanio_mem_ppal=tamanio_mem_ppal;
 		(*informacion_memoria).tamanio_swap=cant_mem_swap;
-		(*informacion_memoria).memoriaPpalActual=memoriaPpalActual;
-		(*informacion_memoria).memoriaSwapActual=memoriaSwapActual;
+		(*informacion_memoria).memoriaPpalActual=*memoriaPpalActual;
+		(*informacion_memoria).memoriaSwapActual=*memoriaSwapActual;
 
 		t_conexion_entrante *nuevaConexion = malloc(sizeof(t_conexion_entrante)); //Informacion para el hilo de conexion
 		(*nuevaConexion).hiloDeConexion=hiloDeConexion;
@@ -112,8 +112,9 @@ int inicializar_semaforos(){
 	return EXIT_SUCCESS;
 }
 
-uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
-	//TODO uint32_t direccionBaseDelSegmento;
+uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
+
+	uint32_t direccionBaseDelSegmento;
 
 	//funcion local para fijarse el PID
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
@@ -121,7 +122,7 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 		}
 
 	//1.Verifica si hay memoria disponible
-	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;
+	int cant_mem_actual=*memoriaPpalActual+*memoriaSwapActual;
 	if (tamanio_segmento > 1048576){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
@@ -147,17 +148,17 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 	int segmentoEnSwap = 0;
 	int segmentoEnMP = 0;
 
-	if(tamanio_segmento<=memoriaSwapActual){
+	if(tamanio_segmento<=*memoriaSwapActual){
 		segmentoEnSwap=tamanio_segmento;
-		memoriaSwapActual=memoriaSwapActual-tamanio_segmento;
-	} else { if(memoriaSwapActual>0){
-				segmentoEnSwap = memoriaSwapActual;
-				tamanio_segmento=tamanio_segmento-memoriaSwapActual;
-				memoriaSwapActual = 0;
+		*memoriaSwapActual=*memoriaSwapActual-tamanio_segmento;
+	} else { if(*memoriaSwapActual>0){
+				segmentoEnSwap = *memoriaSwapActual;
+				tamanio_segmento=tamanio_segmento-*memoriaSwapActual;
+				*memoriaSwapActual = 0;
 				segmentoEnMP=tamanio_segmento;
-				memoriaPpalActual= memoriaPpalActual-tamanio_segmento;
+				*memoriaPpalActual= *memoriaPpalActual-tamanio_segmento;
 	} else { segmentoEnMP=tamanio_segmento;
-			 memoriaPpalActual= memoriaPpalActual-tamanio_segmento;}
+			 *memoriaPpalActual= *memoriaPpalActual-tamanio_segmento;}
 	}
 
 	//4.Crea lista de segmentos o agrega nuevo segmento
@@ -194,7 +195,6 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 		list_add( (*nuevoSegmento).lista_Paginas , pagina);
 		numeroPag++;
 		cantPaginas=cantPaginas-1;
-		free(pagina);
 	}
     //6. Carga paginas en memoria principal si es necesario
 	 if(segmentoEnMP>0){
@@ -205,13 +205,10 @@ uint32_t crearSegmento(uint32_t PID, int tamanio_segmento){
 			 cantPagCargar=cantPagCargar-1;
 		 }
 	 }
-	// TODO direccionBaseDelSegmento = obtenerDireccionBase((*nuevoSegmento).numeroSegmento,0);
-	free(mismoPID);
-	free(proceso);
-	free(nuevoSegmento);
+  direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0);
 
 	//TODO Ver como imprimir direccion base del segmento
-	return  0 ;//TODO direccionBaseDelSegmento;
+	return direccionBaseDelSegmento ;
 }
 
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
@@ -236,22 +233,25 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		free((*marcoEnMemoria).memoria);
 		}
 		else {
-		//1. Creamos la direccion para destruir el archivo
-		uint32_t direccionCreada = crearDireccion((*direccionTraducida).segmento,(*unaPagina).numeroPagina);
-		//FIXME destruir_archivo_swap(PID,direccionCreada);
-		//FIXME Yo hice una funcion destruir_archivo_swap que le pasas el pid, segmento y pagina. No hace falta traducir la direccion!
+		//1. Destruir el archivo
 		destruir_archivo_swap(PID, (*direccionTraducida).segmento, (*unaPagina).numeroPagina);
 	}
 	free(unaPagina);
 	}
+
+	void liberarSegmento(t_lista_segmentos *segmento){
+		free(segmento);
+	}
+
 	t_lista_procesos *proceso = list_find(listaProcesos, (void*) (*mismoPID));
 	if(proceso != NULL){
 		//3. Ingresa la tabla de segmentos del proceso PID y con la traduccion entra al segmento pedido
 		t_lista_segmentos *segmento=list_find((*proceso).lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
 			//4. Libera la memoria y elimina la entrada en la tabla de segmentos y su respectiva tabla de paginas
-			list_iterate((*segmento).lista_Paginas, (void*) (*liberarMemoria));
-			//TODO Eliminar segmentos de la lista de segmentos y liberar la memoria;
+			list_destroy_and_destroy_elements((*segmento).lista_Paginas, (void*) (*liberarMemoria));
+			list_remove_and_destroy_by_condition((*proceso).lista_Segmentos,(void*) (*mismoSegmento), (void*) (*liberarSegmento));
+			//TODO Faltan logs de eleminar segmento
 		} else {
 			pthread_mutex_lock(&mutex_log);
 			log_error(logMSP, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (*direccionTraducida).segmento);
@@ -265,6 +265,9 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 
 }
 
-uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //TODO hacer crearDireccion!
-	return 1;
+void escribirMemoria(uint32_t PID, uint32_t direcc_log, uint32_t bytes_escribir, uint32_t tamanio){
+	//1. traducir direccion y validarla
+	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
+		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
+	//3.una vez cargada la pagina, escribir donde corresponda los bytes a escribir
 }
