@@ -24,8 +24,8 @@ t_config *archConfigMSP = NULL;
 
 //Variables de Memoria Principal
 void *memoria_ppal = NULL;
-int memoriaSwapActual = 0;
-int memoriaPpalActual = 0;
+int *memoriaSwapActual = 0;
+int *memoriaPpalActual = 0;
 
 //Variables de estructuras administrativas
 t_list *listaProcesos = NULL;
@@ -67,11 +67,11 @@ typedef struct lista_procesos{
 	//Estructuras sujetas a posibles cambio y arreglos mas adelante
 
 
-uint32_t crearSegmento(uint32_t PID, int tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
+uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
 void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
 void solicitarMemoria(uint32_t PID, uint32_t direccion_log, int tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
 //TODO no estamos seguros de que devuelta esta funcion. Consultar
-void escribirMemoria(int PID, uint32_t direcc_log, int bytes_escribir, int tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
+void escribirMemoria(uint32_t PID, uint32_t direcc_log, uint32_t bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 uint32_t crearDireccion(uint32_t segmento,uint32_t pagina);
 
 int inicializar_semaforos();
