@@ -179,46 +179,6 @@ void destruir_archivo(char* nombre_archivo) {
 	free(nombre_archivo);
 }
 
-FILE* abrir_archivo(char* nombre_archivo){
-	FILE* arch_swap = fopen(nombre_archivo, "r");
-
-	if(arch_swap == NULL){
-		pthread_mutex_lock(&mutex_log);
-		printf("Error al abrir el archivo %s\n", nombre_archivo);
-		log_error(logMSP, "Error al abrir el archivo %s",nombre_archivo);
-		pthread_mutex_unlock(&mutex_log);
-		free(nombre_archivo);
-	}
-
-	return arch_swap;
-}
-
-char* leer_archivo(FILE* arch_swap, long int tamanio_archivo){
-	char* codigo = malloc(tamanio_archivo);
-
-	if(arch_swap == NULL){
-		return codigo; //Error
-	}
-
-	fseek(arch_swap, 0L, SEEK_SET);
-
-	char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
-
-	while(!feof(arch_swap)){
-		fread(buffer, 1, tamanio_archivo, arch_swap);
-	}
-	buffer[tamanio_archivo]= '\0';
-
-	memcpy(codigo, buffer, tamanio_archivo);
-
-	return codigo;
-}
-
-long int calcular_tamanio_archivo(FILE* archivo){
-	fseek(archivo, 0L, SEEK_END); //Averiguo tamaño del archivo
-	return ftell(archivo);
-}
-
 DIR* abrir_directorio_swap(){
 	DIR* dir;
 
@@ -272,7 +232,7 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 
 					pag.nombre_archivo = nombre_archivo;
 
-					FILE* arch_swap = abrir_archivo(nombre_archivo);
+					FILE* arch_swap = abrir_archivo(nombre_archivo, logMSP, &mutex_log);
 
 					pag.archivo = arch_swap;
 

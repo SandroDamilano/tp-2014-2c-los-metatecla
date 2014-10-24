@@ -107,5 +107,9 @@
 		uint32_t tamano_buffer;
 	}__attribute__((__packed__)) t_struct_respuesta_msp;
 
+	char* leer_archivo(FILE* archivo, long int tamanio_archivo);
+	long int calcular_tamanio_archivo(FILE* archivo);
+	FILE* abrir_archivo(char* nombre_archivo, t_log* log, pthread_mutex_t *mutex);
+
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */

@@ -9,12 +9,14 @@
 
 //TODO usar en algún lado esta función!!
 void inicializar_semaforos(){
+	//FIXME creo que en algun lado tenes que usar malloc para los mutex si los usas como puntero. Sino se pueden usar con &
 	pthread_mutex_init(mutex_new, NULL);
 	pthread_mutex_init(mutex_exit, NULL);
 	sem_init(sem_new, 0, 0);
 	sem_init(sem_exit, 0, 0);
 	pthread_mutex_init(mutex_PIDs, NULL);
 	pthread_mutex_init(mutex_TIDs, NULL);
+	pthread_mutex_init(mutex_log, NULL);
 }
 
 //La idea seria usar estas funciones para hacer push y pop de las colas de new y ready

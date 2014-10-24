@@ -21,6 +21,7 @@
 #include "commons/log.h"
 #include "commons/txt.h"
 #include "commons/string.h"
+#include <estructuras_auxiliares.h>
 
 char* path_swap;
 t_log* logMSP;
@@ -81,9 +82,7 @@ t_direccion *traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y l
 
 void swap_out(t_pagina pagina);
 t_pagina swap_in(int pid, int seg, int pag);
-FILE* abrir_archivo(char* nombre_archivo);
-char* leer_archivo(FILE* arch_swap, long int tamanio_archivo);
-long int calcular_tamanio_archivo(FILE* archivo);
+
 DIR* abrir_directorio_swap();
 t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
 
