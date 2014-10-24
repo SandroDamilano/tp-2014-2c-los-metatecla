@@ -80,7 +80,9 @@ t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el b
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
 t_direccion *traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y la guarda en un struc nuevo
 uint32_t *traducirABinario(uint32_t direccion);
-uint32_t* traducirADecimal(uint32_t *binario);
+uint32_t *traducirADecimal(uint32_t *binario);
+uint32_t crearDireccion(uint32_t segmento, uint32_t pagina);
+
 
 void swap_out(t_pagina pagina);
 t_pagina swap_in(int pid, int seg, int pag);

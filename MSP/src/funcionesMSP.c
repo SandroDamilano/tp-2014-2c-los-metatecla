@@ -266,17 +266,24 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 
 /************************************************************/
 
-uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento){
-	// char* valorBinario = unaFuncion(numeroSegmento);
-	//TODO preugntar que funcion es
-	return 0;
+uint32_t elevar(uint32_t numero, uint32_t elevado){
+	int i;
+	uint32_t resultado;
+	resultado=numero;
+	switch(elevado){
+	case 0: resultado=1; break;
+	case 1: resultado=numero; break;
+	default: for(i=1;i<elevado;i++){resultado=resultado*numero;};
+
+	}
+return resultado;
 }
 
 uint32_t *traducirABinario(uint32_t direccion) {
 
-	uint32_t *binNumInv = malloc(sizeof(uint32_t)*32); //FIXME por que multiplican 4 bytes * 32?
+	uint32_t *binNumInv = malloc(sizeof(uint32_t));
 	uint32_t counter;
-	uint32_t *binNum= malloc(sizeof(uint32_t)*32) ;
+	uint32_t *binNum= malloc(sizeof(uint32_t)) ;
 	uint32_t i;
 
 	for ( counter = 0; counter < 32; counter++ ) {
@@ -288,15 +295,75 @@ uint32_t *traducirABinario(uint32_t direccion) {
 		binNum[counter]=binNumInv[i];
 
 	}
+	free(binNumInv);
 	return binNum;
 	}
 
+uint32_t* traducirADecimal(uint32_t *binario){
+	return 1;
+	/* 	uint32_t *binario = malloc(sizeof(uint32_t));
+	uint32_t *numbinario = malloc(sizeof(uint32_t));
+	memset(binario,0,32);
+	memset(numbinario,0,32);
+	int a,b,decimal;
+	b=-1;
+	printf("Teclea el numero binario de 32 bits :  ");
+		scanf("%u",binario);
+ for(a=31;a>=0;a--)
+ 	{
+ 		b++;
+ 		switch(binario[b])
+
+ 		{
+ 			case 0:
+ 				numbinario[a]=0;
+ 			break;
+ 			case 1:
+ 				numbinario[a]=1;
+ 			break;
+ 			default:
+ 			printf("Los caracteres introducidos no son correctos");
+ 		}
+ 		decimal=numbinario[a]*elevar(2,a)+decimal;
+ 	}
+printf("\nEl numero en decimal es %u",decimal);
+return 0; */
+} //FIXME en estado de pruebas.........
+
+uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){
+	uint32_t *binSegmento, *binPagina, *direccionCreadaBin, *direccionCreada;
+	uint32_t i;
+	binSegmento=malloc(sizeof(uint32_t));
+	binPagina=malloc(sizeof(uint32_t));
+	direccionCreadaBin=malloc(sizeof(uint32_t));
+	direccionCreada=malloc(sizeof(uint32_t));
+	*binSegmento=traducirABinario(segmento);
+	*binPagina=traducirABinario(segmento);
+	for(i=0 ;i<12; i++){
+		direccionCreadaBin[i]=binSegmento[21+i];
+	}
+	for(i=12 ;i<23; i++){
+		direccionCreadaBin[i]=binPagina[9+i];
+		}
+	for(i=23 ;i<32; i++){
+		direccionCreadaBin[i]=0;
+			}
+	*direccionCreada=traducirADecimal(direccionCreadaBin);
+	free(binSegmento);
+	free(binPagina);
+	free(direccionCreadaBin);
+	return *direccionCreada;
+}
+
  t_direccion *traducirDireccion(uint32_t unaDireccion){
-	t_direccion *direccionTraducida;
-	uint32_t *direccionEnBinario = malloc(sizeof(uint32_t)*32);
+	t_direccion *direccionTraducida = malloc(sizeof(t_direccion));
+	uint32_t *direccionEnBinario = malloc(sizeof(uint32_t));
 	direccionEnBinario=traducirABinario(unaDireccion);
 	int i;
-	uint32_t *segmento, *pagina, *desplazamiento;
+	uint32_t *segmento=malloc(sizeof(uint32_t));
+	uint32_t *pagina=malloc(sizeof(uint32_t));
+	uint32_t *desplazamiento=malloc(sizeof(uint32_t));
+
 	for(i=0 ;i<12; i++){
 		segmento[i]=direccionEnBinario[i];
 	}
@@ -309,12 +376,12 @@ uint32_t *traducirABinario(uint32_t direccion) {
 	(*direccionTraducida).segmento=traducirADecimal(segmento);//FIXME definir funcion TraducirADecimal
 	(*direccionTraducida).pagina=traducirADecimal(pagina);
 	(*direccionTraducida).desplazamiento=traducirADecimal(desplazamiento);
-
+	free(segmento);
+	free(pagina);
+	free(desplazamiento);
+	free(direccionEnBinario);
 	return direccionTraducida;
 }
 
 
 
-uint32_t* traducirADecimal(uint32_t *binario){
-	return 1;
-}
