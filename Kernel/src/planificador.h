@@ -29,8 +29,7 @@
 	typedef struct data_nodo_block { //Estructura de la cola de BLOCK
 		t_hilo * tcb;
 		t_evento evento;
-		uint32_t tid;
-		uint32_t recurso;
+		uint32_t parametro;
 	} t_data_nodo_block;
 
 	//Por ahora estas van aca porque el planificador es el único que las usa
@@ -40,8 +39,8 @@
 
 	//Estas 3 variables globales se usan para desbloquear los procesos
 	// (participan en la búsqueda del TCB que hay que desbloquear)
-	uint32_t tid_a_buscar;
-	uint32_t recurso_a_buscar;
+	uint32_t tid_a_buscar; //Para encontrar al TCB que hizo la systcall
+	uint32_t parametro_a_buscar; //Puede ser un tid o un recurso (semáforo)
 	t_evento evento_a_buscar;
 
 	void* main_PLANIFICADOR(void* parametros);

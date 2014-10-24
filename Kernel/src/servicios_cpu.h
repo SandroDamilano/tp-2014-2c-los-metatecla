@@ -13,7 +13,8 @@
 	#include "general_kernel.h"
 	#include "planificador.h"
 
-
+void copiar_tcb(t_hilo* original, t_hilo* copia);
+void atender_systcall(t_hilo* tcb, uint32_t dir_systcall);
 
 
 #endif /* SERVICIOS_CPU_H_ */

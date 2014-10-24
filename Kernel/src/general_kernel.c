@@ -7,7 +7,6 @@
 
 #include "general_kernel.h"
 
-//TODO usar en algún lado esta función!!
 void inicializar_semaforos(){
 	//FIXME creo que en algun lado tenes que usar malloc para los mutex si los usas como puntero. Sino se pueden usar con &
 	pthread_mutex_init(mutex_new, NULL);
