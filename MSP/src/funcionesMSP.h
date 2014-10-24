@@ -33,6 +33,8 @@ typedef struct pagina{
 	uint32_t num_segmento;
 	char* codigo;
 	uint32_t tamanio_buffer;
+	FILE* archivo;
+	char* nombre_archivo;
 }t_pagina;
 
 typedef struct marco{
@@ -63,7 +65,9 @@ typedef struct conexion_entrante{
 	//TODO Archivo de logeo
 } t_conexion_entrante;
 
-extern uint32_t puertoMSP, tamanio_mem_ppal, cant_mem_swap;
+extern uint32_t puertoMSP;
+extern uint32_t tamanio_mem_ppal;
+extern uint32_t cant_mem_swap;
 extern char* alg_sustitucion;
 
 
@@ -72,9 +76,17 @@ void leerConfiguracion(t_config *config, char *path); //levanta archivo de confi
 void crear_logger(t_log *logger);//Crea archivos de logeo
 void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
-void crear_archivo_swap_out(t_pagina pagina);
-t_pagina leer_y_destruir_archivo_swap_in(int pid);
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
 t_direccion *traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y la guarda en un struc nuevo
+
+void swap_out(t_pagina pagina);
+t_pagina swap_in(int pid, int seg, int pag);
+FILE* abrir_archivo(char* nombre_archivo);
+char* leer_archivo(FILE* arch_swap, long int tamanio_archivo);
+long int calcular_tamanio_archivo(FILE* archivo);
+DIR* abrir_directorio_swap();
+t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
+
+void destruir_archivo(char* nombre_archivo);
 
 #endif /* FUNCIONESMSP_H_ */
