@@ -279,80 +279,82 @@ uint32_t elevar(uint32_t numero, uint32_t elevado){
 return resultado;
 }
 
-uint32_t *traducirABinario(uint32_t direccion) {
 
-	uint32_t *binNumInv = malloc(sizeof(uint32_t));
+char *traducirABinario(uint32_t direccion, int cantidad_bits) {
+
+
+	uint32_t *binNumInv = malloc(cantidad_bits);
 	uint32_t counter;
-	uint32_t *binNum= malloc(sizeof(uint32_t)) ;
+
 	uint32_t i;
+	uint32_t aux = direccion;
 
-	for ( counter = 0; counter < 32; counter++ ) {
-	binNumInv[counter] = direccion % 2;
-	direccion = direccion / 2;
+
+	char bina[cantidad_bits];
+	char bina_inv[cantidad_bits];
+
+
+
+	for ( counter = 0 ; counter < cantidad_bits; counter++ ) {
+	binNumInv[counter] = aux % 2;
+
+
+	aux = aux / 2;
+
+	if(binNumInv[counter] == 0){
+
+	bina[counter] = '0'; } else { bina[counter] = '1';}
 	}
-	for (i=0;i<32;i++){
-		counter = counter -1;
-		binNum[counter]=binNumInv[i];
+
+	for (i=0;i<cantidad_bits;i++){
+		counter --;
+		bina_inv[counter]=bina[i];
 
 	}
-	free(binNumInv);
-	return binNum;
+	return bina_inv;
 	}
 
-uint32_t* traducirADecimal(uint32_t *binario){
-	return 1;
-	/* 	uint32_t *binario = malloc(sizeof(uint32_t));
-	uint32_t *numbinario = malloc(sizeof(uint32_t));
-	memset(binario,0,32);
-	memset(numbinario,0,32);
-	int a,b,decimal;
-	b=-1;
-	printf("Teclea el numero binario de 32 bits :  ");
-		scanf("%u",binario);
- for(a=31;a>=0;a--)
- 	{
- 		b++;
- 		switch(binario[b])
 
- 		{
- 			case 0:
- 				numbinario[a]=0;
- 			break;
- 			case 1:
- 				numbinario[a]=1;
- 			break;
- 			default:
- 			printf("Los caracteres introducidos no son correctos");
- 		}
- 		decimal=numbinario[a]*elevar(2,a)+decimal;
- 	}
-printf("\nEl numero en decimal es %u",decimal);
-return 0; */
-} //FIXME en estado de pruebas.........
+uint32_t traducirADecimal(char *binario, int cantidad_bits){
+	int i;
+	int j;
+	uint32_t decimal = 0;
+	for(i=cantidad_bits-1; i >= 0; i--){
+		j= cantidad_bits-1-i;
+		switch(binario[i]){
+		case '0':
+			break;
+		case '1':
+			decimal = elevar(2,j)+decimal;
+			break;
+		default:
+			break;
+		}
+	}
+	return decimal;
+}
 
 uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){
-	uint32_t *binSegmento, *binPagina, *direccionCreadaBin, *direccionCreada;
-	uint32_t i;
-	binSegmento=malloc(sizeof(uint32_t));
-	binPagina=malloc(sizeof(uint32_t));
-	direccionCreadaBin=malloc(sizeof(uint32_t));
-	direccionCreada=malloc(sizeof(uint32_t));
-	*binSegmento=traducirABinario(segmento);
-	*binPagina=traducirABinario(segmento);
-	for(i=0 ;i<12; i++){
-		direccionCreadaBin[i]=binSegmento[21+i];
-	}
-	for(i=12 ;i<23; i++){
-		direccionCreadaBin[i]=binPagina[9+i];
-		}
-	for(i=23 ;i<32; i++){
-		direccionCreadaBin[i]=0;
-			}
-	*direccionCreada=traducirADecimal(direccionCreadaBin);
+	uint32_t direccionCreada;
+	char *binSegmento;
+	char *binPagina;
+	char *direccionCreadaBin = malloc(32);
+
+	binSegmento=malloc(12);
+	binPagina=malloc(13);
+	memcpy(binSegmento, traducirABinario(segmento, 12), 12);
+	memcpy(binPagina, traducirABinario(pagina, 12), 12);
+
+	memcpy(direccionCreadaBin, binSegmento, 12);
+	memcpy(direccionCreadaBin+12, binPagina, 12);
+	memcpy(direccionCreadaBin+24, "00000000", 8);
+
+	direccionCreada=traducirADecimal(direccionCreadaBin, 32);
+
 	free(binSegmento);
 	free(binPagina);
 	free(direccionCreadaBin);
-	return *direccionCreada;
+	return direccionCreada;
 }
 
  t_direccion *traducirDireccion(uint32_t unaDireccion){
