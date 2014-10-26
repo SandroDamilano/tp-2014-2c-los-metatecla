@@ -22,7 +22,6 @@ int main(int argc, char *argv[]) {
 	leerConfiguracion(archConfigMSP, argv[1]);
 	inicializar_semaforos();
 
-
 	//2. Reservar bloque de memoria principal
 
 	memoria_ppal=reservarBloquePpal(tamanio_mem_ppal);
@@ -213,13 +212,13 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
 	//1. Traduce direccion base
-	t_direccion *direccionTraducida = traducirDireccion(direccBase);
+	t_direccion direccionTraducida = traducirDireccion(direccBase);
 	//2. Se fija si la dirrecion base es correcta
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 				return PIDEncontrado->pid==PID;
 			}
 	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
-					return numeroSegmento->numeroSegmento==(*direccionTraducida).segmento;
+					return numeroSegmento->numeroSegmento==(direccionTraducida).segmento;
 				}
 
 	void liberarMemoria(t_lista_paginas *unaPagina){
@@ -234,7 +233,7 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		}
 		else {
 		//1. Destruir el archivo
-		destruir_archivo_swap(PID, (*direccionTraducida).segmento, (*unaPagina).numeroPagina);
+		destruir_archivo_swap(PID, (direccionTraducida).segmento, (*unaPagina).numeroPagina);
 	}
 	free(unaPagina);
 	}
@@ -254,7 +253,7 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 			//TODO Faltan logs de eleminar segmento
 		} else {
 			pthread_mutex_lock(&mutex_log);
-			log_error(logMSP, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (*direccionTraducida).segmento);
+			log_error(logMSP, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
 			pthread_mutex_unlock(&mutex_log);
 		}
 	} else {

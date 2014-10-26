@@ -282,8 +282,7 @@ return resultado;
 
 char *traducirABinario(uint32_t direccion, int cantidad_bits) {
 
-
-	uint32_t *binNumInv = malloc(cantidad_bits);
+	uint32_t binNumInv[cantidad_bits];
 	uint32_t counter;
 
 	uint32_t i;
@@ -292,8 +291,6 @@ char *traducirABinario(uint32_t direccion, int cantidad_bits) {
 
 	char bina[cantidad_bits];
 	char bina_inv[cantidad_bits];
-
-
 
 	for ( counter = 0 ; counter < cantidad_bits; counter++ ) {
 	binNumInv[counter] = aux % 2;
@@ -316,6 +313,7 @@ char *traducirABinario(uint32_t direccion, int cantidad_bits) {
 
 
 uint32_t traducirADecimal(char *binario, int cantidad_bits){
+
 	int i;
 	int j;
 	uint32_t decimal = 0;
@@ -334,7 +332,7 @@ uint32_t traducirADecimal(char *binario, int cantidad_bits){
 	return decimal;
 }
 
-uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){
+uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copado que reciba el desplazamiento por parametro
 	uint32_t direccionCreada;
 	char *binSegmento;
 	char *binPagina;
@@ -357,31 +355,33 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){
 	return direccionCreada;
 }
 
- t_direccion *traducirDireccion(uint32_t unaDireccion){
-	t_direccion *direccionTraducida = malloc(sizeof(t_direccion));
-	uint32_t *direccionEnBinario = malloc(sizeof(uint32_t));
-	direccionEnBinario=traducirABinario(unaDireccion);
-	int i;
-	uint32_t *segmento=malloc(sizeof(uint32_t));
-	uint32_t *pagina=malloc(sizeof(uint32_t));
-	uint32_t *desplazamiento=malloc(sizeof(uint32_t));
+ t_direccion traducirDireccion(uint32_t unaDireccion){
+	t_direccion direccionTraducida;// = malloc(350);
+	char direccionEnBinario[32];
+	memcpy(direccionEnBinario,traducirABinario(unaDireccion,32),32);
 
-	for(i=0 ;i<12; i++){
-		segmento[i]=direccionEnBinario[i];
-	}
-	for(i=12 ;i<23; i++){
-			pagina[i]=direccionEnBinario[i];
-		}
-	for(i=23 ;i<32; i++){
-				desplazamiento[i]=direccionEnBinario[i];
-			}
-	(*direccionTraducida).segmento=traducirADecimal(segmento);//FIXME definir funcion TraducirADecimal
-	(*direccionTraducida).pagina=traducirADecimal(pagina);
-	(*direccionTraducida).desplazamiento=traducirADecimal(desplazamiento);
-	free(segmento);
+	//printf("direc en binario %s\n", direccionEnBinario);
+
+	char segmento[12];
+	char pagina[12];
+	char desplazamiento[8];
+
+	memcpy(segmento, direccionEnBinario, 12);
+	//printf("llego seg %s\n", segmento);
+	memcpy(pagina, direccionEnBinario + 12, 12);
+	//printf("llego pag %s\n", pagina);
+	memcpy(desplazamiento, direccionEnBinario + 24, 8);
+//	printf("llego desp %s\n", desplazamiento);
+
+
+	(direccionTraducida).segmento=traducirADecimal(segmento, 12);
+	//printf("seg traducido %d\n", direccionTraducida.segmento);
+	(direccionTraducida).pagina=traducirADecimal(pagina, 12);
+	(direccionTraducida).desplazamiento=traducirADecimal(desplazamiento, 8);
+	/*free(segmento);
 	free(pagina);
 	free(desplazamiento);
-	free(direccionEnBinario);
+	free(direccionEnBinario);*/
 	return direccionTraducida;
 }
 
