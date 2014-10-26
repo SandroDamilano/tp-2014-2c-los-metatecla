@@ -21,6 +21,7 @@
 #include "commons/log.h"
 #include "commons/txt.h"
 #include "commons/string.h"
+//#include "ConsolaMSP.h"
 #include <estructuras_auxiliares.h>
 
 char* path_swap;
@@ -72,6 +73,16 @@ extern uint32_t cant_mem_swap;
 extern char* alg_sustitucion;
 
 
+void *inciarConsola(void *param1);
+void indicaciones_consola();
+
+
+uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
+void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
+void solicitarMemoria(uint32_t PID, uint32_t direccion_log, int tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
+//TODO no estamos seguros de que devuelta esta funcion. Consultar
+void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
+uint32_t crearDireccion(uint32_t segmento,uint32_t pagina);
 
 void leerConfiguracion(t_config *config, char *path); //levanta archivo de configuracion y asigna a las variables correspodientes
 void crear_logger(t_log *logger);//Crea archivos de logeo

@@ -11,6 +11,7 @@ uint32_t tamanio_mem_ppal;
 uint32_t cant_mem_swap;
 char* alg_sustitucion;
 
+/*********************************** INICIO *******************************************************************/
 void leerConfiguracion(t_config *archConfigMSP, char *path){
 
 
@@ -49,7 +50,14 @@ void leerConfiguracion(t_config *archConfigMSP, char *path){
 
 }
 
+void crear_logger(t_log *logger){
+	if ((logger = log_create("logMSP.log","MSP",false,LOG_LEVEL_DEBUG)) == NULL) {
+		printf("No se pudo crear el logger\n");
+	}
+}
 
+
+/******************************************** MEMORIA PRINCIPAL ******************************************************/
 void *reservarBloquePpal(int tamanioMemoria){
 
      void *unaMemoria = malloc(tamanioMemoria);
@@ -73,18 +81,12 @@ t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 		(*marco).memoria = memoria + i*256;
 		(*marco).numeroMarco = i;
 		list_add(lista_marcos, marco);
-		free((*marco).memoria);
-		free(marco);
+		//free((*marco).memoria);
+		//free(marco);
 	}
 return lista_marcos; //TODO Preguntar a ayudante
 }
 
-
-void crear_logger(t_log *logger){
-	if ((logger = log_create("logMSP.log","MSP",false,LOG_LEVEL_DEBUG)) == NULL) {
-		printf("No se pudo crear el logger\n");
-	}
-}
 
 /*********************************** FUNCIONES DE SWAP *******************************/
 
@@ -264,7 +266,7 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 	return pag;
 }
 
-/************************************************************/
+/*********************************************** DIRECCIONES *********************************************************/
 
 uint32_t elevar(uint32_t numero, uint32_t elevado){
 	int i;
@@ -356,34 +358,109 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 }
 
  t_direccion traducirDireccion(uint32_t unaDireccion){
-	t_direccion direccionTraducida;// = malloc(350);
+	t_direccion direccionTraducida;
 	char direccionEnBinario[32];
 	memcpy(direccionEnBinario,traducirABinario(unaDireccion,32),32);
-
-	//printf("direc en binario %s\n", direccionEnBinario);
 
 	char segmento[12];
 	char pagina[12];
 	char desplazamiento[8];
 
 	memcpy(segmento, direccionEnBinario, 12);
-	//printf("llego seg %s\n", segmento);
 	memcpy(pagina, direccionEnBinario + 12, 12);
-	//printf("llego pag %s\n", pagina);
 	memcpy(desplazamiento, direccionEnBinario + 24, 8);
-//	printf("llego desp %s\n", desplazamiento);
-
 
 	(direccionTraducida).segmento=traducirADecimal(segmento, 12);
-	//printf("seg traducido %d\n", direccionTraducida.segmento);
 	(direccionTraducida).pagina=traducirADecimal(pagina, 12);
 	(direccionTraducida).desplazamiento=traducirADecimal(desplazamiento, 8);
-	/*free(segmento);
-	free(pagina);
-	free(desplazamiento);
-	free(direccionEnBinario);*/
+
 	return direccionTraducida;
 }
 
+ /************************************************* CONSOLA *********************************************************/
 
+ void *inciarConsola(void *param1){
+
+	char command;
+	uint32_t baseSeg, direcVir;
+	int terminarConsola = 1;
+	uint32_t PID;
+	uint32_t tamanio_escritura;
+
+	printf("\nConsola MSP inciada(exit para cerrar)\n");
+	indicaciones_consola();
+	while (terminarConsola){
+	scanf("%c",&command);
+	switch(command){
+	case '1': printf("El comando elegido fue: Crear Segmento\n"
+				"Ingrese un PID:\n");
+				scanf("%d",&PID);
+				printf("Ingrese Tamaño (en bytes):\n");
+				uint32_t tam_segmento;
+				scanf("%d",&tam_segmento);
+				uint32_t direccion_segmento = crearSegmento(PID, tam_segmento);
+				printf("La direccion del nuevo segmento es: %d\n", direccion_segmento);
+				indicaciones_consola();
+
+	break;
+	case '2': printf("El comando elegido fue: Destruir segmento\n"
+				"Ingrese un PID:\n");
+				scanf("%d",&PID);
+				printf("Ingrese base del segmento:");
+				scanf("%d",&baseSeg);
+				destruirSegmento(PID,baseSeg);
+				indicaciones_consola();
+	break;
+	case '3': printf("El comando elegido fue: Escribir Memoria\n"
+				"Ingrese un PID:\n");
+				scanf("%d",&PID);
+				printf("Ingrese direccion virtual:\n");
+				scanf("%d", &direcVir);
+				printf("Ingrese un tamaño:\n");
+				scanf("%d", &tamanio_escritura);
+				printf("Ingrese un texto:\n");
+				char* texto; //CAPAZ DEBERIA SER CHAR[ALGUN TAMANIO MAX]
+				scanf("%s", texto);
+				escribirMemoria(PID, direcVir, texto, tamanio_escritura);
+
+	break;
+	case '4': printf("El comando elegido fue: Leer memoria\n"
+				"Ingrese un PID:\n");
+				scanf("%d",&PID);
+				printf("Ingrese una direccion virtual:\n");
+				scanf("%d", &direcVir);
+				printf("Ingrese un tamaño:\n");
+				scanf("%d", &tamanio_escritura);
+	break;
+	case '5': printf("El comando elegido fue: Tabla de segmentos\n"); break;
+	case '6': printf("El comando elegido fue: Tabla de paginas\n"
+				"Ingrese un PID:\n");
+				scanf("%d",&PID);
+	break;
+	case '7': printf("El comando elegido fue: Listar marcos\n"); break;
+	case '8': terminarConsola=0; break;
+	}
+	}
+pthread_exit((void*) "Termino el hilo Consola");	/* No se si esta bien implementado el pthread_exit */
+// Falta ajustar cada case a lo que el comando pida: definir que funcion se llama de la MSP, definir tipos y liberar memoria
+return NULL;
+}
+
+/******************* AUXILIARES CONSOLA *******************/
+ void indicaciones_consola() {
+ 	printf(
+ 			"\nIntroduzca numero de comando elegido:\n1. Crear segmento\n2. Destruir Segmento\n3. Escribir memoria\n4. Leer memoria\n5. Tabla de segmentos\n6. Tabla de paginas\n7. Listar marcos\n8. Exit\n");
+ }
+
+ void tabla_segmentos(){
+
+ }
+
+ void tabla_paginas(){
+
+ }
+
+ void listar_marcos(){
+
+ }
 

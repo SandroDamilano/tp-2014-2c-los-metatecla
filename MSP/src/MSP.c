@@ -26,13 +26,16 @@ int main(int argc, char *argv[]) {
 
 	memoria_ppal=reservarBloquePpal(tamanio_mem_ppal);
 
+	printf("pase la mem ppal \n");
+
 	//TODO log "se creo memoria princial y abaca desde memoria_ppal hasta memoria_ppal+tamanio
 
 	//3. Generar estructuras administrativas
 
 	lista_marcos=dividirMemoriaEnMarcos(memoria_ppal, tamanio_mem_ppal);
-	*memoriaPpalActual=tamanio_mem_ppal;
-	*memoriaSwapActual=cant_mem_swap;
+	printf("pase division de marcos\n");
+	memoriaPpalActual=tamanio_mem_ppal;
+	memoriaSwapActual=cant_mem_swap;
 	listaProcesos = list_create();
 
 	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
@@ -44,7 +47,7 @@ int main(int argc, char *argv[]) {
 
 		//Se crea socket servidor de la MSP
 
-		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+		/*socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -60,8 +63,8 @@ int main(int argc, char *argv[]) {
 		(*informacion_memoria).lista_marcos=lista_marcos;
 		(*informacion_memoria).tamanio_mem_ppal=tamanio_mem_ppal;
 		(*informacion_memoria).tamanio_swap=cant_mem_swap;
-		(*informacion_memoria).memoriaPpalActual=*memoriaPpalActual;
-		(*informacion_memoria).memoriaSwapActual=*memoriaSwapActual;
+		(*informacion_memoria).memoriaPpalActual=memoriaPpalActual;
+		(*informacion_memoria).memoriaSwapActual=memoriaSwapActual;
 
 		t_conexion_entrante *nuevaConexion = malloc(sizeof(t_conexion_entrante)); //Informacion para el hilo de conexion
 		(*nuevaConexion).hiloDeConexion=hiloDeConexion;
@@ -72,7 +75,7 @@ int main(int argc, char *argv[]) {
 
 		pthread_create(hiloDeConexion,NULL,inciarConsola,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}
+	}*/
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -121,11 +124,12 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		}
 
 	//1.Verifica si hay memoria disponible
-	int cant_mem_actual=*memoriaPpalActual+*memoriaSwapActual;
+	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual*256; //AGREGUE *256 PORQUE ME PARECIA MEJOR QUE SOLO DEJAR LA CANTIDAD DE ARCH SWAP
+
 	if (tamanio_segmento > 1048576){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
-		log_error(logMSP,"Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
+		//log_error(logMSP,"Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
 		pthread_mutex_unlock(&mutex_log);
 		return 0;
 	}
@@ -133,36 +137,36 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	if(tamanio_segmento > cant_mem_actual){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error Memoria llena");
-		log_error(logMSP,"Error Memoria Llena");
+		//log_error(logMSP,"Error Memoria Llena");
 		pthread_mutex_unlock(&mutex_log);
 		return 0;
 	}
 	//2.Se fija si se existe el proceso
 
-	//t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
-	t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
+	t_lista_procesos* proceso;// = malloc(sizeof(t_lista_procesos));
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	//3. Se fija donde crear el segmento
 	int segmentoEnSwap = 0;
 	int segmentoEnMP = 0;
 
-	if(tamanio_segmento<=*memoriaSwapActual){
+	if(tamanio_segmento<=memoriaSwapActual){
 		segmentoEnSwap=tamanio_segmento;
-		*memoriaSwapActual=*memoriaSwapActual-tamanio_segmento;
-	} else { if(*memoriaSwapActual>0){
-				segmentoEnSwap = *memoriaSwapActual;
-				tamanio_segmento=tamanio_segmento-*memoriaSwapActual;
-				*memoriaSwapActual = 0;
+		memoriaSwapActual=memoriaSwapActual-tamanio_segmento;
+	} else { if(memoriaSwapActual>0){
+				segmentoEnSwap = memoriaSwapActual;
+				tamanio_segmento=tamanio_segmento-memoriaSwapActual;
+				memoriaSwapActual = 0;
 				segmentoEnMP=tamanio_segmento;
-				*memoriaPpalActual= *memoriaPpalActual-tamanio_segmento;
+				memoriaPpalActual= memoriaPpalActual-tamanio_segmento;
 	} else { segmentoEnMP=tamanio_segmento;
-			 *memoriaPpalActual= *memoriaPpalActual-tamanio_segmento;}
+			 memoriaPpalActual= memoriaPpalActual-tamanio_segmento;}
 	}
 
 	//4.Crea lista de segmentos o agrega nuevo segmento
-	if(proceso==false){
-		(*proceso).pid=PID;
+	if(proceso==NULL){
+		proceso = malloc(sizeof(t_lista_procesos));
+		proceso->pid=PID;
 		(*proceso).lista_Segmentos=list_create();
 		list_add(listaProcesos,proceso);}
 
@@ -174,11 +178,13 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		(*nuevoSegmento).tamanio=segmentoEnSwap+segmentoEnMP;
 		pthread_mutex_lock(&mutex_log);
 		list_add((*proceso).lista_Segmentos, nuevoSegmento);
-		log_info(logMSP,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,segmentoEnSwap+segmentoEnMP);
+		//log_info(logMSP,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,segmentoEnSwap+segmentoEnMP);
+		printf("Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d\n", PID, segmentoEnSwap+segmentoEnMP);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		pthread_mutex_lock(&mutex_log);
-		log_error(logMSP,"Se supera el maximo de segmentos por programa");
+		//log_error(logMSP,"Se supera el maximo de segmentos por programa");
+		printf("Se supera el maximo de segmentos por programa");
 		pthread_mutex_unlock(&mutex_log);
 		return 0;
 	}
@@ -207,12 +213,14 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0);
 
 	//TODO Ver como imprimir direccion base del segmento
+  	//FIXME no entiendo, tiene que devolver la direccion base del segmento o la direccion formada por seg, pag y desplazamiento? Es lo mismo?
 	return direccionBaseDelSegmento ;
 }
 
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
 	//1. Traduce direccion base
 	t_direccion direccionTraducida = traducirDireccion(direccBase);
+	printf("Me llga de direcc traducida segmento %d, pagina %d y desplazamiento %d\n", direccionTraducida.segmento, direccionTraducida.pagina, direccionTraducida.desplazamiento);
 	//2. Se fija si la dirrecion base es correcta
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 				return PIDEncontrado->pid==PID;
@@ -253,18 +261,20 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 			//TODO Faltan logs de eleminar segmento
 		} else {
 			pthread_mutex_lock(&mutex_log);
-			log_error(logMSP, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
+			//log_error(logMSP, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
+			printf("El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
 			pthread_mutex_unlock(&mutex_log);
 		}
 	} else {
 		pthread_mutex_lock(&mutex_log);
-		log_error(logMSP, "No existe el PID: %u en el sistema", PID);
+		//log_error(logMSP, "No existe el PID: %u en el sistema", PID);
+		printf("No existe el PID: %u en el sistema", PID);
 		pthread_mutex_unlock(&mutex_log);
 	}
 
 }
 
-void escribirMemoria(uint32_t PID, uint32_t direcc_log, uint32_t bytes_escribir, uint32_t tamanio){
+void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
 	//1. traducir direccion y validarla
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
 		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
