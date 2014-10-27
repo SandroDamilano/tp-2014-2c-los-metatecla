@@ -16,6 +16,8 @@
 
 	t_stream * serializeStruct_signal(t_struct_signal * estructuraOrigen);
 	t_stream * serializeStruct_numero(t_struct_numero * estructuraOrigen);
+	t_stream * serializeStruct_malc(t_struct_numero * estructuraOrigen);
+	t_stream * serializeStruct_free(t_struct_numero * estructuraOrigen);
 	t_stream * serializeStruct_direccion(t_struct_direccion * estructuraOrigen);
 	t_stream * serializeStruct_char(t_struct_char * estructuraOrigen);
 	t_stream * serializeStruct_string(t_struct_string * estructuraOrigen);

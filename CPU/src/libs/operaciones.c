@@ -84,7 +84,7 @@ void ejecutarLinea(int* bytecode){
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
-		incrementar_cpu(2*sizeof(char)); //registro + registro
+		incrementar_pc(2*sizeof(char)); //registro + registro
 
 		list_clean(parametros);
 		break;
@@ -603,6 +603,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 		free(datos_recibidos);
+		free(structRecibido);
 
 		obtener_numero(param,0,&numero,aux);
 		obtener_registro(param,4,&reg1);
@@ -639,24 +640,36 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("XXXX",parametros);
 
 		copiar_registros_a_tcb();
-		tcb->cola = EXIT;
+		tcb->cola = EXIT; //FIXME esta bien esto?
 
 		list_clean(parametros);
 		break;
 	case MALC:
 		ejecucion_instruccion("MALC",parametros);
 
-		//socket a MSP enviando registros_cpu.registros_programacion['A'] con el protocolo de comunicacion
-		//indicado para que entienda crear segmento
-		//registros_cpu.registros_programacion['A'] = socket de MSP con direccion del nuevo segmento
+		t_struct_numero* crear_segmento_struct = malloc(sizeof(t_struct_numero));
+		crear_segmento_struct->numero = registros_cpu.registros_programacion['A'];
+		free(crear_segmento_struct);
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_MALC, crear_segmento_struct);
+		controlar_envio(resultado, D_STRUCT_MALC);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_DIRECCION);
+
+		registros_cpu.registros_programacion['A'] = ((t_struct_direccion*) structRecibido)->numero;
 
 		list_clean(parametros);
 		break;
 	case FREE:
 		ejecucion_instruccion("FREE",parametros);
 
-		//socket a MSP enviando registros_cpu.registros_programacion['A'] con el protocolo de comunicacion
-		//indicado para que entienda destruir segmento
+		t_struct_numero* crear_segmento_struct = malloc(sizeof(t_struct_numero));
+		crear_segmento_struct->numero = registros_cpu.registros_programacion['A'];
+		free(crear_segmento_struct);
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_FREE, crear_segmento_struct);
+		controlar_envio(resultado, D_STRUCT_FREE);
 
 		list_clean(parametros);
 		break;
@@ -712,7 +725,7 @@ void ejecutarLinea(int* bytecode){
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
 	free(((t_struct_respuesta_msp*) structRecibido)->buffer);
-	free(structRecibido);
+	free(structRecibido); //FIXME En las operaciones que no reciben parametros, va a fallar
 	free(datos_recibidos);
 	free(datos_solicitados);
 	free(datos_enviados);

@@ -48,6 +48,8 @@
 		D_STRUCT_SOL_BYTES=5,
 		D_STRUCT_RESPUESTA_MSP=6,
 		D_STRUCT_ENV_BYTES=7,
+		D_STRUCT_MALC=8,
+		D_STRUCT_FREE=9,
 
 		//comunicacion entre kernel y consola
 		HANDSHAKE_SUCCESS = 100,// TODO: serializar segun estas señales
