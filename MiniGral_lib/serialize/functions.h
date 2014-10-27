@@ -24,6 +24,13 @@
 	t_stream * serializeStruct_sol_bytes(t_struct_sol_bytes * estructuraOrigen);
 	t_stream * serializeStruct_env_bytes(t_struct_env_bytes * estructuraOrigen);
 	t_stream * serializeStruct_respuestaMSP(t_struct_respuesta_msp * estructuraOrigen);
+	t_stream* serializeStruct_tcb(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_tcbQuantum(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_tcbINNN(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_tcbINNC(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_tcbOUTN(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_tcbOUTC(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_tcbCREA(t_struct_tcb* estructuraOrigen);
 
 	t_header despaquetizarHeader(char * header);
 	void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length);
@@ -35,6 +42,7 @@
 	t_struct_string * deserializeStruct_string(char * dataPaquete, uint16_t length);
 	t_struct_sol_bytes * deserializeStruct_sol_bytes(char * dataPaquete, uint16_t length);
 	t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint16_t length);
+	t_struct_tcb* deserializeStruct_tcb(char* dataPaquete, uint16_t lenght);
 
 
 

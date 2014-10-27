@@ -73,6 +73,27 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 			case D_STRUCT_RESPUESTA_MSP:
 				paquete = serializeStruct_respuestaMSP((t_struct_respuesta_msp *) estructuraOrigen);
 				break;
+			case D_STRUCT_TCB:
+				paquete = serializeStruct_tcb((t_struct_tcb *) estructuraOrigen);
+				break;
+			case D_STRUCT_TCB_QUANTUM:
+				paquete = serializeStruct_tcbQuantum((t_struct_tcb *) estructuraOrigen);
+				break;
+			case D_STRUCT_TCB_INNN:
+				paquete = serializeStruct_tcbINNN((t_struct_tcb *) estructuraOrigen);
+				break;
+			case D_STRUCT_TCB_INNC:
+				paquete = serializeStruct_tcbINNC((t_struct_tcb *) estructuraOrigen);
+				break;
+			case D_STRUCT_TCB_OUTN:
+				paquete = serializeStruct_tcbOUTN((t_struct_tcb *) estructuraOrigen);
+				break;
+			case D_STRUCT_TCB_OUTC:
+				paquete = serializeStruct_tcbOUTC((t_struct_tcb *) estructuraOrigen);
+				break;
+			case D_STRUCT_TCB_CREA:
+				paquete = serializeStruct_tcbCREA((t_struct_tcb *) estructuraOrigen);
+				break;
 
 		}
 
@@ -251,6 +272,113 @@ t_stream * serializeStruct_respuestaMSP(t_struct_respuesta_msp * estructuraOrige
 	return paquete;
 }
 
+t_stream* serializeStruct_tcb(t_struct_tcb* estructuraOrigen){
+
+	t_stream* paquete = malloc(sizeof(t_stream));
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+
+	char* data = crearDataConHeader(D_STRUCT_TCB, paquete->length);
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+t_stream* serializeStruct_tcbQuantum(t_struct_tcb* estructuraOrigen){
+
+	t_stream* paquete = malloc(sizeof(t_stream));
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+
+	char* data = crearDataConHeader(D_STRUCT_TCB_QUANTUM, paquete->length);
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+t_stream* serializeStruct_tcbINNN(t_struct_tcb* estructuraOrigen){
+
+	t_stream* paquete = malloc(sizeof(t_stream));
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+
+	char* data = crearDataConHeader(D_STRUCT_TCB_INNN, paquete->length);
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+t_stream* serializeStruct_tcbINNC(t_struct_tcb* estructuraOrigen){
+
+	t_stream* paquete = malloc(sizeof(t_stream));
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+
+	char* data = crearDataConHeader(D_STRUCT_TCB_INNC, paquete->length);
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+t_stream* serializeStruct_tcbOUTN(t_struct_tcb* estructuraOrigen){
+
+	t_stream* paquete = malloc(sizeof(t_stream));
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+
+	char* data = crearDataConHeader(D_STRUCT_TCB_OUTN, paquete->length);
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+t_stream* serializeStruct_tcbOUTC(t_struct_tcb* estructuraOrigen){
+
+	t_stream* paquete = malloc(sizeof(t_stream));
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+
+	char* data = crearDataConHeader(D_STRUCT_TCB_OUTC, paquete->length);
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+t_stream* serializeStruct_tcbCREA(t_struct_tcb* estructuraOrigen){
+
+	t_stream* paquete = malloc(sizeof(t_stream));
+
+	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+
+	char* data = crearDataConHeader(D_STRUCT_TCB_CREA, paquete->length);
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+
+
 // --------------------------------------
 // to RECIEVE
 
@@ -296,6 +424,15 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 				break;
 			case D_STRUCT_RESPUESTA_MSP:
 				estructuraDestino = deserializeStruct_respuestaMSP(dataPaquete,length);
+				break;
+			case D_STRUCT_TCB:
+			case D_STRUCT_TCB_QUANTUM:
+			case D_STRUCT_TCB_INNN:
+			case D_STRUCT_TCB_INNC:
+			case D_STRUCT_TCB_OUTN:
+			case D_STRUCT_TCB_OUTC:
+			case D_STRUCT_TCB_CREA:
+				estructuraDestino = deserializeStruct_tcb(dataPaquete,length);
 				break;
 				}
 
@@ -366,6 +503,14 @@ t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint1
 	memcpy(buffer, dataPaquete + sizeof(t_struct_respuesta_msp), length - sizeof(t_struct_respuesta_msp)); // copiamos los bytes que queriamos enviar
 
 	estructuraDestino->buffer = buffer;
+
+	return estructuraDestino;
+}
+
+t_struct_tcb* deserializeStruct_tcb(char* dataPaquete, uint16_t lenght){
+	t_struct_tcb* estructuraDestino = malloc(sizeof(t_struct_tcb));
+
+	memcpy(estructuraDestino, dataPaquete, sizeof(t_struct_tcb));
 
 	return estructuraDestino;
 }

@@ -640,7 +640,6 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("XXXX",parametros);
 
 		copiar_registros_a_tcb();
-		tcb->cola = EXIT; //FIXME esta bien esto?
 
 		list_clean(parametros);
 		break;
@@ -649,7 +648,6 @@ void ejecutarLinea(int* bytecode){
 
 		t_struct_numero* crear_segmento_struct = malloc(sizeof(t_struct_numero));
 		crear_segmento_struct->numero = registros_cpu.registros_programacion['A'];
-		free(crear_segmento_struct);
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_MALC, crear_segmento_struct);
 		controlar_envio(resultado, D_STRUCT_MALC);
@@ -659,18 +657,19 @@ void ejecutarLinea(int* bytecode){
 
 		registros_cpu.registros_programacion['A'] = ((t_struct_direccion*) structRecibido)->numero;
 
+		free(crear_segmento_struct);
 		list_clean(parametros);
 		break;
 	case FREE:
 		ejecucion_instruccion("FREE",parametros);
 
-		t_struct_numero* crear_segmento_struct = malloc(sizeof(t_struct_numero));
-		crear_segmento_struct->numero = registros_cpu.registros_programacion['A'];
-		free(crear_segmento_struct);
+		t_struct_numero* liberar_segmento_struct = malloc(sizeof(t_struct_numero));
+		liberar_segmento_struct->numero = registros_cpu.registros_programacion['A'];
 
-		resultado = socket_enviar(sockMSP, D_STRUCT_FREE, crear_segmento_struct);
+		resultado = socket_enviar(sockMSP, D_STRUCT_FREE, liberar_segmento_struct);
 		controlar_envio(resultado, D_STRUCT_FREE);
 
+		free(liberar_segmento_struct);
 		list_clean(parametros);
 		break;
 	case INNN:

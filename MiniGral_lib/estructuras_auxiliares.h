@@ -19,6 +19,7 @@
 	#include <sys/socket.h>
 	#include <errno.h>
 	#include <stdint.h>
+	#include <ansisop-panel/panel.h>
 
 	#include <commons/log.h>
 	#include <commons/config.h>
@@ -40,18 +41,30 @@
 
 
 	enum{
+		//Generales
 		D_STRUCT_SIGNAL=0,
 		D_STRUCT_NUMERO=1,
 		D_STRUCT_DIRECCION=2,
 		D_STRUCT_CHAR=3,
 		D_STRUCT_STRING=4,
+
+		//Comunicacion MSP-CPU
 		D_STRUCT_SOL_BYTES=5,
 		D_STRUCT_RESPUESTA_MSP=6,
 		D_STRUCT_ENV_BYTES=7,
 		D_STRUCT_MALC=8,
 		D_STRUCT_FREE=9,
 
-		//comunicacion entre kernel y consola
+		//Comunicacion Kernel-CPU
+		D_STRUCT_TCB=10,
+		D_STRUCT_TCB_QUANTUM=11,
+		D_STRUCT_TCB_INNN=12,
+		D_STRUCT_TCB_INNC=13,
+		D_STRUCT_TCB_OUTN=14,
+		D_STRUCT_TCB_OUTC=15,
+		D_STRUCT_TCB_CREA=16,
+
+		//Comunicacion entre Kernel-Consola
 		HANDSHAKE_SUCCESS = 100,// TODO: serializar segun estas señales
 		HANDSHAKE_FAIL = 101,
 		ENVIAR_IMPRIMIR_TEXTO = 102,
@@ -60,6 +73,7 @@
 		FILE_RECV_SUCCESS = 105,
 		FILE_RECV_FAIL = 106,
 		END_PROGRAM = 107,
+
 	} t_operaciones;
 
 	// Header de stream
@@ -108,6 +122,20 @@
 		void* buffer;
 		uint32_t tamano_buffer;
 	}__attribute__((__packed__)) t_struct_respuesta_msp;
+
+	typedef struct struct_tcb{
+		uint32_t pid;
+		uint32_t tid;
+		bool kernel_mode;
+		uint32_t segmento_codigo;
+		uint32_t segmento_codigo_size;
+		uint32_t puntero_instruccion;
+		uint32_t base_stack;
+		uint32_t cursor_stack;
+		int32_t registros[5];
+		t_cola cola;
+
+	}__attribute__((__packed__)) t_struct_tcb;
 
 	char* leer_archivo(FILE* archivo, long int tamanio_archivo);
 	long int calcular_tamanio_archivo(FILE* archivo);
