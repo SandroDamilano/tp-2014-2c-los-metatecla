@@ -7,6 +7,14 @@
 
 #include "general_kernel.h"
 
+	t_queue* cola_new;
+	t_queue* cola_exit;
+	sem_t* sem_exit;
+	pthread_mutex_t* mutex_exit;
+	pthread_mutex_t* mutex_TIDs;
+	pthread_mutex_t* mutex_PIDs;
+	pthread_mutex_t* mutex_log;
+
 void inicializar_semaforos(){
 	//FIXME creo que en algun lado tenes que usar malloc para los mutex si los usas como puntero. Sino se pueden usar con &
 	pthread_mutex_init(mutex_new, NULL);
@@ -67,7 +75,7 @@ t_hilo *crear_TCB(int pid, uint32_t dir_codigo, uint32_t dir_stack, int tamanio_
 	tcb->cursor_stack = 0; // TODO: Consultar con ayudante si esta bien
 
 	int i;
-	for(i=0; i==4; i++){
+	for(i=0; i<=4; i++){
 		tcb->registros[i] = 0;
 	}
 

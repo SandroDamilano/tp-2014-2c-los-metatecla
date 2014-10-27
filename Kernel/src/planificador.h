@@ -11,11 +11,15 @@
 	#include <ansisop-panel/panel.h>
 	#include <commons/log.h>
 	#include "general_kernel.h"
-	#include "servicios_cpu.h"
+//	#include "servicios_cpu.h"
 
 	int sockMSP;
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
+
+	t_queue* cola_new;
+	sem_t* sem_new;
+	pthread_mutex_t* mutex_new;
 
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;
@@ -33,7 +37,7 @@
 	} t_data_nodo_block;
 
 	//Por ahora estas van aca porque el planificador es el único que las usa
-	t_list* cola_ready, cola_block; //Colas de planificación.
+	t_list *cola_ready, *cola_block; //Colas de planificación.
 
 	pthread_mutex_t* mutex_ready;
 
@@ -43,6 +47,18 @@
 	uint32_t parametro_a_buscar; //Puede ser un tid o un recurso (semáforo)
 	t_evento evento_a_buscar;
 
-	void* main_PLANIFICADOR(void* parametros);
+	void encolar_en_ready(t_hilo* tcb);
+
+	void desbloquear_por_semaforo(t_evento evento, uint32_t sem);
+	void desbloquear_por_join(t_evento evento, uint32_t tid);
+	t_hilo* desbloquear_tcbSystcall(uint32_t tid);
+	t_hilo* desbloquear_tcbKernel();
+
+	void bloquear_tcbSemaforo(t_hilo* tcb, uint32_t sem);
+	void bloquear_tcbSystcall(t_hilo* tcb, uint32_t dir_systcall);
+	void bloquear_tcbJoin(t_hilo* tcb, uint32_t tid);
+	void bloquear_tcbKernel(t_hilo* tcb);
+
+	void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros);
 
 #endif /* PLANIFICADOR_H_ */

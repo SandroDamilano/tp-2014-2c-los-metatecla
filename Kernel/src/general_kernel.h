@@ -23,8 +23,8 @@
 	extern pthread_mutex_t* mutex_TIDs;
 	extern pthread_mutex_t* mutex_PIDs;
 	extern pthread_mutex_t* mutex_log;
-	extern int cantidad_de_PIDs = 0;
-	extern int cantidad_de_TIDs = 0;
+	extern int cantidad_de_PIDs;// = 0;
+	extern int cantidad_de_TIDs;// = 0;
 	extern int sockMSP;
 
 	void inicializar_semaforos();

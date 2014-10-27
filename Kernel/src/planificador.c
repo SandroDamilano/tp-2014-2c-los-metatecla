@@ -48,25 +48,28 @@ void bloquear_tcbSemaforo(t_hilo* tcb, uint32_t sem){
 	bloquear_tcb(tcb, SEM, sem);
 }
 
-bool es_el_tcbKernel(t_data_nodo_block* data){
+bool es_el_tcbKernel(void* dataEnVoid){
+	t_data_nodo_block* data = dataEnVoid;
 	return (data->evento == TCBKM);
 };
 
-bool es_el_tcbSystcall(t_data_nodo_block* data){
-	return (data->evento == SYSTCALL & data->tcb->tid == tid_a_buscar);
+bool es_el_tcbSystcall(void* dataEnVoid){
+	t_data_nodo_block* data = dataEnVoid;
+	return ((data->evento == SYSTCALL) & (data->tcb->tid == tid_a_buscar));
 }
 
-bool es_el_tcbBuscado(t_data_nodo_block* data){
-	return (data->parametro == parametro_a_buscar & data->evento == evento_a_buscar);
+bool es_el_tcbBuscado(void* dataEnVoid){
+	t_data_nodo_block* data = dataEnVoid;
+	return ((data->parametro == parametro_a_buscar) & (data->evento == evento_a_buscar));
 };
 
 // Este desbloquear es GENERAL. Para desbloqear, hay que usar los particulares.
 void desbloquear_proceso(t_evento evento, uint32_t parametro){
-	t_hilo* tcb_desbloqueado;
+	t_hilo *tcb_desbloqueado;
 	parametro_a_buscar = parametro;
 	evento_a_buscar = evento;
 	tcb_desbloqueado = list_remove_by_condition(cola_block, es_el_tcbBuscado);
-	if (*tcb_desbloqueado != NULL){
+	if (tcb_desbloqueado != NULL){
 		encolar_en_ready(tcb_desbloqueado);
 	}
 }
@@ -96,23 +99,24 @@ void inicializar_ready_block(){
 }
 
 void pop_new(t_hilo* tcb){
-	void* nuevo = queue_pop(cola_new);
-	*tcb = *nuevo;
+	void *nuevo = queue_pop(cola_new);
+	tcb = nuevo;
 };
 
 //Este hilo se queda haciendo loop hasta que termine la ejecución
 void poner_new_a_ready(){
 	while(1){
-		t_hilo* tcb;
+		t_hilo* tcb = malloc(sizeof(t_hilo));
 		consumir_tcb(pop_new, sem_new, mutex_new, tcb);
 		encolar_en_ready(tcb);
+		free(tcb);
 	}
 };
 
 void inicializar_semaforo_ready(){
 	pthread_mutex_init(mutex_ready, NULL);
 };
-
+/*
 void boot(char* systcalls_path){
 	uint32_t dir_codigo;
 	uint32_t dir_stack;
@@ -147,19 +151,77 @@ void boot(char* systcalls_path){
 	free(datos_recibidos);
 
 	//Crea hilo en modo kernel y lo encola en bloqueados
-	t_hilo* tcb_kernel = crear_TCB(obtener_pid(), dir_codigo, dir_stack, tamanio_codigo);
+	t_hilo *tcb_kernel = crear_TCB(obtener_pid(), dir_codigo, dir_stack, tamanio_codigo);
 	tcb_kernel->kernel_mode = true;
 	bloquear_tcbKernel(tcb_kernel);
 }
+*/
+
+///////////////////////////////////////////////////////////////////////////
+//EX SERVICIOS_CPU.C
+
+void copiar_tcb(t_hilo* original, t_hilo* copia){
+	copia->tid = original->tid;
+	copia->pid = original->pid;
+	int i;
+	for(i=0; i<=4; i++){
+		copia->registros[i] = original->registros[i];
+	}
+//	copia->registros = original->registros;
+};
+
+void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
+	t_hilo* tcb_kernel = desbloquear_tcbKernel();
+	bloquear_tcbSystcall(tcb, dir_systcall);
+	if (tcb_kernel != NULL){
+		copiar_tcb(tcb, tcb_kernel);
+		tcb_kernel->puntero_instruccion = dir_systcall;
+		encolar_en_ready(tcb_kernel);
+	}
+	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
+};
+
+bool esta_por_systcall(void* dataEnVoid){
+	t_data_nodo_block* data = dataEnVoid;
+	return (data->evento == SYSTCALL);
+}
+
+t_data_nodo_block* desbloquear_alguno_por_systcall(t_hilo* tcb_kernel){
+	return list_remove_by_condition(cola_block, esta_por_systcall);
+}
+
+void retornar_de_systcall(t_hilo* tcb_kernel){
+	t_hilo* tcb = desbloquear_tcbSystcall(tcb_kernel->tid);
+	int i;
+	for(i=0; i<=4; i++){
+		tcb->registros[i] = tcb_kernel->registros[i];
+	}
+//	tcb->registros = tcb_kernel->registros;
+	encolar_en_ready(tcb);
+	bloquear_tcbKernel(tcb_kernel);
+	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall(tcb_kernel);
+
+	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
+
+	if (data_otro_tcb != NULL){
+		atender_systcall(data_otro_tcb->tcb, data_otro_tcb->parametro);
+	};
+}
+
+void crear_nuevo_hilo(t_hilo* tcb_padre){
+	//TODO Averiguar qué hay que poner en el nuevo TCB hijo
+}
+
+//////////////////////////////////////////////////////////////////////
 
 void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 {
 	inicializar_ready_block();
 	inicializar_semaforo_ready();
 	pthread_t thr_consumidor_new;
-	pthread_create(&thr_consumidor_new, NULL, poner_new_a_ready, NULL);
+	pthread_create(&thr_consumidor_new, NULL, (void*)&poner_new_a_ready, NULL);
 
-	boot(parametros->syscalls_path);
+//	boot(parametros->syscalls_path);
 
 	pthread_join(thr_consumidor_new, NULL);
 
