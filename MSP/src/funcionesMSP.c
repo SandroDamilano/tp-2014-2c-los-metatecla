@@ -163,7 +163,7 @@ void swap_out(t_pagina pagina){
 
 	//Abro un nuevo archivo
 	FILE* arch_swap = NULL;
-	arch_swap = fopen(file_name, "wb");
+	arch_swap = fopen(file_name, "w+"); //FIXME Aca el modo es w+ lo hablamos con el ayudante
 
 	//Pongo la informacion necesaria en el archivo
 	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
@@ -322,6 +322,15 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 	return pag;
 }
 
+
+void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
+
+	if(((*marco).memoria + direccion.desplazamiento + tamanio) < ((*marco).memoria+256)){ // Se fija que no se quiera escribir fuera de los limites del marco
+			memcpy((*marco).memoria + direccion.desplazamiento, bytes_escribir, tamanio);}
+	else {
+			segmentation_fault();
+	}
+}
 /*********************************************** DIRECCIONES *********************************************************/
 
 uint32_t elevar(uint32_t numero, uint32_t elevado){
@@ -455,7 +464,7 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 				uint32_t tam_segmento;
 				scanf("%d",&tam_segmento);
 				uint32_t direccion_segmento = crearSegmento(PID, tam_segmento);
-				printf("La direccion del nuevo segmento es: %d\n", direccion_segmento);
+				printf("La direccion base del nuevo segmento es: %d\n", direccion_segmento);
 				indicaciones_consola();
 
 	break;

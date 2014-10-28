@@ -238,14 +238,17 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		free(segmento);
 	}
 
-	t_lista_procesos *proceso = list_find(listaProcesos, (void*) (*mismoPID));
+	t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
+	proceso = list_find(listaProcesos, (void*) (*mismoPID));
 	if(proceso != NULL){
 		//3. Ingresa la tabla de segmentos del proceso PID y con la traduccion entra al segmento pedido
-		t_lista_segmentos *segmento=list_find((*proceso).lista_Segmentos, (void*) (*mismoSegmento));
+		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+		segmento=list_find((*proceso).lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
 			//4. Libera la memoria y elimina la entrada en la tabla de segmentos y su respectiva tabla de paginas
 			list_destroy_and_destroy_elements((*segmento).lista_Paginas, (void*) (*liberarMemoria));
 			list_remove_and_destroy_by_condition((*proceso).lista_Segmentos,(void*) (*mismoSegmento), (void*) (*liberarSegmento));
+			free(segmento);
 			//TODO Faltan logs de eleminar segmento
 		} else {
 			pthread_mutex_lock(&mutex_log);
@@ -260,19 +263,16 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		pthread_mutex_unlock(&mutex_log);
 	}
 
+free(proceso);
 }
 
 void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
 	//1. traducir direccion y validarla
 
 	t_direccion direccion = traducirDireccion(direcc_log);
-	//TODO: VALIDAR
 
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
 		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
-
-	//3.una vez cargada la pagina, escribir donde corresponda los bytes a escribir
-
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 					return PIDEncontrado->pid==PID;
 				}
@@ -282,27 +282,41 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 	bool mismaPagina(t_lista_paginas *numeroPagina){
 							return numeroPagina->numeroPagina==direccion.pagina;
 				}
+	bool funcionMarcoLibre(t_marco *marco){
+		return marco->marco_libre == 1;
+	}
 
-	t_lista_procesos* proceso;
+	t_lista_procesos* proceso = malloc(sizeof(t_lista_procesos));
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	if(proceso != NULL){
-		t_lista_segmentos* segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
+		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+		segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
-			t_lista_paginas* pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
+			t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
+			pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 			if(pagina != NULL){
-				if(pagina->swap == 0){ //FIXME: ACA MANDE CUALQUIERA. QUIERO PONER QUE SI ESTA EN MEM PPAL
-					/*TODO: IR A LA DIRECCION PERTINENTE EN MEM PPAL Y HACER ALGO COMO (SI NO ME EQUIVOCO):
-					 * if(mamPpal + direccion.desplazamiento){
-						memcpy(memPpal + direccion.desplazamiento, bytes_escribir, tamanio)}
-						else {
-						segmentation_fault()}*/
-				} else {
-					swap_in(PID, direccion.segmento, direccion.pagina);
-					/*if(mamPpal + direccion.desplazamiento){
-						memcpy(memPpal + direccion.desplazamiento, bytes_escribir, tamanio)}
-						else {
-						segmentation_fault()}*/
+				if(pagina->swap == 0){
+					bool mismoMarco(t_marco *marco){
+						return marco->numeroMarco == (*pagina).marcoEnMemPpal;
+					}
+					t_marco *marco = malloc(sizeof(t_marco));
+					marco=list_find(lista_marcos,(void*) (*mismoMarco)); //Busca el marco de memoria ppal
+
+					guardarInformacion(marco,direccion,bytes_escribir,tamanio);
+
+				} else {//Traemos pagina a memoria ppal
+					t_marco *marcoLibre = malloc(sizeof(t_marco));
+					marcoLibre= list_find(lista_marcos,(void*) (*funcionMarcoLibre));
+					if(marcoLibre!=NULL){
+						t_pagina *pagina = malloc(sizeof(t_pagina));
+						*pagina= swap_in(PID, direccion.segmento, direccion.pagina);
+						memcpy(marcoLibre, pagina->codigo, pagina->tamanio_buffer); //FIXME el tamaño buffer es el tamaño de lo que tiene el archivo adentro ?
+						guardarInformacion(marcoLibre,direccion,bytes_escribir,tamanio);
+						marcoLibre->marco_libre = 0;
+					} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
+
+					}
 				}
 			} else {
 				page_not_found_exception(direccion.pagina);
@@ -312,4 +326,8 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 		}
 	} else {
 	PID_not_found_exception(PID);}
+	//3.una vez cargada la pagina, escribir donde corresponda los bytes a escribir
 }
+//FIXME hacer los free
+
+

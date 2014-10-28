@@ -22,7 +22,6 @@
 #include "commons/log.h"
 #include "commons/txt.h"
 #include "commons/string.h"
-//#include "ConsolaMSP.h"
 #include <estructuras_auxiliares.h>
 
 
@@ -44,7 +43,7 @@ typedef struct pagina{
 
 typedef struct marco{
 	void *memoria;
-	bool marco_libre;
+	uint32_t marco_libre;
 	uint32_t numeroMarco;
 } t_marco;
 
@@ -106,6 +105,7 @@ void swap_out(t_pagina pagina);
 t_pagina swap_in(int pid, int seg, int pag);
 DIR* abrir_directorio_swap();
 t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
+void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
 
 void destruir_archivo(char* nombre_archivo);
 void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
