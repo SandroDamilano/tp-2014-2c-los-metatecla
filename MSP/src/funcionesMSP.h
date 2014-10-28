@@ -104,4 +104,9 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
 void destruir_archivo(char* nombre_archivo);
 void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
 
+void PID_not_found_exception(uint32_t PID);
+void segment_not_found_exception(uint32_t segmento);
+void page_not_found_exception(uint32_t pagina);
+void segmentation_fault();
+
 #endif /* FUNCIONESMSP_H_ */
