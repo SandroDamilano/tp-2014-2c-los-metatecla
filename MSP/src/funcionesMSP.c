@@ -322,7 +322,7 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 	return pag;
 }
 
-
+/********************************* MANEJO DE INFORMACION ******************************************/
 void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
 
 	if(((*marco).memoria + direccion.desplazamiento + tamanio) < ((*marco).memoria+256)){ // Se fija que no se quiera escribir fuera de los limites del marco
@@ -330,6 +330,13 @@ void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribi
 	else {
 			segmentation_fault();
 	}
+}
+
+char* devolverInformacion(t_marco *marco, t_direccion direccion, uint32_t tamanio){
+	//TODO VALIDAR QUE NO SE PASE DEL LIMITE
+	char* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
+	memcpy(buffer, marco->memoria + direccion.desplazamiento, tamanio);
+	return buffer;
 }
 /*********************************************** DIRECCIONES *********************************************************/
 
@@ -487,6 +494,7 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 				char* texto; //CAPAZ DEBERIA SER CHAR[ALGUN TAMANIO MAX]
 				scanf("%s", texto);
 				escribirMemoria(PID, direcVir, texto, tamanio_escritura);
+				indicaciones_consola();
 
 	break;
 	case '4': printf("El comando elegido fue: Leer memoria\n"
@@ -496,13 +504,24 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 				scanf("%d", &direcVir);
 				printf("Ingrese un tamaño:\n");
 				scanf("%d", &tamanio_escritura);
+				solicitar_memoria(PID, direcVir, tamanio_escritura);
+				indicaciones_consola();
+
 	break;
-	case '5': printf("El comando elegido fue: Tabla de segmentos\n"); break;
+	case '5': printf("El comando elegido fue: Tabla de segmentos\n");
+			  tabla_segmentos();
+			  indicaciones_consola();
+	break;
 	case '6': printf("El comando elegido fue: Tabla de paginas\n"
 				"Ingrese un PID:\n");
 				scanf("%d",&PID);
+				tabla_paginas(PID);
+				indicaciones_consola();
 	break;
-	case '7': printf("El comando elegido fue: Listar marcos\n"); break;
+	case '7': printf("El comando elegido fue: Listar marcos\n");
+			  listar_marcos();
+			  indicaciones_consola();
+	break;
 	case '8': terminarConsola=0; break;
 	}
 	}
@@ -521,7 +540,7 @@ return NULL;
 
  }
 
- void tabla_paginas(){
+ void tabla_paginas(uint32_t PID){
 
  }
 

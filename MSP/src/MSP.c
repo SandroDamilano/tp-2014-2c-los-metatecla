@@ -296,7 +296,7 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 			t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
 			pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 			if(pagina != NULL){
-				if(pagina->swap == 0){
+				if(pagina->swap == 0){ //Esta en memoria principal
 					bool mismoMarco(t_marco *marco){
 						return marco->numeroMarco == (*pagina).marcoEnMemPpal;
 					}
@@ -308,7 +308,8 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 				} else {//Traemos pagina a memoria ppal
 					t_marco *marcoLibre = malloc(sizeof(t_marco));
 					marcoLibre= list_find(lista_marcos,(void*) (*funcionMarcoLibre));
-					if(marcoLibre!=NULL){
+
+					if(marcoLibre!=NULL){//Hay un marco libre en memoria principal donde cargar la pagina
 						t_pagina *pagina = malloc(sizeof(t_pagina));
 						*pagina= swap_in(PID, direccion.segmento, direccion.pagina);
 						memcpy(marcoLibre, pagina->codigo, pagina->tamanio_buffer); //FIXME el tamaño buffer es el tamaño de lo que tiene el archivo adentro ?
@@ -330,4 +331,80 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 }
 //FIXME hacer los free
 
+
+
+//FIXME!!! HICE UN COPY PASTE RARO DE ESCRIBIR MEMORIA PORQUE ME PARECIO QUE LA LOGICA ES SIMILAR
+//CAMBIEN TODOO LO QUE CONSIDEREN NECESARIO, POR SUPUESTO
+char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
+	char* bytes_solicitados;
+
+	t_direccion direccion = traducirDireccion(direcc_log);
+	return NULL;//FIXME
+
+	bool mismoPID(t_lista_procesos *PIDEncontrado){
+			return PIDEncontrado->pid==PID;
+		}
+	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
+			return numeroSegmento->numeroSegmento==direccion.segmento;
+		}
+	bool mismaPagina(t_lista_paginas *numeroPagina){
+			return numeroPagina->numeroPagina==direccion.pagina;
+		}
+	bool funcionMarcoLibre(t_marco *marco){
+			return marco->marco_libre == 1;
+		}
+
+	t_lista_procesos* proceso = malloc(sizeof(t_lista_procesos));
+	proceso = list_find(listaProcesos,(void*) (*mismoPID));
+
+	if(proceso != NULL){
+			t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+			segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
+			if(segmento != NULL){
+				t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
+				pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
+				if(pagina != NULL){
+					if(pagina->swap == 0){ //Esta en memoria principal
+
+						bool mismoMarco(t_marco *marco){
+							return marco->numeroMarco == (*pagina).marcoEnMemPpal;
+						}
+
+						t_marco *marco = malloc(sizeof(t_marco));
+						marco=list_find(lista_marcos,(void*) (*mismoMarco)); //Busca el marco de memoria ppal
+
+						bytes_solicitados = devolverInformacion(marco, direccion, tamanio);
+						return bytes_solicitados;
+						//TODO: cuando se terminen de usar los bytes solicitados, AFUERA de esta funcion, liberar memoria.
+
+					} else {//Traemos pagina a memoria ppal
+						t_marco *marcoLibre = malloc(sizeof(t_marco));
+						marcoLibre= list_find(lista_marcos,(void*) (*funcionMarcoLibre));
+
+						if(marcoLibre!=NULL){//Hay un marco libre en memoria principal donde cargar la pagina
+							t_pagina *pagina = malloc(sizeof(t_pagina));
+							*pagina= swap_in(PID, direccion.segmento, direccion.pagina);
+							memcpy(marcoLibre, pagina->codigo, pagina->tamanio_buffer);
+
+							bytes_solicitados = devolverInformacion(marcoLibre, direccion, tamanio);
+
+							marcoLibre->marco_libre = 0;
+							return bytes_solicitados;
+						} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
+
+						}
+					}
+				} else {
+					page_not_found_exception(direccion.pagina);
+					return NULL;
+				}
+			} else {
+				segment_not_found_exception(direccion.segmento);
+				return NULL;
+			}
+		} else {
+		PID_not_found_exception(PID);
+		return NULL;}
+
+}
 
