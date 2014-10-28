@@ -17,10 +17,6 @@
 //Path para archivos swap
 extern char* path_swap;
 
-//Variables de Archivos
-extern t_log *logMSP;
-t_config *archConfigMSP = NULL;
-
 //Variables de Memoria Principal
 void *memoria_ppal = NULL;
 int memoriaSwapActual = 0;

@@ -8,6 +8,7 @@
 #ifndef FUNCIONESMSP_H_
 #define FUNCIONESMSP_H_
 
+#define MAX_COUNT_OF_CONFIG_KEYS 4
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -24,10 +25,12 @@
 //#include "ConsolaMSP.h"
 #include <estructuras_auxiliares.h>
 
+
 char* path_config, *path_swap;
-t_log* logMSP;
 pthread_mutex_t mutex_log;
 int paginas_en_disco;
+void* buffer;
+char bufferLog[80];
 
 typedef struct pagina{
 	uint32_t PID;
@@ -87,8 +90,8 @@ void solicitarMemoria(uint32_t PID, uint32_t direccion_log, int tamanio_mem); //
 void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 uint32_t crearDireccion(uint32_t segmento,uint32_t pagina);
 
-void leerConfiguracion(t_config *config, char *path); //levanta archivo de configuracion y asigna a las variables correspodientes
-void crear_logger(t_log *logger);//Crea archivos de logeo
+void leer_config(char *path); 	//levanta archivo de configuracion y asigna a las variables correspodientes
+void crear_logger();			//Crea archivos de log
 void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
 uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento

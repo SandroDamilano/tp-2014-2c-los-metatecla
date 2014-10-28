@@ -16,29 +16,28 @@ pthread_mutex_t mutex_consola = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char *argv[]) {
 
-	//Defino path para poner los archivos del swap (path_swap)
-
 	// Control de argumentos
 	if(!(path_config = argv[1])) {
 		path_config = "config.cfg";	// default path, en caso de no ingresarlo
 	}
+	//Defino path para poner los archivos del swap (path_swap)
 	if (!(path_swap = argv[2])) {
 		path_swap = "/home/utnso/archivos_swap/";	// default path, en caso de no ingresarlo
 	}
 
-	//1.Leer archivo de configuracion, Crear archivo de log e iniciar semaforos
-	leerConfiguracion(archConfigMSP, path_config);
-	crear_logger(logMSP);
+	//1. Crear archivo de log, Leer archivo de configuracion e Iniciar semaforos
+	crear_logger();
+	leer_config(path_config);
 	inicializar_semaforos();
 
 	//2. Reservar bloque de memoria principal
 	memoria_ppal = reservarBloquePpal(tamanio_mem_ppal);
 	//TODO log "se creo memoria princial y abarca DESDE memoria_ppal HASTA memoria_ppal+tamanio
-printf("pase la mem ppal \n");
+	printf("pase la mem ppal \n");	//DEBUG
 
 	//3. Generar estructuras administrativas
 	lista_marcos = dividirMemoriaEnMarcos(memoria_ppal, tamanio_mem_ppal);
-printf("pase division de marcos\n");
+	printf("pase division de marcos\n");	//DEBUG
 	memoriaPpalActual = tamanio_mem_ppal;
 	memoriaSwapActual = cant_mem_swap;
 	listaProcesos = list_create();

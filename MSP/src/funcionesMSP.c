@@ -12,41 +12,68 @@ uint32_t cant_mem_swap;
 char* alg_sustitucion;
 
 /*********************************** INICIO *******************************************************************/
-void leerConfiguracion(t_config *archConfigMSP, char *path){	//TODO Faltan logs y alguna que otra validacion
-
-	archConfigMSP= config_create(path);
-
-	if(config_has_property(archConfigMSP, "CANTIDAD_MEMORIA")){
-			tamanio_mem_ppal = config_get_int_value(archConfigMSP,"CANTIDAD_MEMORIA");}
-	else {
-				printf("No esta definida la cantidad de memoria principal en el archivo\n");
-				exit(0);
-			}
-	if(config_has_property(archConfigMSP, "PUERTO")){
-			puertoMSP = config_get_int_value(archConfigMSP, "PUERTO");}
-	else {
-			printf("No esta definido el puerto en el archivo\n");
-			exit(0);
-		}
-
-	if(config_has_property(archConfigMSP, "CANTIDAD_SWAP")){
-			cant_mem_swap = config_get_int_value(archConfigMSP,"CANTIDAD_SWAP");}
-	else {
-				printf("No esta definido la cantidad de memoria swap en el archivo\n");
-				exit(0);
-			}
-
-	if(config_has_property(archConfigMSP, "SUST_PAGS")){
-			alg_sustitucion = config_get_string_value(archConfigMSP,"SUST_PAGS");}
-	else {
-					printf("No esta definido el algoritmo de sustitucion de paginas en el archivo\n");
-					exit(0);
-			}
+void crear_logger(){
+	if ((logger = log_create("logger.log", "MSP", false, LOG_LEVEL_TRACE)) == NULL) {
+		printf("No se pudo crear el logger. Proceso abortado.\n");
+		exit(1);
+	}
+	log_info(logger,"Inicio de registro de actividades del Proceso MSP.");
 }
 
-void crear_logger(t_log *logger){
-	if ((logger = log_create("logMSP.log", "MSP", false, LOG_LEVEL_TRACE)) == NULL) {
-		printf("No se pudo crear el logger. Proceso abortado.\n");
+void leer_config(char *config_path)	{	//TODO Faltan logs y alguna que otra validacion
+
+	config_file = config_create(config_path);
+    log_info(logger,"Parseo y Extraccion de valores de archivo de configuracion");
+
+	if (config_keys_amount(config_file) != MAX_COUNT_OF_CONFIG_KEYS)
+	{
+		fprintf(stderr,"El fichero 'config.cfg' contiene menos keys de las que deberia o no se encuentra al fichero en disco.\n");
+		log_error(logger,"El fichero 'config.cfg' contiene menos keys de las que deberia o no se encuentra al fichero en disco.");
+		exit(1);
+	}
+
+	if(config_has_property(config_file, "CANTIDAD_MEMORIA"))	{
+			tamanio_mem_ppal = config_get_int_value(config_file,"CANTIDAD_MEMORIA");
+	    	sprintf(bufferLog,"CANTIDAD_MEMORIA = [%d]",tamanio_mem_ppal);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'CANTIDAD_MEMORIA' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'CANTIDAD_MEMORIA' en archivo de configuracion. Programa abortado.");
+		exit(1);
+	}
+
+	if(config_has_property(config_file, "PUERTO")){
+			puertoMSP = config_get_int_value(config_file, "PUERTO");
+	    	sprintf(bufferLog,"PUERTO = [%d]",puertoMSP);
+	    	log_debug(logger,bufferLog);
+	}
+	 else {
+			fprintf(stderr, "Falta key 'PUERTO' en archivo de configuracion. Chequear.\n");
+			fprintf(stderr, "Programa abortado.\n");
+			log_error(logger,"Falta key 'PUERTO' en archivo de configuracion. Programa abortado.");
+			exit(1);
+		}
+
+	if(config_has_property(config_file, "CANTIDAD_SWAP")){
+			cant_mem_swap = config_get_int_value(config_file,"CANTIDAD_SWAP");
+	    	sprintf(bufferLog,"CANTIDAD_SWAP = [%d]",cant_mem_swap);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'CANTIDAD_SWAP' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'CANTIDAD_SWAP' en archivo de configuracion. Programa abortado.");
+		exit(1);
+	}
+
+	if(config_has_property(config_file, "SUST_PAGS"))	{
+			alg_sustitucion = config_get_string_value(config_file,"SUST_PAGS");
+	    	sprintf(bufferLog,"SUST_PAGS = [%s]",alg_sustitucion);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'SUST_PAGS' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'SUST_PAGS' en archivo de configuracion. Programa abortado.");
 		exit(1);
 	}
 }
@@ -142,7 +169,7 @@ void swap_out(t_pagina pagina){
 	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
 
 	/*pthread_mutex_lock(&mutex_log);
-	log_debug(logMSP,"Creado el archivo %s",file_name);
+	log_debug(logger,"Creado el archivo %s",file_name);
 	pthread_mutex_unlock(&mutex_log);*/
 
 	paginas_en_disco++;
@@ -200,11 +227,11 @@ void destruir_archivo(char* nombre_archivo) {
 		paginas_en_disco--;
 		pthread_mutex_lock(&mutex_log);
 		printf("No se pudo eliminar el archivo %s\n", nombre_archivo);
-		log_error(logMSP, "No se pudo eliminar el archivo %s\n",nombre_archivo);
+		log_error(logger, "No se pudo eliminar el archivo %s\n",nombre_archivo);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		/*pthread_mutex_lock(&mutex_log);
-		 log_info(logMSP,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
+		 log_info(logger,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
 		 pthread_mutex_unlock(&mutex_log);*/
 	}
 	free(nombre_archivo);
@@ -236,7 +263,7 @@ DIR* abrir_directorio_swap(){
 		if(dir == NULL){
 			pthread_mutex_lock(&mutex_log);
 			printf("No se pudo abrir el directorio %s\n", path_swap);
-			log_error(logMSP,"No se pudo abrir el directorio %s\n", path_swap);
+			log_error(logger,"No se pudo abrir el directorio %s\n", path_swap);
 			pthread_mutex_unlock(&mutex_log);
 			closedir(dir);
 			return NULL;
@@ -282,7 +309,7 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 
 					pag.nombre_archivo = nombre_archivo;
 
-					FILE* arch_swap = abrir_archivo(nombre_archivo, logMSP, &mutex_log);
+					FILE* arch_swap = abrir_archivo(nombre_archivo, logger, &mutex_log);
 
 					pag.archivo = arch_swap;
 
