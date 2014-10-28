@@ -117,7 +117,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	if (tamanio_segmento > 1048576){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
-		//log_error(logMSP,"Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
+		//log_error(logger,"Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
 		pthread_mutex_unlock(&mutex_log);
 		return 0;
 	}
@@ -125,7 +125,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	if(tamanio_segmento > cant_mem_actual){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error Memoria llena");
-		//log_error(logMSP,"Error Memoria Llena");
+		//log_error(logger,"Error Memoria Llena");
 		pthread_mutex_unlock(&mutex_log);
 		return 0;
 	}
@@ -166,12 +166,12 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		(*nuevoSegmento).tamanio=segmentoEnSwap+segmentoEnMP;
 		pthread_mutex_lock(&mutex_log);
 		list_add((*proceso).lista_Segmentos, nuevoSegmento);
-		//log_info(logMSP,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,segmentoEnSwap+segmentoEnMP);
+		//log_info(logger,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,segmentoEnSwap+segmentoEnMP);
 		printf("Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d\n", PID, segmentoEnSwap+segmentoEnMP);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		pthread_mutex_lock(&mutex_log);
-		//log_error(logMSP,"Se supera el maximo de segmentos por programa");
+		//log_error(logger,"Se supera el maximo de segmentos por programa");
 		printf("Se supera el maximo de segmentos por programa");
 		pthread_mutex_unlock(&mutex_log);
 		return 0;
@@ -249,13 +249,13 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 			//TODO Faltan logs de eleminar segmento
 		} else {
 			pthread_mutex_lock(&mutex_log);
-			//log_error(logMSP, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
+			//log_error(logger, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
 			printf("El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
 			pthread_mutex_unlock(&mutex_log);
 		}
 	} else {
 		pthread_mutex_lock(&mutex_log);
-		//log_error(logMSP, "No existe el PID: %u en el sistema", PID);
+		//log_error(logger, "No existe el PID: %u en el sistema", PID);
 		printf("No existe el PID: %u en el sistema", PID);
 		pthread_mutex_unlock(&mutex_log);
 	}

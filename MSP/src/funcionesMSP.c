@@ -23,7 +23,7 @@ void crear_logger(){
 void leer_config(char *config_path)	{
 
 	config_file = config_create(config_path);
-    log_info(logger,"Parseo y Extraccion de valores de archivo de configuracion");
+    log_info(logger,"Parseo y Extraccion de valores de archivo de configuracion.");
 
 	if (config_keys_amount(config_file) != MAX_COUNT_OF_CONFIG_KEYS)
 	{

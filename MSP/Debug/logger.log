@@ -1,0 +1,18 @@
+[INFO] 15:13:55:926 MSP/(8009:8009): Inicio de registro de actividades del Proceso MSP.
+[INFO] 15:13:55:935 MSP/(8009:8009): Parseo y Extraccion de valores de archivo de configuracion
+[DEBUG] 15:13:55:935 MSP/(8009:8009): CANTIDAD_MEMORIA = [100]
+[DEBUG] 15:13:55:935 MSP/(8009:8009): PUERTO = [5002]
+[DEBUG] 15:13:55:935 MSP/(8009:8009): CANTIDAD_SWAP = [10]
+[DEBUG] 15:13:55:935 MSP/(8009:8009): SUST_PAGS = [CLOCK]
+[INFO] 15:14:18:905 MSP/(8018:8018): Inicio de registro de actividades del Proceso MSP.
+[INFO] 15:14:18:908 MSP/(8018:8018): Parseo y Extraccion de valores de archivo de configuracion
+[DEBUG] 15:14:18:908 MSP/(8018:8018): CANTIDAD_MEMORIA = [100]
+[DEBUG] 15:14:18:908 MSP/(8018:8018): PUERTO = [5002]
+[DEBUG] 15:14:18:908 MSP/(8018:8018): CANTIDAD_SWAP = [10]
+[DEBUG] 15:14:18:908 MSP/(8018:8018): SUST_PAGS = [CLOCK]
+[INFO] 15:16:21:371 MSP/(8076:8076): Inicio de registro de actividades del Proceso MSP.
+[INFO] 15:16:21:374 MSP/(8076:8076): Parseo y Extraccion de valores de archivo de configuracion.
+[DEBUG] 15:16:21:374 MSP/(8076:8076): CANTIDAD_MEMORIA = [100]
+[DEBUG] 15:16:21:374 MSP/(8076:8076): PUERTO = [5002]
+[DEBUG] 15:16:21:377 MSP/(8076:8076): CANTIDAD_SWAP = [10]
+[DEBUG] 15:16:21:377 MSP/(8076:8076): SUST_PAGS = [CLOCK]
