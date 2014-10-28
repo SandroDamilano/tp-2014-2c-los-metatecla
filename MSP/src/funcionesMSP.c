@@ -12,11 +12,9 @@ uint32_t cant_mem_swap;
 char* alg_sustitucion;
 
 /*********************************** INICIO *******************************************************************/
-void leerConfiguracion(t_config *archConfigMSP, char *path){
-
+void leerConfiguracion(t_config *archConfigMSP, char *path){	//TODO Faltan logs y alguna que otra validacion
 
 	archConfigMSP= config_create(path);
-
 
 	if(config_has_property(archConfigMSP, "CANTIDAD_MEMORIA")){
 			tamanio_mem_ppal = config_get_int_value(archConfigMSP,"CANTIDAD_MEMORIA");}
@@ -44,31 +42,43 @@ void leerConfiguracion(t_config *archConfigMSP, char *path){
 					printf("No esta definido el algoritmo de sustitucion de paginas en el archivo\n");
 					exit(0);
 			}
-
-	//TODO Faltan logs y alguna que otra validacion
-
-
 }
 
 void crear_logger(t_log *logger){
-	if ((logger = log_create("logMSP.log","MSP",false,LOG_LEVEL_DEBUG)) == NULL) {
-		printf("No se pudo crear el logger\n");
+	if ((logger = log_create("logMSP.log", "MSP", false, LOG_LEVEL_TRACE)) == NULL) {
+		printf("No se pudo crear el logger. Proceso abortado.\n");
+		exit(1);
 	}
 }
 
+int inicializar_semaforos(){
 
+	if(pthread_mutex_init(&mutex_consola,NULL) != 0){
+		printf("mutex_consola failed");
+		return EXIT_FAILURE;
+	}
+
+	if(pthread_mutex_init(&mutex_log,NULL) != 0){
+		printf("mutex_log failed");
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
 /******************************************** MEMORIA PRINCIPAL ******************************************************/
 void *reservarBloquePpal(int tamanioMemoria){
 
-     void *unaMemoria = malloc(tamanioMemoria);
-     if(NULL == unaMemoria){
+     void *bloquePrincipal = malloc(tamanioMemoria);
+     if(NULL == bloquePrincipal){
     	 //TODO log "no se pudo crear memoria principal"
          //TODO liberar recursos
     	 exit(0);
      }
-     return unaMemoria;
-}
+ 	//Se puede inicializar la memoria, en este caso creo que conviene guardar un \0 en los bloques
+ 	memset(bloquePrincipal,0,tamanioMemoria);
 
+ 	return bloquePrincipal;
+}
 
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 	t_list *lista_marcos = list_create();

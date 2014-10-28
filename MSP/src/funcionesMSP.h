@@ -24,7 +24,7 @@
 //#include "ConsolaMSP.h"
 #include <estructuras_auxiliares.h>
 
-char* path_swap;
+char* path_config, *path_swap;
 t_log* logMSP;
 pthread_mutex_t mutex_log;
 int paginas_en_disco;
@@ -72,6 +72,9 @@ extern uint32_t tamanio_mem_ppal;
 extern uint32_t cant_mem_swap;
 extern char* alg_sustitucion;
 
+//Semaforos
+extern pthread_mutex_t mutex_consola;
+extern pthread_mutex_t mutex_log;
 
 void *inciarConsola(void *param1);
 void indicaciones_consola();

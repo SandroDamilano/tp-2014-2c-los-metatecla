@@ -15,28 +15,32 @@ pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_consola = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char *argv[]) {
-	//Defino path para poner los archivos del swap. Esta hardcodeado, deberia pasarse por parametro.
-	path_swap = "/home/utnso/archivos_swap/";
 
-	//1.Leer archivo de configuracion, archivo de log y iniciar semaforos
+	//Defino path para poner los archivos del swap (path_swap)
+
+	// Control de argumentos
+	if(!(path_config = argv[1])) {
+		path_config = "config.cfg";	// default path, en caso de no ingresarlo
+	}
+	if (!(path_swap = argv[2])) {
+		path_swap = "/home/utnso/archivos_swap/";	// default path, en caso de no ingresarlo
+	}
+
+	//1.Leer archivo de configuracion, Crear archivo de log e iniciar semaforos
+	leerConfiguracion(archConfigMSP, path_config);
 	crear_logger(logMSP);
-	leerConfiguracion(archConfigMSP, argv[1]);
 	inicializar_semaforos();
 
 	//2. Reservar bloque de memoria principal
-
-	memoria_ppal=reservarBloquePpal(tamanio_mem_ppal);
-
-	printf("pase la mem ppal \n");
-
-	//TODO log "se creo memoria princial y abaca desde memoria_ppal hasta memoria_ppal+tamanio
+	memoria_ppal = reservarBloquePpal(tamanio_mem_ppal);
+	//TODO log "se creo memoria princial y abarca DESDE memoria_ppal HASTA memoria_ppal+tamanio
+printf("pase la mem ppal \n");
 
 	//3. Generar estructuras administrativas
-
-	lista_marcos=dividirMemoriaEnMarcos(memoria_ppal, tamanio_mem_ppal);
-	printf("pase division de marcos\n");
-	memoriaPpalActual=tamanio_mem_ppal;
-	memoriaSwapActual=cant_mem_swap;
+	lista_marcos = dividirMemoriaEnMarcos(memoria_ppal, tamanio_mem_ppal);
+printf("pase division de marcos\n");
+	memoriaPpalActual = tamanio_mem_ppal;
+	memoriaSwapActual = cant_mem_swap;
 	listaProcesos = list_create();
 
 	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
@@ -98,21 +102,6 @@ int asignarNumeroSegmento(int tamanioListaSegmentos, t_list *listaSegmentos){
 	}
 	free(segmento);
 	return tamanioListaSegmentos;
-}
-
-int inicializar_semaforos(){
-
-	if(pthread_mutex_init(&mutex_consola,NULL) != 0){
-		printf("mutex_consola failed");
-		return EXIT_FAILURE;
-	}
-
-	if(pthread_mutex_init(&mutex_log,NULL) != 0){
-		printf("mutex_log failed");
-		return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
 }
 
 uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){

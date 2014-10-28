@@ -33,10 +33,6 @@ t_list *lista_marcos = NULL;
 //Variables para hilos
 pthread_t consola;
 
-//Semaforos
-extern pthread_mutex_t mutex_consola;
-extern pthread_mutex_t mutex_log;
-
 //Variables para Sockets
 int socketServidorMSP;
 bool escuchandoConexiones = true;
@@ -59,11 +55,7 @@ typedef struct lista_procesos{
 	t_list *lista_Segmentos;
 } t_lista_procesos;
 
-
-
-
-
 	//Estructuras sujetas a posibles cambio y arreglos mas adelante
+	int inicializar_semaforos();
 
-int inicializar_semaforos();
 #endif /* MSP_H_ */
