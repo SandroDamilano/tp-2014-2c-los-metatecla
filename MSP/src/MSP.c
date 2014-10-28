@@ -9,6 +9,7 @@
  */
 
 #include "MSP.h"
+#include <ansisop-panel/panel.h>
 
 pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_consola = PTHREAD_MUTEX_INITIALIZER;
@@ -43,11 +44,11 @@ int main(int argc, char *argv[]) {
 	//4. Abrir conexiones con Kernel y CPU, y levantar Consola MSP
 
 	//Se crea el hilo para la consola
-		pthread_create(&consola, NULL, inciarConsola, NULL); //TODO pasar info de la memoria a la consola (4 parametro diferente a null)
+/*		pthread_create(&consola, NULL, inciarConsola, NULL); //TODO pasar info de la memoria a la consola (4 parametro diferente a null)
 
 		//Se crea socket servidor de la MSP
 
-		/*socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -143,7 +144,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	}
 	//2.Se fija si se existe el proceso
 
-	t_lista_procesos* proceso;// = malloc(sizeof(t_lista_procesos));
+	t_lista_procesos* proceso;
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	//3. Se fija donde crear el segmento
@@ -276,7 +277,52 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 
 void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
 	//1. traducir direccion y validarla
+
+	t_direccion direccion = traducirDireccion(direcc_log);
+	//TODO: VALIDAR
+
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
 		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
+
 	//3.una vez cargada la pagina, escribir donde corresponda los bytes a escribir
+
+	bool mismoPID(t_lista_procesos *PIDEncontrado){
+					return PIDEncontrado->pid==PID;
+				}
+	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
+						return numeroSegmento->numeroSegmento==direccion.segmento;
+				}
+	bool mismaPagina(t_lista_paginas *numeroPagina){
+							return numeroPagina->numeroPagina==direccion.pagina;
+				}
+
+	t_lista_procesos* proceso;
+	proceso = list_find(listaProcesos,(void*) (*mismoPID));
+
+	if(proceso != NULL){
+		t_lista_segmentos* segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
+		if(segmento != NULL){
+			t_lista_paginas* pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
+			if(pagina != NULL){
+				if(pagina->swap == 0){ //FIXME: ACA MANDE CUALQUIERA. QUIERO PONER QUE SI ESTA EN MEM PPAL
+					/*TODO: IR A LA DIRECCION PERTINENTE EN MEM PPAL Y HACER ALGO COMO (SI NO ME EQUIVOCO):
+					 * if(mamPpal + direccion.desplazamiento){
+						memcpy(memPpal + direccion.desplazamiento, bytes_escribir, tamanio)}
+						else {
+						segmentation_fault()}*/
+				} else {
+					swap_in(PID, direccion.segmento, direccion.pagina);
+					/*if(mamPpal + direccion.desplazamiento){
+						memcpy(memPpal + direccion.desplazamiento, bytes_escribir, tamanio)}
+						else {
+						segmentation_fault()}*/
+				}
+			} else {
+				page_not_found_exception(direccion.pagina);
+			}
+		} else {
+			segment_not_found_exception(direccion.segmento);
+		}
+	} else {
+	PID_not_found_exception(PID);}
 }

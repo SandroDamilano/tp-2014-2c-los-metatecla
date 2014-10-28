@@ -87,7 +87,26 @@ t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 return lista_marcos; //TODO Preguntar a ayudante
 }
 
+/************************************ EXCEPCIONES ************************************/
+void PID_not_found_exception(uint32_t PID){
+	printf("No se encontro el PID %d\n", PID);
+	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+}
 
+void segment_not_found_exception(uint32_t segmento){
+	printf("No se encontro el segmento %d\n", segmento);
+	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+}
+
+void page_not_found_exception(uint32_t pagina){
+	printf("No se encontro la pagina %d\n",pagina);
+	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+}
+
+void segmentation_fault(){
+	printf("Se produjo segmentation fault\n");
+	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+}
 /*********************************** FUNCIONES DE SWAP *******************************/
 
 void swap_out(t_pagina pagina){
