@@ -41,19 +41,20 @@ int main(int argc, char **argv){
 //	// 5- Conectar a MSP
 //	conectar_a_MSP();
 
-	// 5.5- Inicializar semáforos de uso global
+	// 5.5- Inicializar semáforos de uso global y colas NEW y EXIT
 	inicializar_semaforos();
+	inicializar_colas_new_exit();
 
 	// 6- Levantar HILOS
 		//6.1- Levantar Hilo KERNEL
-	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL))) //TODO: definir main_KERNEL
+/*	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL))) //TODO: definir main_KERNEL
 	{
 		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d\n", ret_KERNEL);
 		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d", ret_KERNEL);
 		log_error(logger, bufferLog);
 		exit(EXIT_FAILURE);
 	}
-
+*/
 		//6.2- Levantar Hilo LOADER
 	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
 	{
@@ -71,6 +72,10 @@ int main(int argc, char **argv){
 		log_error(logger, bufferLog);
 		exit(EXIT_FAILURE);
 	}
+
+	pthread_join(thread_KERNEL, NULL);
+	pthread_join(thread_LOADER, NULL);
+	pthread_join(thread_PLANIFICADOR, NULL);
 
 	return 0;
 }

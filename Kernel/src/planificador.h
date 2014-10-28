@@ -11,15 +11,14 @@
 	#include <ansisop-panel/panel.h>
 	#include <commons/log.h>
 	#include "general_kernel.h"
-//	#include "servicios_cpu.h"
 
 	int sockMSP;
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
 
 	t_queue* cola_new;
-	sem_t* sem_new;
-	pthread_mutex_t* mutex_new;
+	sem_t sem_new;
+	pthread_mutex_t mutex_new;
 
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;
@@ -39,7 +38,7 @@
 	//Por ahora estas van aca porque el planificador es el único que las usa
 	t_list *cola_ready, *cola_block; //Colas de planificación.
 
-	pthread_mutex_t* mutex_ready;
+	pthread_mutex_t mutex_ready;
 
 	//Estas 3 variables globales se usan para desbloquear los procesos
 	// (participan en la búsqueda del TCB que hay que desbloquear)

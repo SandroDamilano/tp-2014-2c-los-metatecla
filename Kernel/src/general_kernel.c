@@ -9,21 +9,27 @@
 
 	t_queue* cola_new;
 	t_queue* cola_exit;
-	sem_t* sem_exit;
-	pthread_mutex_t* mutex_exit;
-	pthread_mutex_t* mutex_TIDs;
-	pthread_mutex_t* mutex_PIDs;
-	pthread_mutex_t* mutex_log;
+	sem_t sem_exit;
+	pthread_mutex_t mutex_exit;
+	pthread_mutex_t mutex_TIDs;
+	pthread_mutex_t mutex_PIDs;
+	pthread_mutex_t mutex_log;
+	int cantidad_de_PIDs;
+	int cantidad_de_TIDs;
 
 void inicializar_semaforos(){
-	//FIXME creo que en algun lado tenes que usar malloc para los mutex si los usas como puntero. Sino se pueden usar con &
-	pthread_mutex_init(mutex_new, NULL);
-	pthread_mutex_init(mutex_exit, NULL);
-	sem_init(sem_new, 0, 0);
-	sem_init(sem_exit, 0, 0);
-	pthread_mutex_init(mutex_PIDs, NULL);
-	pthread_mutex_init(mutex_TIDs, NULL);
-	pthread_mutex_init(mutex_log, NULL);
+	pthread_mutex_init(&mutex_new, NULL);
+	pthread_mutex_init(&mutex_exit, NULL);
+	sem_init(&sem_new, 0, 0);
+	sem_init(&sem_exit, 0, 0);
+	pthread_mutex_init(&mutex_PIDs, NULL);
+	pthread_mutex_init(&mutex_TIDs, NULL);
+	pthread_mutex_init(&mutex_log, NULL);
+}
+
+void inicializar_colas_new_exit(){
+	cola_new = queue_create();
+	cola_exit = queue_create();
 }
 
 //La idea seria usar estas funciones para hacer push y pop de las colas de new y ready
@@ -42,17 +48,21 @@ void consumir_tcb(void (*funcion)(t_hilo*), sem_t* sem, pthread_mutex_t* mutex, 
 };
 
 int obtener_pid(){
-	pthread_mutex_lock(mutex_PIDs);
+	pthread_mutex_lock(&mutex_PIDs);
 	int pid = cantidad_de_PIDs++;
-	pthread_mutex_unlock(mutex_PIDs);
+	pthread_mutex_unlock(&mutex_PIDs);
 	return pid;
 };
 
 int obtener_tid(){
-	pthread_mutex_lock(mutex_TIDs);
+	pthread_mutex_lock(&mutex_TIDs);
 	int tid = cantidad_de_TIDs++;
-	pthread_mutex_unlock(mutex_TIDs);
+	pthread_mutex_unlock(&mutex_TIDs);
 	return tid;
+};
+
+void push_new(t_hilo* tcb){
+	queue_push(cola_new, (void*)tcb);
 };
 
 t_hilo *crear_TCB(int pid, uint32_t dir_codigo, uint32_t dir_stack, int tamanio_codigo)

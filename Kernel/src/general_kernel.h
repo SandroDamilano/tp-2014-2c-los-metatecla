@@ -16,17 +16,20 @@
 
 	extern t_queue* cola_new;
 	extern t_queue* cola_exit;
-	extern sem_t* sem_new;
-	extern sem_t* sem_exit;
-	extern pthread_mutex_t* mutex_new;
-	extern pthread_mutex_t* mutex_exit;
-	extern pthread_mutex_t* mutex_TIDs;
-	extern pthread_mutex_t* mutex_PIDs;
-	extern pthread_mutex_t* mutex_log;
-	extern int cantidad_de_PIDs;// = 0;
-	extern int cantidad_de_TIDs;// = 0;
+	extern sem_t sem_new;
+	extern sem_t sem_exit;
+	extern pthread_mutex_t mutex_new;
+	extern pthread_mutex_t mutex_exit;
+	extern pthread_mutex_t mutex_TIDs;
+	extern pthread_mutex_t mutex_PIDs;
+	extern pthread_mutex_t mutex_log;
+	//TODO Inicializar cantidad de PIDs y TIDs
+	extern int cantidad_de_PIDs;
+	extern int cantidad_de_TIDs;
 	extern int sockMSP;
 
+	void inicializar_colas_new_exit();
+	void push_new(t_hilo* tcb); // Se lo podría poner en el Loader directamente
 	void inicializar_semaforos();
 	void producir_tcb(void (*funcion)(t_hilo*), sem_t* sem, pthread_mutex_t* mutex, t_hilo* tcb);
 	void consumir_tcb(void (*funcion)(t_hilo*), sem_t* sem, pthread_mutex_t* mutex, t_hilo* tcb);

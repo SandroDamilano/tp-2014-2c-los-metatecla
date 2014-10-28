@@ -8,13 +8,13 @@
 #include "planificador.h"
 
 void encolar_en_ready(t_hilo* tcb){
-	pthread_mutex_lock(mutex_ready);
+	pthread_mutex_lock(&mutex_ready);
 	if (tcb->kernel_mode == 1){
 		list_add_in_index(cola_ready, 0, (void*)tcb);
 	}else{
 		list_add(cola_ready, (void*)tcb);
 	};
-	pthread_mutex_unlock(mutex_ready);
+	pthread_mutex_unlock(&mutex_ready);
 	tcb->cola = READY;
 };
 
@@ -107,16 +107,17 @@ void pop_new(t_hilo* tcb){
 void poner_new_a_ready(){
 	while(1){
 		t_hilo* tcb = malloc(sizeof(t_hilo));
-		consumir_tcb(pop_new, sem_new, mutex_new, tcb);
+		consumir_tcb(pop_new, &sem_new, &mutex_new, tcb);
 		encolar_en_ready(tcb);
 		free(tcb);
 	}
 };
 
 void inicializar_semaforo_ready(){
-	pthread_mutex_init(mutex_ready, NULL);
+	pthread_mutex_init(&mutex_ready, NULL);
 };
-/*
+
+/* FIXME arreglar los problemas de compilación del boot
 void boot(char* systcalls_path){
 	uint32_t dir_codigo;
 	uint32_t dir_stack;
@@ -218,6 +219,7 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 {
 	inicializar_ready_block();
 	inicializar_semaforo_ready();
+
 	pthread_t thr_consumidor_new;
 	pthread_create(&thr_consumidor_new, NULL, (void*)&poner_new_a_ready, NULL);
 

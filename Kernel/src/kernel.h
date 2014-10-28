@@ -28,6 +28,9 @@
 	#include <ansisop-panel/kernel.h>
 	#include <estructuras_auxiliares.h>
 
+	int cantidad_de_TIDs;
+	int cantidad_de_PIDs;
+
 	// Vars de config
 	uint32_t puerto, puerto_msp, quantum, tamanio_stack;
 	char* ip_msp, *syscalls_path;
