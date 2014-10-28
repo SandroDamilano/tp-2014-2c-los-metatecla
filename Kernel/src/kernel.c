@@ -56,14 +56,14 @@ int main(int argc, char **argv){
 	}
 */
 		//6.2- Levantar Hilo LOADER
-	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
+/*	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
 	{
 		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d\n", ret_LOADER);
 		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d", ret_LOADER);
 		log_error(logger, bufferLog);
 		exit(EXIT_FAILURE);
 	}
-
+*/
 		//6.3- Levantar Hilo PLANIFICADOR
 	if((ret_PLANIFICADOR = pthread_create(&thread_PLANIFICADOR, NULL, (void*)&main_PLANIFICADOR, &param_PLANIFICADOR)))
 	{

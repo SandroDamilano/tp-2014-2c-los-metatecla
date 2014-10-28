@@ -100,7 +100,7 @@ void inicializar_ready_block(){
 
 void pop_new(t_hilo* tcb){
 	void *nuevo = queue_pop(cola_new);
-	tcb = nuevo;
+	*tcb = *(t_hilo*)nuevo;
 };
 
 //Este hilo se queda haciendo loop hasta que termine la ejecución
@@ -117,14 +117,13 @@ void inicializar_semaforo_ready(){
 	pthread_mutex_init(&mutex_ready, NULL);
 };
 
-/* FIXME arreglar los problemas de compilación del boot
 void boot(char* systcalls_path){
 	uint32_t dir_codigo;
 	uint32_t dir_stack;
 	int tamanio_codigo;
 
 	//Levanta archivo de syst calls
-	FILE* syscalls_file = abrir_archivo(systcalls_path, logger, mutex_log);
+	FILE* syscalls_file = abrir_archivo(systcalls_path, logger, &mutex_log);
 	tamanio_codigo = calcular_tamanio_archivo(syscalls_file);
 	char* syscalls_code = leer_archivo(syscalls_file, tamanio_codigo);
 
@@ -146,8 +145,8 @@ void boot(char* systcalls_path){
 	void *datos_recibidos = malloc(2*sizeof(int32_t)); //direccion_codigo + direccion_stack
 	datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-	memcpy(dir_codigo,datos_recibidos,sizeof(uint32_t));
-	memcpy(dir_stack,datos_recibidos + sizeof(uint32_t),sizeof(uint32_t));
+	memcpy(&dir_codigo,datos_recibidos,sizeof(uint32_t));
+	memcpy(&dir_stack,datos_recibidos + sizeof(uint32_t),sizeof(uint32_t));
 
 	free(datos_recibidos);
 
@@ -156,7 +155,7 @@ void boot(char* systcalls_path){
 	tcb_kernel->kernel_mode = true;
 	bloquear_tcbKernel(tcb_kernel);
 }
-*/
+
 
 ///////////////////////////////////////////////////////////////////////////
 //EX SERVICIOS_CPU.C

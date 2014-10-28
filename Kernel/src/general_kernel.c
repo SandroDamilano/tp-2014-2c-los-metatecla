@@ -56,7 +56,8 @@ int obtener_pid(){
 
 int obtener_tid(){
 	pthread_mutex_lock(&mutex_TIDs);
-	int tid = cantidad_de_TIDs++;
+	cantidad_de_TIDs++;
+	int tid = cantidad_de_TIDs;
 	pthread_mutex_unlock(&mutex_TIDs);
 	return tid;
 };
