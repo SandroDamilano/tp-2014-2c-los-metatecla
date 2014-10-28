@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
 
 	//2. Reservar bloque de memoria principal
 	memoria_ppal = reservarBloquePpal(tamanio_mem_ppal);
-	//TODO log "se creo memoria princial y abarca DESDE memoria_ppal HASTA memoria_ppal+tamanio
 	printf("pase la mem ppal \n");	//DEBUG
 
 	//3. Generar estructuras administrativas

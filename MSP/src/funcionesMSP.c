@@ -20,7 +20,7 @@ void crear_logger(){
 	log_info(logger,"Inicio de registro de actividades del Proceso MSP.");
 }
 
-void leer_config(char *config_path)	{	//TODO Faltan logs y alguna que otra validacion
+void leer_config(char *config_path)	{
 
 	config_file = config_create(config_path);
     log_info(logger,"Parseo y Extraccion de valores de archivo de configuracion");

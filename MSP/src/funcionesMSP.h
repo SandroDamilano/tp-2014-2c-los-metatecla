@@ -94,8 +94,8 @@ void leer_config(char *path); 	//levanta archivo de configuracion y asigna a las
 void crear_logger();			//Crea archivos de log
 void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
-uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
-t_direccion traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y la guarda en un struc nuevo
+uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);	//Devuelve la direccion base del segmento
+t_direccion traducirDireccion(uint32_t unaDireccion);		//Traduce la direccion y la guarda en un struc nuevo
 uint32_t crearDireccion(uint32_t segmento, uint32_t pagina);
 
 char *traducirABinario(uint32_t direccion, int cantidad_bits) ;
