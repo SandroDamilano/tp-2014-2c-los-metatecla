@@ -26,10 +26,10 @@
 	t_stream * serializeStruct_respuestaMSP(t_struct_respuesta_msp * estructuraOrigen);
 	t_stream* serializeStruct_tcb(t_struct_tcb* estructuraOrigen);
 	t_stream* serializeStruct_tcbQuantum(t_struct_tcb* estructuraOrigen);
-	t_stream* serializeStruct_tcbINNN(t_struct_tcb* estructuraOrigen);
-	t_stream* serializeStruct_tcbINNC(t_struct_tcb* estructuraOrigen);
-	t_stream* serializeStruct_tcbOUTN(t_struct_tcb* estructuraOrigen);
-	t_stream* serializeStruct_tcbOUTC(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_INNN(t_struct_string* estructuraOrigen);
+	t_stream* serializeStruct_INNC(t_struct_string* estructuraOrigen);
+	t_stream* serializeStruct_OUTN(t_struct_string* estructuraOrigen);
+	t_stream* serializeStruct_OUTC(t_struct_string* estructuraOrigen);
 	t_stream* serializeStruct_tcbCREA(t_struct_tcb* estructuraOrigen);
 
 	t_header despaquetizarHeader(char * header);
