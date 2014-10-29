@@ -31,6 +31,8 @@
 
 	t_hilo *crear_TCB(int pid, uint32_t dir_codigo, uint32_t dir_stack, int tamanio_codigo);
 	void inicializar_colas_new_exit();
+	void sacar_de_exit(t_hilo* tcb);// Se lo podría poner en el Loader directamente
+	void poner_en_new(t_hilo* tcb);// Se lo podría poner en el Loader directamente
 	void push_new(t_hilo* tcb); // Se lo podría poner en el Loader directamente
 	void inicializar_semaforos();
 	void producir_tcb(void (*funcion)(t_hilo*), sem_t* sem, pthread_mutex_t* mutex, t_hilo* tcb);

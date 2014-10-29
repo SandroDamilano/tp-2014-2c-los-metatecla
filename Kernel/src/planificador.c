@@ -25,6 +25,7 @@ t_hilo* obtener_tcb_a_ejecutar(){
 //Este bloquear es GENERAL. Para bloquear, usar los particulares.
 void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t parametro){
 	t_data_nodo_block* data = malloc(sizeof(t_data_nodo_block));
+	data->tcb = malloc(sizeof(t_hilo));
 	data->tcb = tcb;
 	data->evento = evento;
 	data->parametro = parametro;
@@ -33,7 +34,7 @@ void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t parametro){
 };
 
 void bloquear_tcbKernel(t_hilo* tcb){
-	bloquear_tcb(tcb, TCBKM, -1);
+	bloquear_tcb(tcb, TCBKM, 0);
 }
 
 void bloquear_tcbJoin(t_hilo* tcb, uint32_t tid){
@@ -48,49 +49,47 @@ void bloquear_tcbSemaforo(t_hilo* tcb, uint32_t sem){
 	bloquear_tcb(tcb, SEM, sem);
 }
 
-bool es_el_tcbKernel(void* dataEnVoid){
-	t_data_nodo_block* data = dataEnVoid;
+bool es_el_tcbKernel(t_data_nodo_block* data){
 	return (data->evento == TCBKM);
 };
 
-bool es_el_tcbSystcall(void* dataEnVoid){
-	t_data_nodo_block* data = dataEnVoid;
-	return ((data->evento == SYSTCALL) & (data->tcb->tid == tid_a_buscar));
+bool es_el_tcbSystcall(t_data_nodo_block* data){
+	return (data->evento == SYSTCALL) & (data->tcb->tid == tid_a_buscar);
 }
 
-bool es_el_tcbBuscado(void* dataEnVoid){
-	t_data_nodo_block* data = dataEnVoid;
+bool es_el_tcbBuscado(t_data_nodo_block* data){
 	return ((data->parametro == parametro_a_buscar) & (data->evento == evento_a_buscar));
 };
 
-// Este desbloquear es GENERAL. Para desbloqear, hay que usar los particulares.
+// Este desbloquear es GENERAL. Para desbloquear, hay que usar los particulares.
 void desbloquear_proceso(t_evento evento, uint32_t parametro){
-	t_hilo *tcb_desbloqueado;
+	t_data_nodo_block *data_desbloqueado;
 	parametro_a_buscar = parametro;
 	evento_a_buscar = evento;
-	tcb_desbloqueado = list_remove_by_condition(cola_block, es_el_tcbBuscado);
-	if (tcb_desbloqueado != NULL){
+	data_desbloqueado = list_remove_by_condition(cola_block,(void*)es_el_tcbBuscado);
+	if (data_desbloqueado != NULL){
+		t_hilo * tcb_desbloqueado = data_desbloqueado->tcb;
 		encolar_en_ready(tcb_desbloqueado);
 	}
 }
 
 t_hilo* desbloquear_tcbKernel(){
-	t_data_nodo_block* data = list_remove_by_condition(cola_block, es_el_tcbKernel);
+	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbKernel);
 	return data->tcb;
 };
 
 t_hilo* desbloquear_tcbSystcall(uint32_t tid){
 	tid_a_buscar = tid;
-	t_data_nodo_block* data = list_remove_by_condition(cola_block, es_el_tcbSystcall);
+	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbSystcall);
 	return data->tcb;
 }
 
-void desbloquear_por_join(t_evento evento, uint32_t tid){
-	desbloquear_proceso(evento, tid);
+void desbloquear_por_join(uint32_t tid){
+	desbloquear_proceso(JOIN, tid);
 }
 
-void desbloquear_por_semaforo(t_evento evento, uint32_t sem){
-	desbloquear_proceso(evento, sem);
+void desbloquear_por_semaforo(uint32_t sem){
+	desbloquear_proceso(SEM, sem);
 }
 
 void inicializar_ready_block(){
@@ -103,13 +102,16 @@ void pop_new(t_hilo* tcb){
 	*tcb = *(t_hilo*)nuevo;
 };
 
+void sacar_de_new(t_hilo* tcb){
+	consumir_tcb(pop_new, &sem_new, &mutex_new, tcb);
+}
+
 //Este hilo se queda haciendo loop hasta que termine la ejecución
 void poner_new_a_ready(){
 	while(1){
 		t_hilo* tcb = malloc(sizeof(t_hilo));
-		consumir_tcb(pop_new, &sem_new, &mutex_new, tcb);
+		sacar_de_new(tcb);
 		encolar_en_ready(tcb);
-		free(tcb);
 	}
 };
 
@@ -163,11 +165,11 @@ void boot(char* systcalls_path){
 void copiar_tcb(t_hilo* original, t_hilo* copia){
 	copia->tid = original->tid;
 	copia->pid = original->pid;
+	printf("original_ 0=%d y copia: 1=%d\n", original->kernel_mode, copia->kernel_mode);
 	int i;
 	for(i=0; i<=4; i++){
 		copia->registros[i] = original->registros[i];
 	}
-//	copia->registros = original->registros;
 };
 
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
@@ -181,13 +183,12 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
 };
 
-bool esta_por_systcall(void* dataEnVoid){
-	t_data_nodo_block* data = dataEnVoid;
+bool esta_por_systcall(t_data_nodo_block* data){
 	return (data->evento == SYSTCALL);
 }
 
 t_data_nodo_block* desbloquear_alguno_por_systcall(t_hilo* tcb_kernel){
-	return list_remove_by_condition(cola_block, esta_por_systcall);
+	return list_remove_by_condition(cola_block, (void*)esta_por_systcall);
 }
 
 void retornar_de_systcall(t_hilo* tcb_kernel){
@@ -196,7 +197,6 @@ void retornar_de_systcall(t_hilo* tcb_kernel){
 	for(i=0; i<=4; i++){
 		tcb->registros[i] = tcb_kernel->registros[i];
 	}
-//	tcb->registros = tcb_kernel->registros;
 	encolar_en_ready(tcb);
 	bloquear_tcbKernel(tcb_kernel);
 	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall(tcb_kernel);

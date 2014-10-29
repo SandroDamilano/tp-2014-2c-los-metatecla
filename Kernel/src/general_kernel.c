@@ -62,9 +62,22 @@ int obtener_tid(){
 	return tid;
 };
 
+void pop_exit(t_hilo* tcb){
+	void *nuevo = queue_pop(cola_exit);
+	*tcb = *(t_hilo*)nuevo;
+};
+
+void sacar_de_exit(t_hilo* tcb){
+	consumir_tcb(pop_exit, &sem_exit, &mutex_exit, tcb);
+}
+
 void push_new(t_hilo* tcb){
 	queue_push(cola_new, (void*)tcb);
 };
+
+void poner_en_new(t_hilo* tcb){
+	producir_tcb(push_new, &sem_new, &mutex_new, tcb);
+}
 
 t_hilo *crear_TCB(int pid, uint32_t dir_codigo, uint32_t dir_stack, int tamanio_codigo)
 {

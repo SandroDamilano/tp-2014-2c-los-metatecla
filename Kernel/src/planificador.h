@@ -47,9 +47,10 @@
 	t_evento evento_a_buscar;
 
 	void encolar_en_ready(t_hilo* tcb);
+	void sacar_de_new(t_hilo* tcb);
 
-	void desbloquear_por_semaforo(t_evento evento, uint32_t sem);
-	void desbloquear_por_join(t_evento evento, uint32_t tid);
+	void desbloquear_por_semaforo(uint32_t sem);
+	void desbloquear_por_join(uint32_t tid);
 	t_hilo* desbloquear_tcbSystcall(uint32_t tid);
 	t_hilo* desbloquear_tcbKernel();
 
