@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 	while(1){
 	if(registros_cpu.K == 1){ //SI NO ES MODO KERNEL
 
-		if(tcb->cola == EXIT){
+		if(tcb->cola == EXIT){ //FIXME!!
 			//socket a Kernel enviandole el tcb ya actualizado en la operacion XXXX
 			//socket de Kernel con tcb nuevo
 

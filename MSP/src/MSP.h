@@ -17,10 +17,6 @@
 //Path para archivos swap
 extern char* path_swap;
 
-//Variables de Archivos
-extern t_log *logMSP;
-t_config *archConfigMSP = NULL;
-
 //Variables de Memoria Principal
 void *memoria_ppal = NULL;
 int memoriaSwapActual = 0;
@@ -32,10 +28,6 @@ t_list *lista_marcos = NULL;
 
 //Variables para hilos
 pthread_t consola;
-
-//Semaforos
-extern pthread_mutex_t mutex_consola;
-extern pthread_mutex_t mutex_log;
 
 //Variables para Sockets
 int socketServidorMSP;
@@ -59,11 +51,7 @@ typedef struct lista_procesos{
 	t_list *lista_Segmentos;
 } t_lista_procesos;
 
-
-
-
-
 	//Estructuras sujetas a posibles cambio y arreglos mas adelante
+	int inicializar_semaforos();
 
-int inicializar_semaforos();
 #endif /* MSP_H_ */

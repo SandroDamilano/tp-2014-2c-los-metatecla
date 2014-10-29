@@ -95,9 +95,17 @@ void incrementar_pc(int cant_bytes){
 }
 
 void controlar_struct_recibido(int struct_recibido, int struct_posta){
-	if(struct_recibido != struct_posta){
+
+	if(struct_recibido == struct_posta){
+		printf("Se recibio correctamente el mensaje %d\n", struct_posta);
+	} else{
+		if(struct_recibido == D_STRUCT_SEG_FAULT){
+		printf("Hubo un segmentation fault\n");
+		} else {
 		printf("Se debia recibir %d, pero llego %d\n", struct_posta, struct_recibido);
+		}
 	}
+
 }
 
 void controlar_envio(int resultado, int tipo){

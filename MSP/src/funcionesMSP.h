@@ -8,6 +8,7 @@
 #ifndef FUNCIONESMSP_H_
 #define FUNCIONESMSP_H_
 
+#define MAX_COUNT_OF_CONFIG_KEYS 4
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -21,13 +22,14 @@
 #include "commons/log.h"
 #include "commons/txt.h"
 #include "commons/string.h"
-//#include "ConsolaMSP.h"
 #include <estructuras_auxiliares.h>
 
-char* path_swap;
-t_log* logMSP;
+
+char* path_config, *path_swap;
 pthread_mutex_t mutex_log;
 int paginas_en_disco;
+void* buffer;
+char bufferLog[80];
 
 typedef struct pagina{
 	uint32_t PID;
@@ -41,7 +43,7 @@ typedef struct pagina{
 
 typedef struct marco{
 	void *memoria;
-	bool marco_libre;
+	uint32_t marco_libre;
 	uint32_t numeroMarco;
 } t_marco;
 
@@ -72,41 +74,63 @@ extern uint32_t tamanio_mem_ppal;
 extern uint32_t cant_mem_swap;
 extern char* alg_sustitucion;
 
+//Semaforos
+extern pthread_mutex_t mutex_consola;
+extern pthread_mutex_t mutex_log;
 
+
+////////////Consola//////////////
 void *inciarConsola(void *param1);
 void indicaciones_consola();
+void tabla_segmentos();
+void tabla_paginas(uint32_t PID);
+void listar_marcos();
 
 
+///////////Interfaz MSP/////////
 uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
 void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
-void solicitarMemoria(uint32_t PID, uint32_t direccion_log, int tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
+char* solicitar_memoria(uint32_t PID, uint32_t direccion_log, uint32_t tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
 //TODO no estamos seguros de que devuelta esta funcion. Consultar
 void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
+
+
+///////////Auxiliares//////////
+
+//Direcciones
 uint32_t crearDireccion(uint32_t segmento,uint32_t pagina);
-
-void leerConfiguracion(t_config *config, char *path); //levanta archivo de configuracion y asigna a las variables correspodientes
-void crear_logger(t_log *logger);//Crea archivos de logeo
-void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
-t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
-uint32_t obtenerBaseDelSegmento(uint32_t numeroSegmento);//Devuelve la direccion base del segmento
-t_direccion traducirDireccion(uint32_t unaDireccion);//Traduce la direccion y la guarda en un struc nuevo
-uint32_t crearDireccion(uint32_t segmento, uint32_t pagina);
-
-char *traducirABinario(uint32_t direccion, int cantidad_bits) ;
+char *traducirABinario(uint32_t direccion, int cantidad_bits);
 uint32_t traducirADecimal(char *binario, int cantidad_bits);
+t_direccion traducirDireccion(uint32_t unaDireccion);
 
-
-void swap_out(t_pagina pagina);
-t_pagina swap_in(int pid, int seg, int pag);
-DIR* abrir_directorio_swap();
-t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
-
-void destruir_archivo(char* nombre_archivo);
-void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
-
+//Excepciones
 void PID_not_found_exception(uint32_t PID);
 void segment_not_found_exception(uint32_t segmento);
 void page_not_found_exception(uint32_t pagina);
 void segmentation_fault();
+
+//Manejo de informacion
+char* devolverInformacion(t_marco* marco, t_direccion direccion, uint32_t tamanio);
+void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
+
+
+////////////INICIO////////////
+void leer_config(char *path); 	//levanta archivo de configuracion y asigna a las variables correspodientes
+void crear_logger();			//Crea archivos de log
+
+
+//////MEMORIA PRINCIPAL//////
+void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
+t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
+
+
+////////////SWAP////////////
+void swap_out(t_pagina pagina);
+t_pagina swap_in(int pid, int seg, int pag);
+DIR* abrir_directorio_swap();
+t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
+void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
+void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
+void destruir_archivo(char* nombre_archivo);
 
 #endif /* FUNCIONESMSP_H_ */

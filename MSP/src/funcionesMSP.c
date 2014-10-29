@@ -12,63 +12,100 @@ uint32_t cant_mem_swap;
 char* alg_sustitucion;
 
 /*********************************** INICIO *******************************************************************/
-void leerConfiguracion(t_config *archConfigMSP, char *path){
-
-
-	archConfigMSP= config_create(path);
-
-
-	if(config_has_property(archConfigMSP, "CANTIDAD_MEMORIA")){
-			tamanio_mem_ppal = config_get_int_value(archConfigMSP,"CANTIDAD_MEMORIA");}
-	else {
-				printf("No esta definida la cantidad de memoria principal en el archivo\n");
-				exit(0);
-			}
-	if(config_has_property(archConfigMSP, "PUERTO")){
-			puertoMSP = config_get_int_value(archConfigMSP, "PUERTO");}
-	else {
-			printf("No esta definido el puerto en el archivo\n");
-			exit(0);
-		}
-
-	if(config_has_property(archConfigMSP, "CANTIDAD_SWAP")){
-			cant_mem_swap = config_get_int_value(archConfigMSP,"CANTIDAD_SWAP");}
-	else {
-				printf("No esta definido la cantidad de memoria swap en el archivo\n");
-				exit(0);
-			}
-
-	if(config_has_property(archConfigMSP, "SUST_PAGS")){
-			alg_sustitucion = config_get_string_value(archConfigMSP,"SUST_PAGS");}
-	else {
-					printf("No esta definido el algoritmo de sustitucion de paginas en el archivo\n");
-					exit(0);
-			}
-
-	//TODO Faltan logs y alguna que otra validacion
-
-
+void crear_logger(){
+	if ((logger = log_create("logger.log", "MSP", false, LOG_LEVEL_TRACE)) == NULL) {
+		printf("No se pudo crear el logger. Proceso abortado.\n");
+		exit(1);
+	}
+	log_info(logger,"Inicio de registro de actividades del Proceso MSP.");
 }
 
-void crear_logger(t_log *logger){
-	if ((logger = log_create("logMSP.log","MSP",false,LOG_LEVEL_DEBUG)) == NULL) {
-		printf("No se pudo crear el logger\n");
+void leer_config(char *config_path)	{
+
+	config_file = config_create(config_path);
+    log_info(logger,"Parseo y Extraccion de valores de archivo de configuracion.");
+
+	if (config_keys_amount(config_file) != MAX_COUNT_OF_CONFIG_KEYS)
+	{
+		fprintf(stderr,"El fichero 'config.cfg' contiene menos keys de las que deberia o no se encuentra al fichero en disco.\n");
+		log_error(logger,"El fichero 'config.cfg' contiene menos keys de las que deberia o no se encuentra al fichero en disco.");
+		exit(1);
+	}
+
+	if(config_has_property(config_file, "CANTIDAD_MEMORIA"))	{
+			tamanio_mem_ppal = config_get_int_value(config_file,"CANTIDAD_MEMORIA");
+	    	sprintf(bufferLog,"CANTIDAD_MEMORIA = [%d]",tamanio_mem_ppal);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'CANTIDAD_MEMORIA' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'CANTIDAD_MEMORIA' en archivo de configuracion. Programa abortado.");
+		exit(1);
+	}
+
+	if(config_has_property(config_file, "PUERTO")){
+			puertoMSP = config_get_int_value(config_file, "PUERTO");
+	    	sprintf(bufferLog,"PUERTO = [%d]",puertoMSP);
+	    	log_debug(logger,bufferLog);
+	}
+	 else {
+			fprintf(stderr, "Falta key 'PUERTO' en archivo de configuracion. Chequear.\n");
+			fprintf(stderr, "Programa abortado.\n");
+			log_error(logger,"Falta key 'PUERTO' en archivo de configuracion. Programa abortado.");
+			exit(1);
+		}
+
+	if(config_has_property(config_file, "CANTIDAD_SWAP")){
+			cant_mem_swap = config_get_int_value(config_file,"CANTIDAD_SWAP");
+	    	sprintf(bufferLog,"CANTIDAD_SWAP = [%d]",cant_mem_swap);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'CANTIDAD_SWAP' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'CANTIDAD_SWAP' en archivo de configuracion. Programa abortado.");
+		exit(1);
+	}
+
+	if(config_has_property(config_file, "SUST_PAGS"))	{
+			alg_sustitucion = config_get_string_value(config_file,"SUST_PAGS");
+	    	sprintf(bufferLog,"SUST_PAGS = [%s]",alg_sustitucion);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'SUST_PAGS' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'SUST_PAGS' en archivo de configuracion. Programa abortado.");
+		exit(1);
 	}
 }
 
+int inicializar_semaforos(){
 
+	if(pthread_mutex_init(&mutex_consola,NULL) != 0){
+		printf("mutex_consola failed");
+		return EXIT_FAILURE;
+	}
+
+	if(pthread_mutex_init(&mutex_log,NULL) != 0){
+		printf("mutex_log failed");
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
 /******************************************** MEMORIA PRINCIPAL ******************************************************/
 void *reservarBloquePpal(int tamanioMemoria){
 
-     void *unaMemoria = malloc(tamanioMemoria);
-     if(NULL == unaMemoria){
+     void *bloquePrincipal = malloc(tamanioMemoria);
+     if(NULL == bloquePrincipal){
     	 //TODO log "no se pudo crear memoria principal"
          //TODO liberar recursos
     	 exit(0);
      }
-     return unaMemoria;
-}
+ 	//Se puede inicializar la memoria, en este caso creo que conviene guardar un \0 en los bloques
+ 	memset(bloquePrincipal,0,tamanioMemoria);
 
+ 	return bloquePrincipal;
+}
 
 t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
 	t_list *lista_marcos = list_create();
@@ -126,13 +163,13 @@ void swap_out(t_pagina pagina){
 
 	//Abro un nuevo archivo
 	FILE* arch_swap = NULL;
-	arch_swap = fopen(file_name, "wb");
+	arch_swap = fopen(file_name, "w+"); //FIXME Aca el modo es w+ lo hablamos con el ayudante
 
 	//Pongo la informacion necesaria en el archivo
 	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
 
 	/*pthread_mutex_lock(&mutex_log);
-	log_debug(logMSP,"Creado el archivo %s",file_name);
+	log_debug(logger,"Creado el archivo %s",file_name);
 	pthread_mutex_unlock(&mutex_log);*/
 
 	paginas_en_disco++;
@@ -190,11 +227,11 @@ void destruir_archivo(char* nombre_archivo) {
 		paginas_en_disco--;
 		pthread_mutex_lock(&mutex_log);
 		printf("No se pudo eliminar el archivo %s\n", nombre_archivo);
-		log_error(logMSP, "No se pudo eliminar el archivo %s\n",nombre_archivo);
+		log_error(logger, "No se pudo eliminar el archivo %s\n",nombre_archivo);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		/*pthread_mutex_lock(&mutex_log);
-		 log_info(logMSP,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
+		 log_info(logger,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
 		 pthread_mutex_unlock(&mutex_log);*/
 	}
 	free(nombre_archivo);
@@ -226,7 +263,7 @@ DIR* abrir_directorio_swap(){
 		if(dir == NULL){
 			pthread_mutex_lock(&mutex_log);
 			printf("No se pudo abrir el directorio %s\n", path_swap);
-			log_error(logMSP,"No se pudo abrir el directorio %s\n", path_swap);
+			log_error(logger,"No se pudo abrir el directorio %s\n", path_swap);
 			pthread_mutex_unlock(&mutex_log);
 			closedir(dir);
 			return NULL;
@@ -272,7 +309,7 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 
 					pag.nombre_archivo = nombre_archivo;
 
-					FILE* arch_swap = abrir_archivo(nombre_archivo, logMSP, &mutex_log);
+					FILE* arch_swap = abrir_archivo(nombre_archivo, logger, &mutex_log);
 
 					pag.archivo = arch_swap;
 
@@ -285,6 +322,22 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 	return pag;
 }
 
+/********************************* MANEJO DE INFORMACION ******************************************/
+void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
+
+	if(((*marco).memoria + direccion.desplazamiento + tamanio) < ((*marco).memoria+256)){ // Se fija que no se quiera escribir fuera de los limites del marco
+			memcpy((*marco).memoria + direccion.desplazamiento, bytes_escribir, tamanio);}
+	else {
+			segmentation_fault();
+	}
+}
+
+char* devolverInformacion(t_marco *marco, t_direccion direccion, uint32_t tamanio){
+	//TODO VALIDAR QUE NO SE PASE DEL LIMITE
+	char* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
+	memcpy(buffer, marco->memoria + direccion.desplazamiento, tamanio);
+	return buffer;
+}
 /*********************************************** DIRECCIONES *********************************************************/
 
 uint32_t elevar(uint32_t numero, uint32_t elevado){
@@ -418,7 +471,7 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 				uint32_t tam_segmento;
 				scanf("%d",&tam_segmento);
 				uint32_t direccion_segmento = crearSegmento(PID, tam_segmento);
-				printf("La direccion del nuevo segmento es: %d\n", direccion_segmento);
+				printf("La direccion base del nuevo segmento es: %d\n", direccion_segmento);
 				indicaciones_consola();
 
 	break;
@@ -441,6 +494,7 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 				char* texto; //CAPAZ DEBERIA SER CHAR[ALGUN TAMANIO MAX]
 				scanf("%s", texto);
 				escribirMemoria(PID, direcVir, texto, tamanio_escritura);
+				indicaciones_consola();
 
 	break;
 	case '4': printf("El comando elegido fue: Leer memoria\n"
@@ -450,13 +504,24 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 				scanf("%d", &direcVir);
 				printf("Ingrese un tamaño:\n");
 				scanf("%d", &tamanio_escritura);
+				solicitar_memoria(PID, direcVir, tamanio_escritura);
+				indicaciones_consola();
+
 	break;
-	case '5': printf("El comando elegido fue: Tabla de segmentos\n"); break;
+	case '5': printf("El comando elegido fue: Tabla de segmentos\n");
+			  tabla_segmentos();
+			  indicaciones_consola();
+	break;
 	case '6': printf("El comando elegido fue: Tabla de paginas\n"
 				"Ingrese un PID:\n");
 				scanf("%d",&PID);
+				tabla_paginas(PID);
+				indicaciones_consola();
 	break;
-	case '7': printf("El comando elegido fue: Listar marcos\n"); break;
+	case '7': printf("El comando elegido fue: Listar marcos\n");
+			  listar_marcos();
+			  indicaciones_consola();
+	break;
 	case '8': terminarConsola=0; break;
 	}
 	}
@@ -475,7 +540,7 @@ return NULL;
 
  }
 
- void tabla_paginas(){
+ void tabla_paginas(uint32_t PID){
 
  }
 
