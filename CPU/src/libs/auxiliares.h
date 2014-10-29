@@ -15,6 +15,7 @@
 #include <string.h>
 #include <ansisop-panel/cpu.h>
 #include <unistd.h>
+#include <estructuras_auxiliares.h>
 
 typedef struct{
 	int puerto_kernel;
