@@ -33,23 +33,7 @@ pthread_t consola;
 int socketServidorMSP;
 bool escuchandoConexiones = true;
 
-typedef struct  lista_paginas{
-	uint32_t numeroPagina;
-	uint32_t marcoEnMemPpal;
-	int swap;
-	}t_lista_paginas;
 
-typedef struct  lista_segmentos{
-	uint32_t numeroSegmento;
-	uint32_t tamanio;
-	t_list *lista_Paginas;
-
-}t_lista_segmentos;
-
-typedef struct lista_procesos{
-	uint32_t pid;
-	t_list *lista_Segmentos;
-} t_lista_procesos;
 
 	//Estructuras sujetas a posibles cambio y arreglos mas adelante
 	int inicializar_semaforos();

@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
-
+	//FIXME Por que esta comentado de aca para abajo ???
 	//4. Abrir conexiones con Kernel y CPU, y levantar Consola MSP
 
 	//Se crea el hilo para la consola
@@ -304,7 +304,7 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 					marco=list_find(lista_marcos,(void*) (*mismoMarco)); //Busca el marco de memoria ppal
 
 					guardarInformacion(marco,direccion,bytes_escribir,tamanio);
-
+					free(marco);
 				} else {//Traemos pagina a memoria ppal
 					t_marco *marcoLibre = malloc(sizeof(t_marco));
 					marcoLibre= list_find(lista_marcos,(void*) (*funcionMarcoLibre));
@@ -315,31 +315,27 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 						memcpy(marcoLibre, pagina->codigo, pagina->tamanio_buffer); //FIXME el tamaño buffer es el tamaño de lo que tiene el archivo adentro ?
 						guardarInformacion(marcoLibre,direccion,bytes_escribir,tamanio);
 						marcoLibre->marco_libre = 0;
+						free(marcoLibre);
 					} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
 
 					}
 				}
+			free(pagina);
 			} else {
 				page_not_found_exception(direccion.pagina);
 			}
 		} else {
 			segment_not_found_exception(direccion.segmento);
 		}
-	} else {
+	free(segmento);} else {
 	PID_not_found_exception(PID);}
-	//3.una vez cargada la pagina, escribir donde corresponda los bytes a escribir
+	free(proceso);
 }
-//FIXME hacer los free
 
-
-
-//FIXME!!! HICE UN COPY PASTE RARO DE ESCRIBIR MEMORIA PORQUE ME PARECIO QUE LA LOGICA ES SIMILAR
-//CAMBIEN TODOO LO QUE CONSIDEREN NECESARIO, POR SUPUESTO
 char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 	char* bytes_solicitados;
 
 	t_direccion direccion = traducirDireccion(direcc_log);
-	return NULL;//FIXME
 
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 			return PIDEncontrado->pid==PID;
@@ -374,8 +370,9 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 						marco=list_find(lista_marcos,(void*) (*mismoMarco)); //Busca el marco de memoria ppal
 
 						bytes_solicitados = devolverInformacion(marco, direccion, tamanio);
+						free(marco);
 						return bytes_solicitados;
-						//TODO: cuando se terminen de usar los bytes solicitados, AFUERA de esta funcion, liberar memoria.
+						//TODO: cuando se terminen de usar los bytes solicitados, AFUERA de esta funcion, liberar memoria. LIBERAR RECURSOS
 
 					} else {//Traemos pagina a memoria ppal
 						t_marco *marcoLibre = malloc(sizeof(t_marco));
@@ -389,11 +386,13 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 							bytes_solicitados = devolverInformacion(marcoLibre, direccion, tamanio);
 
 							marcoLibre->marco_libre = 0;
+							free(marcoLibre);
 							return bytes_solicitados;
 						} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
 
 						}
 					}
+					free(pagina);
 				} else {
 					page_not_found_exception(direccion.pagina);
 					return NULL;
@@ -402,9 +401,10 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 				segment_not_found_exception(direccion.segmento);
 				return NULL;
 			}
-		} else {
+			free(segmento);} else {
 		PID_not_found_exception(PID);
 		return NULL;}
+free(proceso);
 
 }
 

@@ -107,7 +107,7 @@ void *reservarBloquePpal(int tamanioMemoria){
  	return bloquePrincipal;
 }
 
-t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){
+t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){//FIXME Reveer lista de marcos, preguntar sabado (BitArray?)
 	t_list *lista_marcos = list_create();
 	int cant_marcos = (tamanioMemoria*1024)/256;
 	int i ;
@@ -219,7 +219,7 @@ t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros 
 	closedir(dir);
 	return pag;
 }
-
+//FIXME juli esta funcion hay que cambiarla, no hace lo que necesitamos, te lo tenemos que explicar por skype si queres. Cuando puedas hablamos
 /**************** AUXILIARES DE SWAPPING *****************/
 
 void destruir_archivo(char* nombre_archivo) {
@@ -335,7 +335,9 @@ void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribi
 char* devolverInformacion(t_marco *marco, t_direccion direccion, uint32_t tamanio){
 	//TODO VALIDAR QUE NO SE PASE DEL LIMITE
 	char* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
-	memcpy(buffer, marco->memoria + direccion.desplazamiento, tamanio);
+	if(((*marco).memoria + direccion.desplazamiento + tamanio) < ((*marco).memoria+256)){
+	memcpy(buffer, marco->memoria + direccion.desplazamiento, tamanio);} else {
+		segmentation_fault();}
 	return buffer;
 }
 /*********************************************** DIRECCIONES *********************************************************/
@@ -537,14 +539,34 @@ return NULL;
  }
 
  void tabla_segmentos(){
-
+	void imprimirSegmento(t_lista_segmentos *segmento){
+		uint32_t base = crearDireccion((*segmento).numeroSegmento,0);
+		printf("Numero segmento: %d,   Tamanio: %d,   Direccion Base: %d\n",(*segmento).numeroSegmento,(*segmento).tamanio, base);
+	}
+	void imprimirPID(t_lista_procesos *proceso){
+	printf("El PID del proceso es: %d\n", (*proceso).pid);
+	list_iterate((*proceso).lista_Segmentos, (void*) (*imprimirSegmento));
+}
+ list_iterate(listaProcesos, (void*) (*imprimirPID));
  }
 
  void tabla_paginas(uint32_t PID){
-
+	 t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
+	 void imprimirPagina(t_lista_paginas *pagina){
+	 		printf("Numero pagina: %d,   Swapeada: %d\n",(*pagina).numeroPagina,(*pagina).swap);
+	 	}
+	 void imprimirSegmento(t_lista_segmentos *segmento){
+	 		printf("Numero segmento: %d\n",(*segmento).numeroSegmento);
+	 		list_iterate((*segmento).lista_Paginas, (void*) (*imprimirPagina));
+	 	}
+	 bool mismoPID(t_lista_procesos *PIDEncontrado){
+	 			return PIDEncontrado->pid==PID;
+	 		}
+	 proceso=list_find(listaProcesos,(void*) (*mismoPID));
+	 list_iterate((*proceso).lista_Segmentos, (void*) (*imprimirSegmento));
  }
 
- void listar_marcos(){
+ void listar_marcos(){//FIXME ARREGLAR LISTA DE MARCOS!
 
  }
 
