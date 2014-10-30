@@ -255,30 +255,12 @@ void crear_nuevo_hilo(t_hilo* tcb_padre){
 }
 
 /******************************** HANDLER CPU *****************************************/
-void copiar_structRecibido_a_tcb(t_hilo* tcb, void* structRecibido){
-	tcb->base_stack = ((t_struct_tcb*) structRecibido)->base_stack;
-	tcb->cola = ((t_struct_tcb*) structRecibido)->cola;
-	tcb->cursor_stack = ((t_struct_tcb*) structRecibido)->cursor_stack;
-	tcb->kernel_mode = ((t_struct_tcb*) structRecibido)->kernel_mode;
-	tcb->pid = ((t_struct_tcb*) structRecibido)->pid;
-	tcb->puntero_instruccion = ((t_struct_tcb*) structRecibido)->puntero_instruccion;
-	tcb->registros[0] = ((t_struct_tcb*) structRecibido)->registros[0];
-	tcb->registros[1] = ((t_struct_tcb*) structRecibido)->registros[1];
-	tcb->registros[2] = ((t_struct_tcb*) structRecibido)->registros[2];
-	tcb->registros[3] = ((t_struct_tcb*) structRecibido)->registros[3];
-	tcb->registros[4] = ((t_struct_tcb*) structRecibido)->registros[4];
-	tcb->segmento_codigo = ((t_struct_tcb*) structRecibido)->segmento_codigo;
-	tcb->segmento_codigo_size = ((t_struct_tcb*) structRecibido)->segmento_codigo_size;
-	tcb->tid = ((t_struct_tcb*) structRecibido)->tid;
-}
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
 		//pido numero por consola
-		break;
-	case D_STRUCT_INNC:
-		//pido string por consola
+		//Mando el numero obtenido con la señal D_STRUCT_INNN a cpu
 		break;
 	case D_STRUCT_ABORT:
 		//abortar
@@ -299,6 +281,9 @@ void handler_cpu(int sockCPU){
 	uint32_t direccion_syscall;
 	int32_t id_semaforo;
 	int32_t numero_cpu;
+	int32_t numero_consola;
+	uint32_t maximo_caracteres;
+	char* cadena_consola;
 
 	t_tipoEstructura tipoRecibido;
 	t_tipoEstructura tipoRecibido2;
@@ -325,6 +310,12 @@ void handler_cpu(int sockCPU){
 
 		numero_cpu = ((t_struct_numero*) structRecibido)->numero;
 		handler_numeros_cpu(numero_cpu, sockCPU);
+		break;
+	case D_STRUCT_INNC:
+
+		maximo_caracteres = ((t_struct_numero *) structRecibido)->numero;
+		//pido string por consola con el maximo de caracteres recibido
+
 		break;
 	case D_STRUCT_TCB_CREA:
 
@@ -359,6 +350,14 @@ void handler_cpu(int sockCPU){
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 
+		break;
+	case D_STRUCT_OUTN:
+		numero_consola = ((t_struct_numero*) structRecibido)->numero;
+		//Mandar ese numero a consola para ser mostrado
+		break;
+	case D_STRUCT_OUTC:
+		cadena_consola = ((t_struct_string*) structRecibido)->string;
+		//Mandar esa cadena a consola para ser mostrada
 		break;
 	}
 }

@@ -80,13 +80,13 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 				paquete = serializeStruct_tcbQuantum((t_struct_tcb *) estructuraOrigen);
 				break;
 			case D_STRUCT_INNN:
-				paquete = serializeStruct_INNN((t_struct_string *) estructuraOrigen);
+				paquete = serializeStruct_INNN((t_struct_numero *) estructuraOrigen);
 				break;
 			case D_STRUCT_INNC:
 				paquete = serializeStruct_INNC((t_struct_string *) estructuraOrigen);
 				break;
 			case D_STRUCT_OUTN:
-				paquete = serializeStruct_OUTN((t_struct_string *) estructuraOrigen);
+				paquete = serializeStruct_OUTN((t_struct_numero *) estructuraOrigen);
 				break;
 			case D_STRUCT_OUTC:
 				paquete = serializeStruct_OUTC((t_struct_string *) estructuraOrigen);
@@ -343,17 +343,15 @@ t_stream* serializeStruct_tcbQuantum(t_struct_tcb* estructuraOrigen){
 	return paquete;
 }
 
-t_stream* serializeStruct_INNN(t_struct_string* estructuraOrigen){
+t_stream* serializeStruct_INNN(t_struct_numero* estructuraOrigen){
 
 	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
 
-	paquete->length = sizeof(t_header) + strlen(estructuraOrigen->string) + 1;
+	paquete->length = sizeof(t_header) + sizeof(int32_t);
 
 	char * data = crearDataConHeader(D_STRUCT_INNN, paquete->length); //creo el data
 
-	int tamanoTotal = sizeof(t_header);
-
-	memcpy(data + tamanoTotal, estructuraOrigen->string, strlen(estructuraOrigen->string)+1);		//copio a data el string.
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));		//copio a data el numero.
 
 	paquete->data = data;
 
@@ -376,17 +374,15 @@ t_stream* serializeStruct_INNC(t_struct_string* estructuraOrigen){
 	return paquete;
 }
 
-t_stream* serializeStruct_OUTN(t_struct_string* estructuraOrigen){
+t_stream* serializeStruct_OUTN(t_struct_numero* estructuraOrigen){
 
 	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
 
-	paquete->length = sizeof(t_header) + strlen(estructuraOrigen->string) + 1;
+	paquete->length = sizeof(t_header) + sizeof(int32_t);
 
 	char * data = crearDataConHeader(D_STRUCT_OUTN, paquete->length); //creo el data
 
-	int tamanoTotal = sizeof(t_header);
-
-	memcpy(data + tamanoTotal, estructuraOrigen->string, strlen(estructuraOrigen->string)+1);		//copio a data el string.
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));		//copio a data el numero.
 
 	paquete->data = data;
 
@@ -481,6 +477,8 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 			case D_STRUCT_SIGNAL:
 				estructuraDestino = deserializeStruct_signal(dataPaquete, length);
 				break;
+			case D_STRUCT_INNN:
+			case D_STRUCT_OUTN:
 			case D_STRUCT_WAKE:
 			case D_STRUCT_BLOCK:
 			case D_STRUCT_MALC:
@@ -495,9 +493,7 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 			case D_STRUCT_CHAR:
 				estructuraDestino = deserializeStruct_char(dataPaquete,length);
 				break;
-			case D_STRUCT_INNN:
 			case D_STRUCT_INNC:
-			case D_STRUCT_OUTN:
 			case D_STRUCT_OUTC:
 			case D_STRUCT_STRING:
 				estructuraDestino = deserializeStruct_string(dataPaquete,length);
