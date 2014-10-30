@@ -62,6 +62,5 @@
 	//Funciones para Sockets
 	void *get_in_addr(struct sockaddr *); 					// Devuelve estructura sockaddr.
 	int crear_socket_cliente (const char *, const char *);	// Crea un socket cliente para conectar al Kernel.
-	void cerrar_socket_cliente();							// Cierra el socket cliente.
 
 #endif /* FUNCIONES_CONSOLA_H_ */

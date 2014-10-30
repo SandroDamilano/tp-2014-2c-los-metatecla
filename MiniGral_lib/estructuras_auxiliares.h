@@ -161,6 +161,7 @@
 	FILE* abrir_archivo(char* nombre_archivo, t_log* log, pthread_mutex_t *mutex);
 	void copiar_structRecibido_a_tcb(t_hilo* tcb, void* structRecibido);
 	void copiar_tcb_a_structTcb(t_hilo* tcb, t_struct_tcb* tcb_enviar);
+	int print_package_to_output(char* datos);
 
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */

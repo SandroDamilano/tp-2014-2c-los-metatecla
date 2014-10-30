@@ -19,7 +19,7 @@
  *
  */
 
-#include "kernel.h"
+#include "main.h"
 
 // Variables para socket Cliente MSP
 int sockfd_cte, numbytes_clt;

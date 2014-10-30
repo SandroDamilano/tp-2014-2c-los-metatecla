@@ -84,7 +84,7 @@ int crear_listener(const char *ip, const char *puerto)
 
 int handleFileLine(char* datos)
 {
-	mensaje *msg = undo_struct_mensaje(datos);
+	t_struct_string *msg = undo_struct_mensaje(datos);
 	char* dirty_file;
 	char* file = "";
 
@@ -106,22 +106,6 @@ int handleFileLine(char* datos)
 
 	free(msg->out);
 	free(msg);
-
-	return 0;
-}
-
-int handleFileEOF(char *datos)
-{
-	return 0;
-}
-
-int handleHandshakeMSP(char *datos)
-{
-	mensaje* deserializado = undo_struct_mensaje(datos);
-
-	printf("%s\n", deserializado->out);
-	free(deserializado->out);
-	free(deserializado);
 
 	return 0;
 }
@@ -150,7 +134,7 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
 			res = handleFileLine(paquete);
 			break;
 		case FILE_EOF:
-			res = handleFileEOF(paquete);
+			res = 0;
 			break;
 		case MEMORIA_MSP_SUCCESS:
 			res = handleMemoriaSuccess(paquete);
@@ -388,9 +372,6 @@ void* main_LOADER(void* parametros) {
 	struct timeval tv; //Timeout del Select
 	tv.tv_sec = DELAY_CHECK_NEW_READY_SEC;
 	tv.tv_usec = DELAY_CHECK_NEW_READY_USEC;
-
-//	//1- Conectarse a MSP
-//	conectar_a_MSP(ip_msp, puerto_msp);
 
 	//2- Socket de escucha para Programas
 	crear_listener(ip_kernel, puerto_consola);

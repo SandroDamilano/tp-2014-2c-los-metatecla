@@ -294,21 +294,3 @@ int socket_aceptarCliente(int socketEscucha){
 int socket_cerrarConexion(int socket){
 	return close(socket);
 }
-
-/******************************** INTERPRETACION PAQUETES *************************************/
-// para el caso de debug del paquete en pantalla
-int undo_struct_mensaje(char* datos) {
-	t_struct_string *deserializado = deserializeStruct_string(datos, 0);
-
-	printf("%s\n", deserializado->string);
-	free(deserializado->string);
-	free(deserializado);
-
-	return 0;
-}
-// para el caso previo al envio del paquete
-t_stream* do_struct_mensaje(t_struct_string* datos) {
-	t_stream *serializado = serializeStruct_string(datos);
-
-	return serializado;
-}

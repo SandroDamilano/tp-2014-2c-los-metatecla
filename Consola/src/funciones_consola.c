@@ -21,21 +21,21 @@ int analizar_paquete(void *paquete, t_tipoEstructura *operacion)
 		case HANDSHAKE_SUCCESS: case HANDSHAKE_FAIL:
 //printf("HANDSHAKE_SUCCESS o HANDSHAKE_FAIL\n");
 			log_trace(logger, "Respuesta Handshake, recibida.");
-			res = undo_struct_mensaje(paquete);
+			res = print_package_to_output(paquete);
 			break;
 		case FILE_RECV_SUCCESS: case FILE_RECV_FAIL:
 //printf("FILE_SUCCESS o FILE_FAIL\n");
 			log_trace(logger, "Kernel recibio envio del BESO file.");
-			res = undo_struct_mensaje(paquete);
+			res = print_package_to_output(paquete);
 			break;
 		case ENVIAR_IMPRIMIR_TEXTO:
 //printf("ENVIAR_IMPRIMIR_TEXTO\n");
 			log_trace(logger, "Solicitud de Impresion por STDOUT, recibida.");
-			res = undo_struct_mensaje(paquete);;
+			res = print_package_to_output(paquete);;
 			break;
 		case END_PROGRAM:
 			log_trace(logger, "Respuesta de FIN de programa, recibida.");
-			res = undo_struct_mensaje(paquete);
+			res = print_package_to_output(paquete);
 //printf("END_PROGRAM\n");
 			break;
 		default:
@@ -64,7 +64,7 @@ int preparar_paquete(u_int32_t socket, t_tipoEstructura op, void* estructura)
 	{
 		case FILE_LINE: case FILE_EOF:
 //printf("FILE_LINE o FILE_EOF\n");
-			paquete = do_struct_mensaje((t_struct_string*)estructura);
+			paquete = serializeStruct_string((t_struct_string*)estructura);
 			break;
 		default:
 //printf("default\n");
@@ -89,10 +89,6 @@ void *get_in_addr_cliente(struct sockaddr *sa)
 	}
 
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
-void cerrar_socket_cliente() {
-	close(sockfd);
 }
 
 int crear_socket_cliente (const char *ip, const char *puerto)
@@ -122,7 +118,7 @@ int crear_socket_cliente (const char *ip, const char *puerto)
 			continue;
 		}
 		if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1)	{
-			cerrar_socket_cliente();
+			socket_cerrarConexion(sockfd);
 			perror("[Programa]: Error on 'connect()' function.");
 			log_error(logger,"Error on 'connect()' function.");
 
@@ -145,7 +141,7 @@ void liberarMemoria()
 {
 	config_destroy(config_file);
 	log_destroy(logger);
-	cerrar_socket_cliente();
+	socket_cerrarConexion(sockfd);
 	free(buffer);
 	exit(1);
 }

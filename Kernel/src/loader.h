@@ -27,7 +27,7 @@
 	#include <sockets/enviar_recibir_paquete.h>
 	#include <estructuras_auxiliares.h>
 	#include <serialize/functions.h>
-	#include "general_kernel.h"
+	#include "funciones_kernel.h"
 
 	typedef struct arg_LOADER {	// Estructura para pasar argumentos al hilo
 		uint32_t puerto;
@@ -44,7 +44,7 @@
 	} mensaje;
 
 	// Vars globales LOADER
-//	t_queue* cola_new, cola_ready, cola_exit; Los puse en general_kernel.h
+//	t_queue* cola_new, cola_ready, cola_exit; Los puse en funciones_kernel.h
 	mensaje msg;
 	t_hilo info_mem_MSP;
 	t_id pid, tid;

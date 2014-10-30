@@ -80,3 +80,15 @@ void copiar_tcb_a_structTcb(t_hilo* tcb, t_struct_tcb* tcb_enviar){
 	tcb_enviar->segmento_codigo_size = tcb->segmento_codigo_size;
 	tcb_enviar->tid = tcb->tid;
 }
+
+// para el caso de debug del paquete por pantalla de consola
+int print_package_to_output(char* datos) {
+	t_struct_string *deserializado = deserializeStruct_string(datos, 0);
+
+	printf("%s\n", deserializado->string);
+	free(deserializado->string);
+	free(deserializado);
+
+	return 0;
+}
+

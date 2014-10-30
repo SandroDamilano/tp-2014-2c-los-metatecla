@@ -1,12 +1,12 @@
 /*
- * kernel.h
+ * main.h
  *
  *  Created on: 12/09/2014
  *      Author: utnso
  */
 
-#ifndef KERNEL_H_
-#define KERNEL_H_
+#ifndef MAIN_H_
+#define MAIN_H_
 
 #define MAX_COUNT_OF_CONFIG_KEYS 6
 
@@ -24,7 +24,7 @@
 
 	#include "loader.h"
 	#include "planificador.h"
-	#include "general_kernel.h"
+	#include "funciones_kernel.h"
 	#include <ansisop-panel/kernel.h>
 	#include <estructuras_auxiliares.h>
 	#include <sockets/enviar_recibir_paquete.h>
@@ -51,4 +51,4 @@
 	void cargar_arg_PLANIFICADOR();	// Carga estructura para mandar a hilo PLANIFICADOR
 	void conectar_a_MSP(char *ip, char* puerto);
 
-#endif /* KERNEL_H_ */
+#endif /* MAIN_H_ */

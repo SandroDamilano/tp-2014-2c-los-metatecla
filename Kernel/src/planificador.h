@@ -10,7 +10,7 @@
 
 	#include <ansisop-panel/panel.h>
 	#include <commons/log.h>
-	#include "general_kernel.h"
+	#include "funciones_kernel.h"
 
 	int sockMSP;
 	int cantidad_de_PIDs;

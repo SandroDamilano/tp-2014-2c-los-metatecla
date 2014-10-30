@@ -1,12 +1,12 @@
 /*
- * general_kernel.h
+ * funciones_kernel.h
  *
  *  Created on: 17/10/2014
  *      Author: utnso
  */
 
-#ifndef GENERAL_KERNEL_H_
-#define GENERAL_KERNEL_H_
+#ifndef FUNCIONES_KERNEL_H_
+#define FUNCIONES_KERNEL_H_
 
 	#include <commons/collections/queue.h>
 	#include <pthread.h>
@@ -40,4 +40,4 @@
 	int obtener_pid();
 	int obtener_tid();
 
-#endif /* GENERAL_KERNEL_H_ */
+#endif /* FUNCIONES_KERNEL_H_ */

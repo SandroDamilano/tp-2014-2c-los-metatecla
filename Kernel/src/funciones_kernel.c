@@ -1,11 +1,11 @@
 /*
- * general_kernel.c
+ * funciones_kernel.c
  *
  *  Created on: 17/10/2014
  *      Author: utnso
  */
 
-#include "general_kernel.h"
+#include "funciones_kernel.h"
 
 	t_queue* cola_new;
 	t_queue* cola_exit;
