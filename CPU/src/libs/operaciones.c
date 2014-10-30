@@ -20,6 +20,8 @@ void ejecutarLinea(int* bytecode){
 	uint32_t direccion;
 	int resultado;
 
+	t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
+	t_struct_numero* id_semaforo = malloc(sizeof(t_struct_numero));
 	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
 	t_struct_env_bytes* datos_enviados = malloc(sizeof(t_struct_env_bytes));
 	void* datos_recibidos;
@@ -662,7 +664,7 @@ void ejecutarLinea(int* bytecode){
 
 		list_clean(parametros);
 		break;
-	case XXXX:
+	case XXXX://FIXME: COMO MANEJO LO DE ENVIAR TCB TERMINADO Y PEDIR OTRO?
 		ejecucion_instruccion("XXXX",parametros);
 
 		copiar_registros_a_tcb();
@@ -736,7 +738,7 @@ void ejecutarLinea(int* bytecode){
 		char* cadena = ((t_struct_string*) structRecibido)->string;
 
 		datos_enviados->base = registros_cpu.registros_programacion['A'];
-		datos_enviados->offset = 0; //FIXME
+		datos_enviados->offset = 0;
 		datos_enviados->buffer = cadena;
 		datos_enviados->tamanio = strlen(cadena);
 
@@ -762,7 +764,7 @@ void ejecutarLinea(int* bytecode){
 
 		//Pido la cadena apuntada por registro A en memoria
 		datos_solicitados->base = registros_cpu.registros_programacion['A'];
-		datos_solicitados->offset = 0; //FIXME
+		datos_solicitados->offset = 0;
 		datos_solicitados->tamanio = registros_cpu.registros_programacion['B'];
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -784,10 +786,10 @@ void ejecutarLinea(int* bytecode){
 
 		list_clean(parametros);
 		break;
-	case CREA: //TODO: QUIEN CREA AL HILO CON TODOS LOS DATOS QUE DICE EL ENUNCIADO (EN REGISTROS)?
+	case CREA: //FIXME: RECIBO EL ALGO DESPUES DE MANDAR ESTO?
 		ejecucion_instruccion("CREA",parametros);
 
-		t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
+		//Mando TCB
 
 		copiar_registros_a_tcb();
 		copiar_tcb_a_structTcb(tcb, tcb_enviar);
@@ -795,29 +797,61 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_TCB_CREA, tcb_enviar);
 		controlar_envio(resultado, D_STRUCT_TCB_CREA);
 
+		//Mando PC
+		t_struct_numero* program_counter = malloc(sizeof(t_struct_numero));
+		program_counter->numero = registros_cpu.registros_programacion['B'];
+		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, program_counter);
+		controlar_envio(resultado, D_STRUCT_NUMERO);
+		free(program_counter);
+
 		list_clean(parametros);
 		break;
-	case JOIN: //TODO
+	case JOIN:
 		ejecucion_instruccion("JOIN",parametros);
 
+		t_struct_join* join = malloc(sizeof(t_struct_join));
+		join->tid_a_esperar = registros_cpu.registros_programacion['A'];
+		join->tid_llamador = tcb->tid;
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_JOIN, join);
+		controlar_envio(resultado, D_STRUCT_JOIN);
+
+		free(join);
 
 		list_clean(parametros);
 		break;
-	case BLOK: //TODO
+	case BLOK:
 		ejecucion_instruccion("BLOK",parametros);
 
+		id_semaforo->numero = registros_cpu.registros_programacion['B'];
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
+		controlar_envio(resultado, D_STRUCT_BLOCK);
+
+
+		copiar_registros_a_tcb();
+		copiar_tcb_a_structTcb(tcb, tcb_enviar);
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
+		controlar_envio(resultado, D_STRUCT_TCB);
 
 		list_clean(parametros);
 		break;
-	case WAKE: //TODO
+	case WAKE:
 		ejecucion_instruccion("WAKE",parametros);
 
+		id_semaforo->numero = registros_cpu.registros_programacion['B'];
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
+		controlar_envio(resultado, D_STRUCT_BLOCK);
 
 		list_clean(parametros);
 		break;
 	}
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
+	free(id_semaforo);
+	free(tcb_enviar);
 	free(((t_struct_respuesta_msp*) structRecibido)->buffer);
 	free(structRecibido); //FIXME En las operaciones que no reciben parametros, va a fallar
 	free(datos_recibidos);

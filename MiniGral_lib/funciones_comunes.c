@@ -5,7 +5,7 @@
  *      Author: utnso
  */
 
-#include "estructuras_auxiliares.h"
+#include "sockets/enviar_recibir_paquete.h"
 
 char* leer_archivo(FILE* archivo, long int tamanio_archivo){
 	char* codigo = malloc(tamanio_archivo);
@@ -34,7 +34,7 @@ long int calcular_tamanio_archivo(FILE* archivo){
 }
 
 FILE* abrir_archivo(char* nombre_archivo, t_log* log, pthread_mutex_t *mutex){
-	FILE* archivo = fopen(nombre_archivo, "r");
+	FILE* archivo = fopen(nombre_archivo, "w+");
 
 	if(archivo == NULL){
 		//pthread_mutex_lock(mutex);
