@@ -42,13 +42,14 @@
 
 	enum{
 		//Generales
-		D_STRUCT_SIGNAL=0,
+		D_STRUCT_SIGNAL=50,
 		D_STRUCT_NUMERO=1,
 		D_STRUCT_DIRECCION=2,
 		D_STRUCT_CHAR=3,
 		D_STRUCT_STRING=4,
 
 		//Comunicacion MSP-CPU
+		D_STRUCT_SEG_FAULT=0,
 		D_STRUCT_SOL_BYTES=5,
 		D_STRUCT_RESPUESTA_MSP=6,
 		D_STRUCT_ENV_BYTES=7,
@@ -58,11 +59,18 @@
 		//Comunicacion Kernel-CPU
 		D_STRUCT_TCB=10,
 		D_STRUCT_TCB_QUANTUM=11,
-		D_STRUCT_TCB_INNN=12,
-		D_STRUCT_TCB_INNC=13,
-		D_STRUCT_TCB_OUTN=14,
-		D_STRUCT_TCB_OUTC=15,
+		D_STRUCT_INNN=12,
+		D_STRUCT_INNC=13,
+		D_STRUCT_OUTN=14,
+		D_STRUCT_OUTC=15,
 		D_STRUCT_TCB_CREA=16,
+		D_STRUCT_PEDIR_TCB=17,
+		D_STRUCT_INTE=18,
+		D_STRUCT_JOIN=19,
+		D_STRUCT_BLOCK=20,
+		D_STRUCT_WAKE=21,
+		D_STRUCT_TERMINO=22,
+		D_STRUCT_ABORT=23,
 
 		//Comunicacion entre Kernel-Consola
 		HANDSHAKE_SUCCESS = 100,// TODO: serializar segun estas señales
@@ -136,6 +144,11 @@
 		t_cola cola;
 
 	}__attribute__((__packed__)) t_struct_tcb;
+
+	typedef struct struct_join {
+		uint32_t tid_llamador;
+		uint32_t tid_a_esperar;
+	} __attribute__ ((__packed__)) t_struct_join;
 
 	char* leer_archivo(FILE* archivo, long int tamanio_archivo);
 	long int calcular_tamanio_archivo(FILE* archivo);

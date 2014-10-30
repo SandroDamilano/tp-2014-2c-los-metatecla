@@ -59,6 +59,14 @@
 	void bloquear_tcbJoin(t_hilo* tcb, uint32_t tid);
 	void bloquear_tcbKernel(t_hilo* tcb);
 
+	void inicializar_ready_block();
+	void inicializar_semaforo_ready();
+	void boot(char* systcalls_path);
+
+	void poner_new_a_ready();
+
+	bool esta_por_systcall(t_data_nodo_block* data);
+
 	void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros);
 
 #endif /* PLANIFICADOR_H_ */
