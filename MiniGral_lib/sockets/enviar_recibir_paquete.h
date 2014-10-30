@@ -37,5 +37,7 @@
 	int socket_aceptarCliente(int socketEscucha);
 	int socket_cerrarConexion(int socket);
 
+	int undo_struct_mensaje(char* datos);
+	t_stream* do_struct_mensaje(t_struct_string* datos);
 
 #endif /* ENVIAR_RECIBIR_PAQUETE_H_ */

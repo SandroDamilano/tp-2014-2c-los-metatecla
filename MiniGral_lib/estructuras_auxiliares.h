@@ -72,7 +72,7 @@
 		D_STRUCT_TERMINO=22,
 		D_STRUCT_ABORT=23,
 
-		//Comunicacion entre Kernel-Consola
+		//Comunicacion entre CONSOLA - KERNEL
 		HANDSHAKE_SUCCESS = 100,// TODO: serializar segun estas señales
 		HANDSHAKE_FAIL = 101,
 		ENVIAR_IMPRIMIR_TEXTO = 102,
@@ -82,6 +82,12 @@
 		FILE_RECV_FAIL = 106,
 		END_PROGRAM = 107,
 
+		//MSP
+		HANDSHAKE_MSP_SUCCESS = 108,
+		HANDSHAKE_MSP_FAIL = 109,
+		SOLICITAR_MEMORIA_MSP = 110,
+		MEMORIA_MSP_SUCCESS = 111,
+		MEMORIA_MSP_FAIL = 112,
 	} t_operaciones;
 
 	// Header de stream

@@ -10,16 +10,6 @@
 // --------------------------------------
 // to RECIEVE from KERNEL
 
-int undo_struct_mensaje(char* datos) {
-	t_struct_string *deserializado = deserializeStruct_string(datos, 0);
-
-	printf("%s\n", deserializado->string);
-	free(deserializado->string);
-	free(deserializado);
-
-	return 0;
-}
-
 int analizar_paquete(void *paquete, t_tipoEstructura *operacion)
 {
 	int res; // Resultado de cada handler
@@ -65,12 +55,6 @@ int analizar_paquete(void *paquete, t_tipoEstructura *operacion)
 
 // --------------------------------------
 // to SEND
-
-t_stream* do_struct_mensaje(t_struct_string* datos) {
-	t_stream *serializado = serializeStruct_string(datos);
-
-	return serializado;
-}
 
 int preparar_paquete(u_int32_t socket, t_tipoEstructura op, void* estructura)
 {
