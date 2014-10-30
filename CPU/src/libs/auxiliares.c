@@ -94,6 +94,13 @@ void incrementar_pc(int cant_bytes){
 	registros_cpu.P += cant_bytes;
 }
 
+void abortar(){
+	t_struct_numero* abortar = malloc(sizeof(t_struct_numero));
+	abortar->numero = D_STRUCT_ABORT;
+	socket_enviar(sockKernel, D_STRUCT_NUMERO, abortar);
+	free(abortar);
+}
+
 void controlar_struct_recibido(int struct_recibido, int struct_posta){
 
 	if(struct_recibido == struct_posta){
@@ -101,8 +108,10 @@ void controlar_struct_recibido(int struct_recibido, int struct_posta){
 	} else{
 		if(struct_recibido == D_STRUCT_SEG_FAULT){
 		printf("Hubo un segmentation fault\n");
+		abortar();
 		} else {
 		printf("Se debia recibir %d, pero llego %d\n", struct_posta, struct_recibido);
+		abortar();
 		}
 	}
 

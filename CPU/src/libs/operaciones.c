@@ -282,7 +282,7 @@ void ejecutarLinea(int* bytecode){
 
 		if(registros_cpu.registros_programacion[elegirRegistro(reg2)] == 0){
 			printf("division por cero");
-			//TODO ABORTAR POR DIVISION POR CERO
+			abortar();
 		} else {
 			registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] / registros_cpu.registros_programacion[elegirRegistro(reg2)];
 		}
@@ -514,7 +514,24 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,&direccion);
 		ejecucion_instruccion("INTE",parametros);
 
-		//TODO INTE.  TENER EN CUENTA EL PROGRAM COUNTER
+		//Mando señal con la direccion
+		t_struct_direccion* direccion_syscalls = malloc(sizeof(t_struct_direccion));
+		direccion_syscalls->numero = direccion;
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_INTE, direccion_syscalls);
+		controlar_envio(resultado, D_STRUCT_INTE);
+		free(direccion_syscalls);
+
+		//Mando tcb
+		copiar_registros_a_tcb();
+
+		t_struct_tcb* tcb_syscalls = malloc(sizeof(t_struct_tcb));
+		copiar_tcb_a_structTcb(tcb, tcb_syscalls);
+		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_syscalls);
+		controlar_envio(resultado, D_STRUCT_TCB);
+		free(tcb_syscalls);
+
+		incrementar_pc(4); //direccion
 
 		list_clean(parametros);
 		break;
@@ -540,7 +557,13 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros, &reg1);
 		ejecucion_instruccion("SHIF",parametros);
 
-		//TODO SHIF.
+		uint32_t cantidad_bits = abs(numero);
+
+		if(numero > 0){
+			registros_cpu.registros_programacion[elegirRegistro(reg1)] >>= cantidad_bits;
+		} else {
+			registros_cpu.registros_programacion[elegirRegistro(reg1)] <<= cantidad_bits;
+		}
 
 		incrementar_pc(5);
 
@@ -580,6 +603,9 @@ void ejecutarLinea(int* bytecode){
 		datos_enviados->offset = registros_cpu.S;
 		datos_enviados->buffer = &auxiliar_copiar;
 		datos_enviados->tamanio = sizeof(int32_t);
+
+		int resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
+		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
 
 		registros_cpu.S += numero;
 
@@ -675,46 +701,115 @@ void ejecutarLinea(int* bytecode){
 	case INNN:
 		ejecucion_instruccion("INNN",parametros);
 
+		//Mando señal con el numero D_STRUCT_INNN
+		t_struct_numero* INNN = malloc(sizeof(t_struct_numero));
+		INNN->numero = D_STRUCT_INNN;
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, INNN);
+		controlar_envio(resultado, D_STRUCT_NUMERO);
+		free(INNN);
+
+		//Recibo un numero que se ingreso por consola
+		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_INNN);
+
+		registros_cpu.registros_programacion['A'] = ((t_struct_numero*) structRecibido)->numero;
 
 		list_clean(parametros);
 		break;
 	case INNC:
 		ejecucion_instruccion("INNC",parametros);
 
+		//Mando señal con el numero D_STRUCT_INNC
+		t_struct_numero* INNC = malloc(sizeof(t_struct_numero));
+		INNC->numero = registros_cpu.registros_programacion['B'];
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_INNC, INNC);
+		controlar_envio(resultado, D_STRUCT_INNC);
+		free(INNC);
+
+		//Recibo un string que se ingreso por consola
+		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_INNC);
+
+		//Envio cadena recibida a memoria
+		char* cadena = ((t_struct_string*) structRecibido)->string;
+
+		datos_enviados->base = registros_cpu.registros_programacion['A'];
+		datos_enviados->offset = 0; //FIXME
+		datos_enviados->buffer = cadena;
+		datos_enviados->tamanio = strlen(cadena);
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
+		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
 
 		list_clean(parametros);
 		break;
 	case OUTN:
 		ejecucion_instruccion("OUTN",parametros);
 
+		t_struct_numero* OUTN = malloc(sizeof(t_struct_numero));
+		OUTN->numero = registros_cpu.registros_programacion['A'];
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_OUTN, OUTN);
+		controlar_envio(resultado, D_STRUCT_OUTN);
+		free(OUTN);
 
 		list_clean(parametros);
 		break;
 	case OUTC:
 		ejecucion_instruccion("OUTC",parametros);
 
+		//Pido la cadena apuntada por registro A en memoria
+		datos_solicitados->base = registros_cpu.registros_programacion['A'];
+		datos_solicitados->offset = 0; //FIXME
+		datos_solicitados->tamanio = registros_cpu.registros_programacion['B'];
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		//Recibo la cadena de memoria
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(registros_cpu.registros_programacion['B']); //tamaño determinado por reg B
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
+
+		//Envio cadena a kernel para ser mostrada por consola
+		t_struct_string* cadena_consola = malloc(sizeof(t_struct_string));
+		cadena_consola->string = (char*)datos_recibidos;
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_OUTC, cadena_consola);
+		controlar_envio(resultado, D_STRUCT_OUTC);
 
 		list_clean(parametros);
 		break;
-	case CREA:
+	case CREA: //TODO: QUIEN CREA AL HILO CON TODOS LOS DATOS QUE DICE EL ENUNCIADO (EN REGISTROS)?
 		ejecucion_instruccion("CREA",parametros);
 
+		t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
+
+		copiar_registros_a_tcb();
+		copiar_tcb_a_structTcb(tcb, tcb_enviar);
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_TCB_CREA, tcb_enviar);
+		controlar_envio(resultado, D_STRUCT_TCB_CREA);
 
 		list_clean(parametros);
 		break;
-	case JOIN:
+	case JOIN: //TODO
 		ejecucion_instruccion("JOIN",parametros);
 
 
 		list_clean(parametros);
 		break;
-	case BLOK:
+	case BLOK: //TODO
 		ejecucion_instruccion("BLOK",parametros);
 
 
 		list_clean(parametros);
 		break;
-	case WAKE:
+	case WAKE: //TODO
 		ejecucion_instruccion("WAKE",parametros);
 
 
