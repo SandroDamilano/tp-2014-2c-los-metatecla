@@ -75,13 +75,21 @@ void desbloquear_proceso(t_evento evento, uint32_t parametro){
 
 t_hilo* desbloquear_tcbKernel(){
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbKernel);
-	return data->tcb;
+	if (data != NULL){
+		return data->tcb;
+	}else{
+		return NULL;
+	}
 };
 
 t_hilo* desbloquear_tcbSystcall(uint32_t tid){
 	tid_a_buscar = tid;
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbSystcall);
-	return data->tcb;
+	if (data != NULL){
+		return data->tcb;
+	}else{
+		return NULL;
+	}
 }
 
 void desbloquear_por_join(uint32_t tid){
@@ -165,7 +173,6 @@ void boot(char* systcalls_path){
 void copiar_tcb(t_hilo* original, t_hilo* copia){
 	copia->tid = original->tid;
 	copia->pid = original->pid;
-	printf("original_ 0=%d y copia: 1=%d\n", original->kernel_mode, copia->kernel_mode);
 	int i;
 	for(i=0; i<=4; i++){
 		copia->registros[i] = original->registros[i];
@@ -175,6 +182,7 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
 	bloquear_tcbSystcall(tcb, dir_systcall);
+	printf("está atendiendo al tid: %d\n", tcb->tid);
 	if (tcb_kernel != NULL){
 		copiar_tcb(tcb, tcb_kernel);
 		tcb_kernel->puntero_instruccion = dir_systcall;
