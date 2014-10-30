@@ -31,6 +31,24 @@ int paginas_en_disco;
 void* buffer;
 char bufferLog[80];
 
+typedef struct  lista_paginas{
+	uint32_t numeroPagina;
+	uint32_t marcoEnMemPpal;
+	int swap;
+	}t_lista_paginas;
+
+typedef struct  lista_segmentos{
+	uint32_t numeroSegmento;
+	uint32_t tamanio;
+	t_list *lista_Paginas;
+
+}t_lista_segmentos;
+
+typedef struct lista_procesos{
+	uint32_t pid;
+	t_list *lista_Segmentos;
+} t_lista_procesos;
+
 typedef struct pagina{
 	uint32_t PID;
 	uint32_t num_pag;
@@ -73,6 +91,8 @@ extern uint32_t puertoMSP;
 extern uint32_t tamanio_mem_ppal;
 extern uint32_t cant_mem_swap;
 extern char* alg_sustitucion;
+extern t_list *listaProcesos;
+extern t_list *lista_marcos;
 
 //Semaforos
 extern pthread_mutex_t mutex_consola;

@@ -15,7 +15,7 @@
 #include <string.h>
 #include <ansisop-panel/cpu.h>
 #include <unistd.h>
-#include <estructuras_auxiliares.h>
+#include <sockets/enviar_recibir_paquete.h>
 
 typedef struct{
 	int puerto_kernel;
@@ -25,7 +25,7 @@ typedef struct{
 	int retardo;
 }t_config_cpu;
 
-extern t_hilo* tcb;
+t_hilo* tcb;
 t_registros_cpu registros_cpu;
 int quantum;
 int cantidad_lineas_ejecutadas;
@@ -48,6 +48,8 @@ void esperar_retardo();
 void incrementar_pc(int cant_bytes);
 void controlar_struct_recibido(int struct_recibido, int struct_posta);
 void controlar_envio(int resultado, int tipo);
+
+void abortar();
 
 enum bytecodes{
 	LOAD,
