@@ -246,4 +246,112 @@ void crear_nuevo_hilo(t_hilo* tcb_padre){
 	//TODO Averiguar qué hay que poner en el nuevo TCB hijo
 }
 
+/******************************** HANDLER CPU *****************************************/
+void copiar_structRecibido_a_tcb(t_hilo* tcb, void* structRecibido){
+	tcb->base_stack = ((t_struct_tcb*) structRecibido)->base_stack;
+	tcb->cola = ((t_struct_tcb*) structRecibido)->cola;
+	tcb->cursor_stack = ((t_struct_tcb*) structRecibido)->cursor_stack;
+	tcb->kernel_mode = ((t_struct_tcb*) structRecibido)->kernel_mode;
+	tcb->pid = ((t_struct_tcb*) structRecibido)->pid;
+	tcb->puntero_instruccion = ((t_struct_tcb*) structRecibido)->puntero_instruccion;
+	tcb->registros[0] = ((t_struct_tcb*) structRecibido)->registros[0];
+	tcb->registros[1] = ((t_struct_tcb*) structRecibido)->registros[1];
+	tcb->registros[2] = ((t_struct_tcb*) structRecibido)->registros[2];
+	tcb->registros[3] = ((t_struct_tcb*) structRecibido)->registros[3];
+	tcb->registros[4] = ((t_struct_tcb*) structRecibido)->registros[4];
+	tcb->segmento_codigo = ((t_struct_tcb*) structRecibido)->segmento_codigo;
+	tcb->segmento_codigo_size = ((t_struct_tcb*) structRecibido)->segmento_codigo_size;
+	tcb->tid = ((t_struct_tcb*) structRecibido)->tid;
+}
+
+void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
+	switch(numero_cpu){
+	case D_STRUCT_INNN:
+		//pido numero por consola
+		break;
+	case D_STRUCT_INNC:
+		//pido string por consola
+		break;
+	case D_STRUCT_ABORT:
+		//abortar
+		break;
+	case D_STRUCT_PEDIR_TCB:
+		//darle otro tcb a cpu, si tiene
+		break;
+	case D_STRUCT_TERMINO:
+		//terminar tcb
+		break;
+	}
+}
+
+void handler_cpu(int sockCPU){
+	t_hilo* tcb;
+	uint32_t tid_llamador;
+	uint32_t tid_a_esperar;
+	uint32_t direccion_syscall;
+	int32_t id_semaforo;
+	int32_t numero_cpu;
+
+	t_tipoEstructura tipoRecibido;
+	t_tipoEstructura tipoRecibido2;
+	void* structRecibido;
+	void* structRecibido2;
+	socket_recibir(sockCPU, &tipoRecibido, &structRecibido);
+
+	//TODO: PONER LOGS!
+	switch(tipoRecibido){
+	case D_STRUCT_INTE:
+		//Recibo la direccion
+		direccion_syscall = ((t_struct_direccion*) structRecibido)->numero;
+		//otro socket para el tcb
+		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
+
+		if(tipoRecibido == D_STRUCT_TCB){
+			copiar_structRecibido_a_tcb(tcb, structRecibido);
+		} else {
+			printf("No llego el TCB para la operacion INTE\n");
+		}
+
+		break;
+	case D_STRUCT_NUMERO:
+
+		numero_cpu = ((t_struct_numero*) structRecibido)->numero;
+		handler_numeros_cpu(numero_cpu, sockCPU);
+		break;
+	case D_STRUCT_TCB_CREA:
+
+		copiar_structRecibido_a_tcb(tcb, structRecibido);
+
+		break;
+	case D_STRUCT_JOIN:
+
+		tid_llamador = ((t_struct_join*) structRecibido)->tid_llamador;
+		tid_a_esperar = ((t_struct_join*) structRecibido)->tid_a_esperar;
+
+		break;
+	case D_STRUCT_BLOCK:
+		//Recibo id semaforo
+		id_semaforo = ((t_struct_numero*) structRecibido)->numero;
+
+		//otro socket para el tcb
+		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
+
+		if(tipoRecibido2 == D_STRUCT_TCB){
+			copiar_structRecibido_a_tcb(tcb, structRecibido);
+		} else {
+			printf("No se recibio el TCB para la operacion BLOCK\n");
+		}
+
+		break;
+	case D_STRUCT_WAKE:
+		//Recibo id semaforo
+		id_semaforo = ((t_struct_numero*) structRecibido)->numero;
+		break;
+	case D_STRUCT_TCB_QUANTUM:
+
+		copiar_structRecibido_a_tcb(tcb, structRecibido);
+
+		break;
+	}
+}
 
