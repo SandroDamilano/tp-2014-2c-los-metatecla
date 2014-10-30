@@ -25,7 +25,6 @@
 	#include <estructuras_auxiliares.h>
 	#include <sockets/enviar_recibir_paquete.h>
 
-
 	// BESO file vars
 	FILE *file;
 	char *file_name;
@@ -35,14 +34,12 @@
 	char* ip_kernel;
 	char* puerto_kernel;
 
-
 	//char *buffer;
 	void* buffer;
 	char bufferLog[80];
 	char* fileBody;
 	int sizeOfFile;
 	int bytesReadFile;
-	//t_operaciones idOperacion;
 	t_tipoEstructura idOperacion;
 
 	// Variables para Socket Cliente
@@ -51,7 +48,6 @@
 	int rv;
 	char s[INET6_ADDRSTRLEN];
 
-
 	// FUNCIONES Grales
 	void leer_config();
 	void liberarMemoria();
@@ -59,6 +55,7 @@
 	//Funciones para Handshake
 	int handleHandshake(char *datos);
 	int handlePIDResult(char* datos);
+	int preparar_paquete(u_int32_t socket, t_tipoEstructura op, void* estructura);
 	int analizar_paquete(void *paquete, t_tipoEstructura *id);
 	void conectar_a_Kernel(char *, char *);
 
@@ -66,6 +63,5 @@
 	void *get_in_addr(struct sockaddr *); 					// Devuelve estructura sockaddr.
 	int crear_socket_cliente (const char *, const char *);	// Crea un socket cliente para conectar al Kernel.
 	void cerrar_socket_cliente();							// Cierra el socket cliente.
-
 
 #endif /* FUNCIONES_CONSOLA_H_ */

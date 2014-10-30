@@ -15,7 +15,6 @@
  * 7- Quedar a la espera de mensajes para imprimir por STDOUT.
  * 8- Destruimos la estructura config, cerramos socket y liberamos memoria.
  *
- * TODO limpiar un poco mas el codigo para independizar funcionalidades como deserializacion, handshake, operaciones de sockets..
  */
 
 #include "funciones_consola.h"
@@ -88,14 +87,14 @@ int main(int argc, char	**argv){
 	}
 
 	//6- Enviar BESO FILE al Kernel
-	/*stream_t msg;
+	t_stream msg;
 	msg.data = fileBody;
 	preparar_paquete(sockfd, FILE_LINE, &msg);
 	log_trace(logger,"Se envio BESO FILE al Kernel.");
 	free(fileBody);
 
 	msg.data = "";	// Senial de corte !!
-	preparar_paquete(sockfd, FILE_EOF, &msg);*/
+	preparar_paquete(sockfd, FILE_EOF, &msg);
 
 	t_struct_string* paquete_codigo_beso = malloc(sizeof(t_struct_string));
 	paquete_codigo_beso->string = fileBody;

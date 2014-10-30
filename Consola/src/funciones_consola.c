@@ -8,48 +8,17 @@
 #include "funciones_consola.h"
 
 // --------------------------------------
-// to RECIEVE
+// to RECIEVE from KERNEL
 
-/*stream_t *deserialize_struct_mensaje(char *datos) {
-	stream_t * self= malloc(sizeof(stream_t));
-	int offset = 0, tmp_size = 0;
+int undo_struct_mensaje(char* datos) {
+	t_struct_string *deserializado = deserializeStruct_string(datos, 0);
 
-	offset += tmp_size;
-	for(tmp_size = 1; (datos + offset)[tmp_size-1] != '\0'; tmp_size++);
-	self->data = malloc(tmp_size);
-	memcpy(self->data, datos + offset, tmp_size);
-
-	return self;
-}
-
-void undo_struct_mensaje(char* datos) {
-	stream_t *deserializado = deserialize_struct_mensaje(datos);
-
-	printf("%s\n", deserializado->data);
-	free(deserializado->data);
+	printf("%s\n", deserializado->string);
+	free(deserializado->string);
 	free(deserializado);
-}
-
-int handleHandshake(char *datos) {
-	undo_struct_mensaje(datos);
-	return 0;
-}
-
-int handlePrintMsg(char *datos) {
-	undo_struct_mensaje(datos);
-	return 0;
-}
-
-int handleEndProgramm(char *datos) {
-	undo_struct_mensaje(datos);
-	return 0;
-}
-
-int handleFileResult(char *datos) {
-	undo_struct_mensaje(datos);
 
 	return 0;
-}*/
+}
 
 int analizar_paquete(void *paquete, t_tipoEstructura *operacion)
 {
@@ -62,21 +31,21 @@ int analizar_paquete(void *paquete, t_tipoEstructura *operacion)
 		case HANDSHAKE_SUCCESS: case HANDSHAKE_FAIL:
 //printf("HANDSHAKE_SUCCESS o HANDSHAKE_FAIL\n");
 			log_trace(logger, "Respuesta Handshake, recibida.");
-			//res = handleHandshake(paquete);
+			res = undo_struct_mensaje(paquete);
 			break;
 		case FILE_RECV_SUCCESS: case FILE_RECV_FAIL:
 //printf("FILE_SUCCESS o FILE_FAIL\n");
 			log_trace(logger, "Kernel recibio envio del BESO file.");
-			//res = handleFileResult(paquete);
+			res = undo_struct_mensaje(paquete);
 			break;
 		case ENVIAR_IMPRIMIR_TEXTO:
 //printf("ENVIAR_IMPRIMIR_TEXTO\n");
 			log_trace(logger, "Solicitud de Impresion por STDOUT, recibida.");
-			//res = handlePrintMsg(paquete);;
+			res = undo_struct_mensaje(paquete);;
 			break;
 		case END_PROGRAM:
 			log_trace(logger, "Respuesta de FIN de programa, recibida.");
-			//res = handleEndProgramm(paquete);
+			res = undo_struct_mensaje(paquete);
 //printf("END_PROGRAM\n");
 			break;
 		default:
@@ -97,41 +66,21 @@ int analizar_paquete(void *paquete, t_tipoEstructura *operacion)
 // --------------------------------------
 // to SEND
 
-/*stream_t *serialize_struct_mensaje (stream_t *msg, int *tamanho) {
-	*tamanho = 	strlen(msg->data) + 1;
-
-	char *data = (char*)malloc(*tamanho);
-	stream_t *stream = malloc(sizeof(stream_t));
-	int offset = 0, tmp_size = 0;
-
-	offset += tmp_size;
-	memcpy(data + offset, msg->data, tmp_size = strlen(msg->data) + 1);
-
-	stream->data = data;
-
-	return stream;
-}
-
-stream_t* do_struct_mensaje(stream_t* datos, int* size) {
-	stream_t *serializado = serialize_struct_mensaje(datos, size);
+t_stream* do_struct_mensaje(t_struct_string* datos) {
+	t_stream *serializado = serializeStruct_string(datos);
 
 	return serializado;
 }
 
-stream_t *handleFileLine(stream_t* datos, int* size) {
-	return do_struct_mensaje(datos, size);
-}
-
-int preparar_paquete(u_int32_t socket, t_operaciones op, void* estructura)
+int preparar_paquete(u_int32_t socket, t_tipoEstructura op, void* estructura)
 {
-	int tamanho = 0;
-	stream_t *paquete = NULL;
+	t_stream *paquete = NULL;
 //printf("id op [%d]\n",op);	// ONLY for debug purpose
 	switch(op)
 	{
 		case FILE_LINE: case FILE_EOF:
 //printf("FILE_LINE o FILE_EOF\n");
-			paquete = handleFileLine((stream_t*)estructura, &tamanho);
+			paquete = do_struct_mensaje((t_struct_string*)estructura);
 			break;
 		default:
 //printf("default\n");
@@ -139,13 +88,13 @@ int preparar_paquete(u_int32_t socket, t_operaciones op, void* estructura)
 			break;
 	}
 
-	send_msg_to(socket, op, paquete->data , tamanho);
+	socket_enviar(socket, op, paquete->data);
 
 	free(paquete->data);
 	free(paquete);
 
 	return 0;
-}*/
+}
 
 // --------------------------------------
 
