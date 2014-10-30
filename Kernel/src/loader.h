@@ -31,8 +31,6 @@
 
 	typedef struct arg_LOADER {	// Estructura para pasar argumentos al hilo
 		uint32_t puerto;
-		char* ip_msp;
-		uint32_t puerto_msp;
 		uint32_t tamanio_stack;
 		t_log* logger;
 	} arg_LOADER;

@@ -27,15 +27,17 @@
 	#include "general_kernel.h"
 	#include <ansisop-panel/kernel.h>
 	#include <estructuras_auxiliares.h>
+	#include <sockets/enviar_recibir_paquete.h>
 
 	int cantidad_de_TIDs;
 	int cantidad_de_PIDs;
 
 	// Vars de config
-	uint32_t puerto, puerto_msp, quantum, tamanio_stack;
-	char* ip_msp, *syscalls_path;
+	uint32_t puerto, quantum, tamanio_stack;
+	char* ip_msp, *puerto_msp, *syscalls_path;
 
 	char bufferLog[80];
+	char* bufferMSP = NULL;
 
 	// Vars para hilos (KERNEL/LOADER/PLANIFICADOR)
 	pthread_t thread_KERNEL, thread_LOADER, thread_PLANIFICADOR;
@@ -47,5 +49,6 @@
 	void leer_config();				// Lee configuracion y asigna a variables.
 	void cargar_arg_LOADER();		// Carga estructura para mandar a hilo LOADER
 	void cargar_arg_PLANIFICADOR();	// Carga estructura para mandar a hilo PLANIFICADOR
+	void conectar_a_MSP(char *ip, char* puerto);
 
 #endif /* KERNEL_H_ */

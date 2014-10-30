@@ -29,8 +29,8 @@ typedef enum Operaciones {  //TODO: ordenar y reorganizar numeros!!
 	HANDSHAKE_FAIL,
 	FILE_LINE,
 	FILE_EOF,
-	BESO_FILE_RECV_SUCCESS,
-	BESO_FILE_RECV_FAIL,
+	FILE_RECV_SUCCESS,
+	FILE_RECV_FAIL,
 	END_PROGRAM,
 	//MSP
 	HANDSHAKE_MSP_SUCCESS = 12,

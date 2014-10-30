@@ -21,11 +21,6 @@ char remoteIP[INET6_ADDRSTRLEN];
 int i, j, rv;
 struct addrinfo hints, *ai, *p;
 
-// Variables para socket Cliente MSP
-int sockfd_cte, numbytes_clt;
-struct addrinfo hints_clt, *servinfo_clt, *p_clt;
-int rv_clt;
-char s_clt[INET6_ADDRSTRLEN];
 //----------------------------------------------------
 
 void *get_in_addr(struct sockaddr *sa)
@@ -157,9 +152,6 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
 		case FILE_EOF:
 			res = handleFileEOF(paquete);
 			break;
-		case HANDSHAKE_MSP_SUCCESS: case HANDSHAKE_MSP_FAIL:
-			res = handleHandshakeMSP(paquete);
-			break;
 		case MEMORIA_MSP_SUCCESS:
 			res = handleMemoriaSuccess(paquete);
 			return res;
@@ -227,7 +219,7 @@ int preparar_paquete(u_int32_t socket, t_operaciones op, void* estructura)
 		case HANDSHAKE_SUCCESS: case HANDSHAKE_FAIL:
 			paquete = handleHandshake((stream_t*)estructura, &tamanho);
 			break;
-		case BESO_FILE_RECV_SUCCESS: case BESO_FILE_RECV_FAIL:
+		case FILE_RECV_SUCCESS: case FILE_RECV_FAIL:
 			paquete = handleFileRecvResult((stream_t*)estructura, &tamanho);
 			break;
 		case END_PROGRAM:
@@ -264,7 +256,7 @@ int recibir_BESO_file(u_int32_t socket)
 	msg.out = "[Kernel-LDR]: BESO file recibido correctamente.";
 	log_info(logger,"BESO file recibido correctamente.");
 
-	preparar_paquete(socket, BESO_FILE_RECV_SUCCESS, &msg);
+	preparar_paquete(socket,FILE_RECV_SUCCESS, &msg);
 
 	return 0;
 }
@@ -314,7 +306,7 @@ int atender_Proceso(uint32_t socket,uint32_t tamanio_stack)
 
 	if(recibir_BESO_file(socket) != 0) {
 		msg.out = "[Kernel-LDR]: Fallo la recepcion del BESO code. Se cierra la conexion.";
-		preparar_paquete(socket, BESO_FILE_RECV_FAIL, &msg);
+		preparar_paquete(socket, FILE_RECV_FAIL, &msg);
 		free(msg.out);
 		FD_CLR(socket, &master);
 		close(socket);
@@ -397,8 +389,8 @@ void* main_LOADER(void* parametros) {
 	tv.tv_sec = DELAY_CHECK_NEW_READY_SEC;
 	tv.tv_usec = DELAY_CHECK_NEW_READY_USEC;
 
-	//1- Conectarse a MSP
-	conectar_a_MSP(ip_msp, puerto_msp);
+//	//1- Conectarse a MSP
+//	conectar_a_MSP(ip_msp, puerto_msp);
 
 	//2- Socket de escucha para Programas
 	crear_listener(ip_kernel, puerto_consola);

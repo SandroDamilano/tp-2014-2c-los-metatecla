@@ -21,6 +21,11 @@
 
 #include "kernel.h"
 
+// Variables para socket Cliente MSP
+int sockfd_cte, numbytes_clt;
+struct addrinfo hints_clt, *servinfo_clt, *p_clt;
+int rv_clt;
+char s_clt[INET6_ADDRSTRLEN];
 
 int main(int argc, char **argv){
 
@@ -39,7 +44,7 @@ int main(int argc, char **argv){
 	cargar_arg_PLANIFICADOR(&param_PLANIFICADOR);
 
 //	// 5- Conectar a MSP
-//	conectar_a_MSP();
+	conectar_a_MSP(ip_msp, puerto_msp);
 
 	// 5.5- Inicializar semáforos de uso global y colas NEW y EXIT
 	inicializar_semaforos();
@@ -124,9 +129,9 @@ void leer_config()
 	//PUERTO_MSP
 	if(config_has_property(config_file, "PUERTO_MSP"))
 	{
-		puerto_msp = config_get_int_value(config_file, "PUERTO_MSP");
+		puerto_msp = config_get_string_value(config_file, "PUERTO_MSP");
 
-		sprintf(bufferLog, "PUERTO_MSP = [%d]", puerto_msp);
+		sprintf(bufferLog, "PUERTO_MSP = [%s]", puerto_msp);
 		log_debug(logger, bufferLog);
 	} else {
 		fprintf(stderr, "Falta key 'PUERTO_MSP' en archivo de configuracion.\n");
@@ -181,8 +186,6 @@ void leer_config()
 void cargar_arg_LOADER(arg_LOADER* arg)
 {
 	arg->puerto = puerto;
-	arg->ip_msp = ip_msp;
-	arg->puerto_msp = puerto_msp;
 	arg->tamanio_stack = tamanio_stack;
 	arg->logger = logger;
 }
@@ -193,4 +196,101 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 	arg->syscalls_path = syscalls_path;
 	arg->puerto = puerto;	// parece que puede tratarse de cualquiera (CPU/Consola)
 	arg->logger = logger;
+}
+
+void *get_in_addr(struct sockaddr *sa)
+{
+	if (sa->sa_family == AF_INET) {
+		return &(((struct sockaddr_in*)sa)->sin_addr);
+	}
+
+	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+int crear_cliente_MSP(const char *ip, const char* puerto)
+{
+	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%s]\n", ip, puerto);
+
+	memset(&hints_clt, 0, sizeof hints_clt);
+	hints_clt.ai_family = AF_INET;
+	hints_clt.ai_socktype = SOCK_STREAM;
+
+	if ((rv_clt = getaddrinfo(ip, puerto, &hints_clt, &servinfo_clt)) != 0)	{
+		fprintf(stderr, "[Kernel]: Error on 'getaddrinfo_cliente' -> %s\n", gai_strerror(rv_clt));
+		return 1;
+	}
+
+	for(p_clt = servinfo_clt; p_clt != NULL; p_clt = p_clt->ai_next)
+	{
+		if ((sockfd_cte = socket(p_clt->ai_family, p_clt->ai_socktype, p_clt->ai_protocol)) == -1)	{
+			perror("[Kernel]: Error on 'socket()' function");
+			continue;
+		}
+		if (connect(sockfd_cte, p_clt->ai_addr, p_clt->ai_addrlen) == -1)	{
+			close(sockfd_cte);
+			perror("[Kernel]: Error on 'connect()' function");
+			continue;
+		}
+		break;
+	}
+
+	if (p_clt == NULL)	{
+		fprintf(stderr, "[Kernel]: Falla en la conexion a la MSP\n");
+		return 2;
+	}
+	inet_ntop(p_clt->ai_family, get_in_addr((struct sockaddr *)p_clt->ai_addr), s_clt, sizeof s_clt);
+	freeaddrinfo(servinfo_clt); // all done with this structure
+
+	return 0;
+}
+
+int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
+{
+	int res; // Resultado de cada handler
+
+	socket_recibir(socket, op, (void*)paquete);
+
+	switch(*op) {
+		case HANDSHAKE_MSP_SUCCESS: case HANDSHAKE_MSP_FAIL:
+			log_trace(logger, "Respuesta Handshake, recibida.");
+			res = undo_struct_mensaje(paquete);
+			break;
+		default:
+			return -1;
+			break;
+	}
+
+	// Se libera el mensaje  cuando ya no lo necesitamos
+	if (paquete != NULL) {
+		free (paquete);
+		paquete = NULL;
+	}
+	return res;
+}
+
+void conectar_a_MSP(char *ip, char *puerto)
+{
+	t_tipoEstructura operacion;
+
+	if(bufferMSP != NULL)	{
+		free(bufferMSP);
+		bufferMSP = NULL;
+	}
+
+	if(crear_cliente_MSP(ip, puerto) != 0)	{
+		perror("[Kernel]: No se puede conectar a la MSP. Abortando.");
+		exit(1);
+	}
+
+	analizar_paquete(sockfd_cte, bufferMSP, &operacion); //Espera respuesta Handshake
+
+	if(operacion == HANDSHAKE_MSP_FAIL)	{
+		perror("[Kernel]: Handshake con MSP, sin exito!");
+		log_error(logger, "Handshake con MSP, sin exito!");
+		close(sockfd_cte);
+		exit(1);
+	}
+
+	printf("[Kernel]: Conexion a MSP establecida.\n");
+	log_info(logger, "Conexion a MSP establecida.");
 }
