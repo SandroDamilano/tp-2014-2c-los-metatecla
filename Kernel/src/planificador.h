@@ -20,6 +20,9 @@
 	sem_t sem_new;
 	pthread_mutex_t mutex_new;
 
+	t_list* consolas;
+	pthread_mutex_t mutex_consolas;
+
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;
 		char* syscalls_path;
@@ -54,8 +57,14 @@
 	//exec
 	int sockCPU_a_buscar;
 
+	//consolas
+	uint32_t tid_de_consola;
+	uint32_t pid_de_consola;
+	uint32_t pid_a_eliminar;
+
 	void encolar_en_ready(t_hilo* tcb);
 	void sacar_de_new(t_hilo* tcb);
+	void mandar_a_exit(t_hilo* tcb, t_fin fin);
 
 	void desbloquear_por_semaforo(uint32_t sem);
 	void desbloquear_por_join(uint32_t tid);
@@ -74,6 +83,22 @@
 	void boot(char* systcalls_path);
 
 	void poner_new_a_ready();
+
+	void terminar_TCBs();
+	bool es_padre(t_hilo* tcb);
+	void escribir_consola(uint32_t pid, char* mensaje);
+	void terminar_proceso(t_hilo* tcb);
+	void terminar_hilo(t_hilo* tcb);
+	void liberar_memoria(t_hilo* tcb);
+	void eliminar_ready(uint32_t pid);
+	void eliminar_block(uint32_t pid);
+	void eliminar_exec(uint32_t pid);
+	void sacar_de_consolas(uint32_t pid);
+	bool es_el_tid_consola(t_data_nodo_consolas* data);
+	bool es_el_pid_consola(t_data_nodo_consolas* data);
+	bool es_el_pid_ready(t_hilo* tcb);
+	bool es_el_pid_block(t_data_nodo_block* data);
+	bool es_el_pid_exec(t_data_nodo_exec* data);
 
 	bool esta_por_systcall(t_data_nodo_block* data);
 

@@ -9,11 +9,13 @@
 
 	t_queue* cola_new;
 	t_queue* cola_exit;
+	t_list* consolas;
 	sem_t sem_exit;
 	pthread_mutex_t mutex_exit;
 	pthread_mutex_t mutex_TIDs;
 	pthread_mutex_t mutex_PIDs;
 	pthread_mutex_t mutex_log;
+	pthread_mutex_t mutex_consolas;
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
 
@@ -25,11 +27,13 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_PIDs, NULL);
 	pthread_mutex_init(&mutex_TIDs, NULL);
 	pthread_mutex_init(&mutex_log, NULL);
+	pthread_mutex_init(&mutex_consolas, NULL);
 }
 
 void inicializar_colas_new_exit(){
 	cola_new = queue_create();
 	cola_exit = queue_create();
+	consolas = list_create();
 }
 
 //La idea seria usar estas funciones para hacer push y pop de las colas de new y ready

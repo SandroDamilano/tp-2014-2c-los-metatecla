@@ -46,7 +46,7 @@ int main(int argc, char **argv){
 //	// 5- Conectar a MSP
 	conectar_a_MSP(ip_msp, puerto_msp);
 
-	// 5.5- Inicializar semáforos de uso global y colas NEW y EXIT
+	// 5.5- Inicializar semáforos de uso global y colas NEW y EXIT (y la de consolas)
 	inicializar_semaforos();
 	inicializar_colas_new_exit();
 
@@ -78,7 +78,7 @@ int main(int argc, char **argv){
 		exit(EXIT_FAILURE);
 	}
 
-	pthread_join(thread_KERNEL, NULL);
+//	pthread_join(thread_KERNEL, NULL);
 	pthread_join(thread_LOADER, NULL);
 	pthread_join(thread_PLANIFICADOR, NULL);
 

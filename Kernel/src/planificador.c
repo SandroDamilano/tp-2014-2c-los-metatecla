@@ -8,21 +8,151 @@
 #include "planificador.h"
 
 
-//////////////////////////////////////////////////////////////////////
-
 void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 {
 	inicializar_ready_block();
 	inicializar_semaforos_colas();
 
-	pthread_t thr_consumidor_new;
+	pthread_t thr_consumidor_new, thr_parca;
 	pthread_create(&thr_consumidor_new, NULL, (void*)&poner_new_a_ready, NULL);
+	pthread_create(&thr_parca, NULL, (void*)&terminar_TCBs, NULL);
 
 	boot(parametros->syscalls_path);
 
 	pthread_join(thr_consumidor_new, NULL);
+	pthread_join(thr_parca, NULL);
 
 return 0;
+}
+
+/*********************** HILOS DEDICADOS ******************************/
+
+//Este hilo se queda haciendo loop hasta que termine la ejecución
+void poner_new_a_ready(){
+	while(1){
+		t_hilo* tcb = malloc(sizeof(t_hilo));
+		sacar_de_new(tcb);
+		encolar_en_ready(tcb);
+	}
+};
+
+/* Este hilo se encarga de:
+ * 		- Liberar todos los recursos del hilo
+ * 		- Mandar a EXIT otros hilos que deban terminarse
+ * 		- Notificar a la consola correspondiente
+ */
+void terminar_TCBs(){
+	while(1){
+		t_data_nodo_exit* data = malloc(sizeof(t_data_nodo_exit));
+		sacar_de_exit(data);
+
+		switch(data->fin){
+		case TERMINAR:
+			if(es_padre(data->tcb)==1){
+				// Hay que finalizar todos los hijos
+				escribir_consola(data->tcb->pid, "El proceso ha finalizado");
+				terminar_proceso(data->tcb);
+			}else{
+				// Se finaliza sólo este hilo
+				terminar_hilo(data->tcb);
+			};
+			break;
+
+		case ABORTAR:
+			// Hay que finalizar el proceso completo
+			escribir_consola(data->tcb->pid, "Ha ocurrido una excepción");
+			terminar_proceso(data->tcb);
+			break;
+		};
+	};
+}
+
+/***************** FUNCIONES DEL HILO TERMINAR_TCBS() *****************/
+
+bool es_padre(t_hilo* tcb){
+	tid_de_consola = tcb->tid;
+	pthread_mutex_lock(&mutex_consolas);
+	t_data_nodo_consolas* data = list_remove_by_condition(consolas, (void*)es_el_tid_consola);
+	pthread_mutex_unlock(&mutex_consolas);
+	if(data!=NULL){
+		return true;
+	};
+	return false;
+}
+
+void escribir_consola(uint32_t pid, char* mensaje){
+	pid_de_consola = pid;
+	pthread_mutex_lock(&mutex_consolas);
+	t_data_nodo_consolas* data = list_find(consolas, (void*)es_el_pid_consola);
+	pthread_mutex_unlock(&mutex_consolas);
+	int socket = data->socket;
+	//TODO Mandarle a la consola el mensaje para que escriba
+}
+
+void terminar_proceso(t_hilo* tcb){
+	uint32_t pid = tcb->pid;
+	eliminar_ready(pid);
+	eliminar_block(pid);
+	eliminar_exec(pid);
+	sacar_de_consolas(pid);
+	terminar_hilo(tcb);
+}
+
+void terminar_hilo(t_hilo* tcb){
+	liberar_memoria(tcb);
+}
+
+void liberar_memoria(t_hilo* tcb){
+	//TODO pedirle a la MSP que elimine los segmentos
+	free(tcb);
+}
+
+void eliminar_ready(uint32_t pid){
+	pid_a_eliminar = pid;
+	pthread_mutex_lock(&mutex_ready);
+	t_hilo* tcb = list_remove_by_condition(cola_ready, (void*)es_el_pid_ready);
+	pthread_mutex_unlock(&mutex_ready);
+	while(tcb!=NULL){
+		mandar_a_exit(tcb, TERMINAR);
+		pthread_mutex_lock(&mutex_ready);
+		tcb = list_remove_by_condition(cola_ready, (void*)es_el_pid_ready);
+		pthread_mutex_unlock(&mutex_ready);
+	};
+}
+
+void eliminar_block(uint32_t pid){
+	pid_a_eliminar = pid;
+	pthread_mutex_lock(&mutex_block);
+	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_pid_block);
+	pthread_mutex_unlock(&mutex_block);
+	while(data!=NULL){
+		mandar_a_exit(data->tcb, TERMINAR);
+		pthread_mutex_lock(&mutex_block);
+		data = list_remove_by_condition(cola_block, (void*)es_el_pid_block);
+		pthread_mutex_unlock(&mutex_block);
+	};
+}
+
+void eliminar_exec(uint32_t pid){
+	pid_a_eliminar = pid;
+	pthread_mutex_lock(&mutex_exec);
+	t_data_nodo_exec* data = list_remove_by_condition(cola_exec, (void*)es_el_pid_exec);
+	pthread_mutex_unlock(&mutex_exec);
+	while(data!=NULL){
+		//TODO decirle a la cpu que aborte su ejecución (¿Eliminar solicitud de atención?)
+		mandar_a_exit(data->tcb, TERMINAR);
+		pthread_mutex_lock(&mutex_exec);
+		data = list_remove_by_condition(cola_exec, (void*)es_el_pid_exec);
+		pthread_mutex_unlock(&mutex_exec);
+	};
+}
+
+void sacar_de_consolas(uint32_t pid){
+	pid_de_consola = pid;
+	pthread_mutex_lock(&mutex_consolas);
+	t_data_nodo_consolas* data = list_remove_by_condition(consolas, (void*)es_el_pid_consola);
+	pthread_mutex_unlock(&mutex_consolas);
+	free(data);
 }
 
 /**************************** COLAS ***********************************/
@@ -52,21 +182,15 @@ void push_exit(t_data_nodo_exit* data){
 	queue_push(cola_exit, (void*)data);
 }
 
-void mandar_a_exit(t_data_nodo_exit* data){
+void mandar_a_exit(t_hilo* tcb, t_fin fin){
+	t_data_nodo_exit* data = malloc(sizeof(t_data_nodo_exit));
+	data->fin = fin;
+	data->tcb = tcb;
 	pthread_mutex_lock(&mutex_exit);
 	push_exit(data);
 	pthread_mutex_unlock(&mutex_exit);
 	sem_post(&sem_exit);
 }
-
-//Este hilo se queda haciendo loop hasta que termine la ejecución
-void poner_new_a_ready(){
-	while(1){
-		t_hilo* tcb = malloc(sizeof(t_hilo));
-		sacar_de_new(tcb);
-		encolar_en_ready(tcb);
-	}
-};
 
 t_hilo* obtener_tcb_a_ejecutar(){
 	pthread_mutex_lock(&mutex_ready);
@@ -85,8 +209,8 @@ t_hilo* obtener_tcb_de_cpu(int sock_cpu){
 		return data->tcb;
 	}else{
 		printf("ERROR: No fue encontrado el CPU\n");
-		return NULL;
 	};
+	return NULL;
 }
 
 /********************************** BLOQUEAR ***************************************/
@@ -139,6 +263,25 @@ bool es_el_tcbCPU(t_data_nodo_exec* data){
 	return (data->sock == sockCPU_a_buscar);
 }
 
+bool es_el_tid_consola(t_data_nodo_consolas* data){
+	return (data->tid == tid_de_consola);
+}
+
+bool es_el_pid_consola(t_data_nodo_consolas* data){
+	return (data->pid == pid_de_consola);
+}
+
+bool es_el_pid_ready(t_hilo* tcb){
+	return(tcb->pid == pid_a_eliminar);
+}
+
+bool es_el_pid_block(t_data_nodo_block* data){
+	return(data->tcb->pid == pid_a_eliminar);
+}
+
+bool es_el_pid_exec(t_data_nodo_exec* data){
+	return(data->tcb->pid == pid_a_eliminar);
+}
 
 /******************************* DESBLOQUEAR ***************************************/
 
@@ -264,7 +407,7 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
 	bloquear_tcbSystcall(tcb, dir_systcall);
-	printf("está atendiendo al tid: %d\n", tcb->tid);
+//	printf("está atendiendo al tid: %d\n", tcb->tid);
 	if (tcb_kernel != NULL){
 		copiar_tcb(tcb, tcb_kernel);
 		tcb_kernel->puntero_instruccion = dir_systcall;
@@ -301,7 +444,7 @@ void crear_nuevo_hilo(t_hilo* tcb_padre){
 /******************************** HANDLER CPU *****************************************/
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
-	t_data_nodo_exit* exit;
+	t_hilo* tcb;
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
 		//TODO
@@ -310,20 +453,16 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		break;
 	case D_STRUCT_ABORT:
 		//abortar
-		exit = malloc(sizeof(t_data_nodo_exit));
-		exit->fin = ABORTAR;
-		exit->tcb = obtener_tcb_de_cpu(sockCPU);
-		mandar_a_exit(exit);
+		tcb = obtener_tcb_de_cpu(sockCPU);
+		mandar_a_exit(tcb, ABORTAR);
 		break;
 	case D_STRUCT_PEDIR_TCB:
 		//TODO darle otro tcb a cpu, si tiene
 		break;
 	case D_STRUCT_TERMINO:
 		//terminar tcb
-		exit = malloc(sizeof(t_data_nodo_exit));
-		exit->fin = TERMINAR;
-		exit->tcb = obtener_tcb_de_cpu(sockCPU);
-		mandar_a_exit(exit);
+		tcb = obtener_tcb_de_cpu(sockCPU);
+		mandar_a_exit(tcb, TERMINAR);
 		break;
 	}
 }
@@ -356,7 +495,7 @@ void handler_cpu(int sockCPU){
 		if(tipoRecibido == D_STRUCT_TCB){
 			copiar_structRecibido_a_tcb(tcb, structRecibido);
 		} else {
-			printf("No llego el TCB para la operacion INTE\n");
+			printf("No llegó el TCB para la operacion INTE\n");
 		}
 
 		atender_systcall(tcb, direccion_syscall);
