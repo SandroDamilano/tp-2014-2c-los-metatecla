@@ -451,6 +451,103 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 	return direccionTraducida;
 }
 
+ /*********************************************** CONEXIONES ********************************************************/
+
+ void handler_cpu(int sock){
+	 	//pthread_detach(pthread_self());
+
+	 	t_tipoEstructura tipoRecibido;
+	 	void* structRecibido;
+	 	t_struct_sol_bytes * solicitud;
+	 	t_struct_env_bytes* escritura;
+
+	 	while(1){
+	 		socket_recibir(sock, &tipoRecibido,&structRecibido);
+	 		switch(tipoRecibido){
+	 			case D_STRUCT_SOL_BYTES:
+
+	 				solicitud = (t_struct_sol_bytes*) structRecibido;
+
+	 				pthread_mutex_lock(mutex_log);
+	 				//TODO LOG diciendo lo que se solicita
+	 				pthread_mutex_unlock(mutex_log);
+
+	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
+	 				buffer->buffer= solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
+	 				buffer->tamano_buffer = sizeof(buffer->buffer); //FIXME: es con sizeof?
+	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, &buffer);
+
+	 				free(buffer);
+	 				free(structRecibido);
+	 				break;
+
+	 			case D_STRUCT_ENV_BYTES:
+
+	 				escritura = (t_struct_env_bytes*) structRecibido;
+
+	 				pthread_mutex_lock(mutex_log);
+	 				//TODO LOG diciendo lo que se envio
+	 				pthread_mutex_unlock(mutex_log);
+
+	 				int resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
+	 				t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
+	 				respuesta->numero = resultado;
+	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
+
+	 				pthread_mutex_lock(mutex_log);
+	 				//TODO LOG diciendo si se pudo enviar correctamente
+	 				pthread_mutex_unlock(mutex_log);
+
+	 				free(structRecibido);
+	 				free(respuesta);
+	 				break;
+
+	 			case D_STRUCT_MALC:
+	 				pthread_mutex_lock(mutex_log);
+	 				//TODO LOG diciendo que se va a crear un segmento con el tamaño recibido
+	 				pthread_mutex_unlock(mutex_log);
+
+	 				int resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
+
+	 				//Le comunico a la CPU si se pudo realizar operacion
+	 				t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
+	 				respuesta->numero = resultado;
+	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
+
+	 				pthread_mutex_lock(mutex_log);
+	 				//TODO LOG diciendo si se pudo crear correctamente (si es -1, poner error)
+	 				pthread_mutex_unlock(mutex_log);
+
+	 				free(respuesta);
+	 				free(structRecibido);
+	 				break;
+
+	 			case D_STRUCT_FREE:
+
+	 				pthread_mutex_lock(mutex_log);
+	 				//TODO LOG diciendo que se va a liberar un segmento de direccion tal
+	 				pthread_mutex_unlock(mutex_log);
+
+	 				destruirSegmento(((t_struct_free *) structRecibido)->PID, ((t_struct_free *) structRecibido)->direccion_base);
+
+	 				/*Le comunico a CPU si se pudo destruir segmento?
+	 				t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
+	 				respuesta->numero = resultado;
+	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
+
+	 				pthread_mutex_lock(mutex_log);
+	 				//TODO LOG diciendo si se pudo borrar correctamente (si es -1, poner error)
+	 				pthread_mutex_unlock(mutex_log);*/
+
+	 				free(structRecibido);
+
+	 				break;
+	 		}
+	 	}
+
+	 	return;
+ }
+
  /************************************************* CONSOLA *********************************************************/
 
  void *inciarConsola(void *param1){

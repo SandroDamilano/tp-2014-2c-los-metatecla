@@ -121,13 +121,13 @@
 
 	typedef struct struct_sol_bytes{
 		uint32_t base;
-		uint32_t offset;
+		uint32_t PID;
 		uint32_t tamanio;
 	}__attribute__ ((__packed__)) t_struct_sol_bytes;
 
 	typedef struct struct_env_bytes{
 		uint32_t base;
-		uint32_t offset;
+		uint32_t PID;
 		uint32_t tamanio;
 		void* buffer;
 	}__attribute__ ((__packed__)) t_struct_env_bytes;
@@ -136,6 +136,16 @@
 		void* buffer;
 		uint32_t tamano_buffer;
 	}__attribute__((__packed__)) t_struct_respuesta_msp;
+
+	typedef struct struct_malloc{
+		uint32_t PID;
+		uint32_t tamano_segmento;
+	}__attribute__((__packed__)) t_struct_malloc;
+
+	typedef struct struct_free{
+		uint32_t PID;
+		uint32_t direccion_base;
+	}__attribute__((__packed__)) t_struct_free;
 
 	typedef struct struct_tcb{
 		uint32_t pid;

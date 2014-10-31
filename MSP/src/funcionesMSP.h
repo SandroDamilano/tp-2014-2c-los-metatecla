@@ -112,8 +112,10 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento); // crea un nuev
 void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
 char* solicitar_memoria(uint32_t PID, uint32_t direccion_log, uint32_t tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
 //TODO no estamos seguros de que devuelta esta funcion. Consultar
-void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
+int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 
+///////////CONEXIONES//////////
+void handler_cpu(int sock);
 
 ///////////Auxiliares//////////
 
