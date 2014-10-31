@@ -18,6 +18,7 @@ void ejecutarLinea(int* bytecode){
 	char reg1, reg2;
 	int32_t numero;
 	uint32_t direccion;
+	uint32_t direccionMSP;
 	int resultado;
 
 	t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
@@ -36,8 +37,10 @@ void ejecutarLinea(int* bytecode){
 	switch(bytecodeLetras){
 	case LOAD:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
 		datos_solicitados->tamanio = 1 + 4; //registro + numero
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -64,8 +67,10 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case GETM:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -92,8 +97,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case SETM:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 4 + 1 + 1; //numero + registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -122,8 +130,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case MOVR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -150,8 +161,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case ADDR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -178,8 +192,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case SUBR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -206,8 +223,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case MULR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -234,8 +254,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case MODR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -262,8 +285,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case DIVR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -295,8 +321,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case INCR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1; //registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -320,8 +349,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case DECR:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1; //registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -345,8 +377,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case COMP:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -372,8 +407,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case CGEQ:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -399,8 +437,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case CLEQ:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -426,8 +467,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case GOTO:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 1; //registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -449,8 +493,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case JMPZ:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 4; //direccion
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -474,8 +521,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case JPNZ:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 4; //direccion
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -499,8 +549,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case INTE:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 4; //direccion
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -539,8 +592,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case SHIF:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 4 + 1; //numero + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -578,8 +634,11 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case PUSH:
 
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 4 + 1; //numero + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -601,8 +660,11 @@ void ejecutarLinea(int* bytecode){
 		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
 
 		//socket a MSP enviando auxiliar_copiar con la direccion del cursor de stack
-		datos_enviados->base = registros_cpu.X;
-		datos_enviados->offset = registros_cpu.S;
+
+		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
 		datos_enviados->buffer = &auxiliar_copiar;
 		datos_enviados->tamanio = sizeof(int32_t);
 
@@ -618,8 +680,11 @@ void ejecutarLinea(int* bytecode){
 	case TAKE:
 
 		//Pido el numero y el registro que sirven como parametros de TAKE
-		datos_solicitados->base = registros_cpu.M;
-		datos_solicitados->offset = registros_cpu.P;
+		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
+
 		datos_solicitados->tamanio = 4 + 1; //numero + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -641,8 +706,10 @@ void ejecutarLinea(int* bytecode){
 
 
 		//Pido lo que hay en el stack del tamanio numero que recibi antes
-		datos_solicitados->base = registros_cpu.X;
-		datos_solicitados->offset = registros_cpu.S - numero;
+		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S - numero);
+
+		datos_solicitados->base = direccionMSP;
+		datos_solicitados->PID = tcb->pid;
 		datos_solicitados->tamanio = numero;
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -738,7 +805,7 @@ void ejecutarLinea(int* bytecode){
 		char* cadena = ((t_struct_string*) structRecibido)->string;
 
 		datos_enviados->base = registros_cpu.registros_programacion['A'];
-		datos_enviados->offset = 0;
+		datos_enviados->PID = tcb->pid;
 		datos_enviados->buffer = cadena;
 		datos_enviados->tamanio = strlen(cadena);
 
@@ -764,7 +831,7 @@ void ejecutarLinea(int* bytecode){
 
 		//Pido la cadena apuntada por registro A en memoria
 		datos_solicitados->base = registros_cpu.registros_programacion['A'];
-		datos_solicitados->offset = 0;
+		datos_solicitados->PID = tcb->pid;
 		datos_solicitados->tamanio = registros_cpu.registros_programacion['B'];
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
