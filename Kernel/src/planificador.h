@@ -35,16 +35,24 @@
 		uint32_t parametro;
 	} t_data_nodo_block;
 
+	typedef struct data_nodo_exec {
+		t_hilo * tcb;
+		int sock;
+	} t_data_nodo_exec;
+
 	//Por ahora estas van aca porque el planificador es el único que las usa
-	t_list *cola_ready, *cola_block; //Colas de planificación.
+	t_list *cola_ready, *cola_block, *cola_exec; //Colas de planificación.
 
-	pthread_mutex_t mutex_ready;
+	pthread_mutex_t mutex_ready, mutex_block, mutex_exec;
 
-	//Estas 3 variables globales se usan para desbloquear los procesos
-	// (participan en la búsqueda del TCB que hay que desbloquear)
+	//Variables de búsqueda en las colas
+	//block
 	uint32_t tid_a_buscar; //Para encontrar al TCB que hizo la systcall
 	uint32_t parametro_a_buscar; //Puede ser un tid o un recurso (semáforo)
 	t_evento evento_a_buscar;
+
+	//exec
+	int sockCPU_a_buscar;
 
 	void encolar_en_ready(t_hilo* tcb);
 	void sacar_de_new(t_hilo* tcb);
@@ -59,8 +67,10 @@
 	void bloquear_tcbJoin(t_hilo* tcb, uint32_t tid);
 	void bloquear_tcbKernel(t_hilo* tcb);
 
+	bool es_el_tcbCPU(t_data_nodo_exec* data);
+
 	void inicializar_ready_block();
-	void inicializar_semaforo_ready();
+	void inicializar_semaforos_colas();
 	void boot(char* systcalls_path);
 
 	void poner_new_a_ready();

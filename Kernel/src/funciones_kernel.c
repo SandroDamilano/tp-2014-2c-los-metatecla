@@ -62,13 +62,17 @@ int obtener_tid(){
 	return tid;
 };
 
-void pop_exit(t_hilo* tcb){
+void pop_exit(t_data_nodo_exit* data){
 	void *nuevo = queue_pop(cola_exit);
-	*tcb = *(t_hilo*)nuevo;
+	*data = *(t_data_nodo_exit*)nuevo;
 };
 
-void sacar_de_exit(t_hilo* tcb){
-	consumir_tcb(pop_exit, &sem_exit, &mutex_exit, tcb);
+void sacar_de_exit(t_data_nodo_exit* data){
+//	consumir_tcb(pop_exit, &sem_exit, &mutex_exit, tcb);
+	sem_wait(&sem_exit);
+	pthread_mutex_lock(&mutex_exit);
+	pop_exit(data);
+	pthread_mutex_unlock(&mutex_exit);
 }
 
 void push_new(t_hilo* tcb){

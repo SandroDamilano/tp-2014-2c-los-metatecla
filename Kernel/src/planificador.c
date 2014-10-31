@@ -13,7 +13,7 @@
 void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 {
 	inicializar_ready_block();
-	inicializar_semaforo_ready();
+	inicializar_semaforos_colas();
 
 	pthread_t thr_consumidor_new;
 	pthread_create(&thr_consumidor_new, NULL, (void*)&poner_new_a_ready, NULL);
@@ -48,6 +48,17 @@ void sacar_de_new(t_hilo* tcb){
 	consumir_tcb(pop_new, &sem_new, &mutex_new, tcb);
 }
 
+void push_exit(t_data_nodo_exit* data){
+	queue_push(cola_exit, (void*)data);
+}
+
+void mandar_a_exit(t_data_nodo_exit* data){
+	pthread_mutex_lock(&mutex_exit);
+	push_exit(data);
+	pthread_mutex_unlock(&mutex_exit);
+	sem_post(&sem_exit);
+}
+
 //Este hilo se queda haciendo loop hasta que termine la ejecución
 void poner_new_a_ready(){
 	while(1){
@@ -58,8 +69,25 @@ void poner_new_a_ready(){
 };
 
 t_hilo* obtener_tcb_a_ejecutar(){
-	return (t_hilo*) list_remove(cola_ready, 0);
+	pthread_mutex_lock(&mutex_ready);
+	t_hilo* tcb = list_remove(cola_ready, 0);
+	pthread_mutex_unlock(&mutex_ready);
+	return tcb;
 };
+
+t_hilo* obtener_tcb_de_cpu(int sock_cpu){
+	sockCPU_a_buscar = sock_cpu;
+	t_data_nodo_exec* data;
+	pthread_mutex_lock(&mutex_exec);
+	data = list_remove_by_condition(cola_exec, (void*)es_el_tcbCPU);
+	pthread_mutex_unlock(&mutex_exec);
+	if (data!=NULL){
+		return data->tcb;
+	}else{
+		printf("ERROR: No fue encontrado el CPU\n");
+		return NULL;
+	};
+}
 
 /********************************** BLOQUEAR ***************************************/
 
@@ -70,7 +98,9 @@ void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t parametro){
 	data->tcb = tcb;
 	data->evento = evento;
 	data->parametro = parametro;
+	pthread_mutex_lock(&mutex_block);
 	list_add(cola_block, (void*)data);
+	pthread_mutex_unlock(&mutex_block);
 	tcb->cola = BLOCK;
 };
 
@@ -105,6 +135,10 @@ bool es_el_tcbBuscado(t_data_nodo_block* data){
 	return ((data->parametro == parametro_a_buscar) & (data->evento == evento_a_buscar));
 };
 
+bool es_el_tcbCPU(t_data_nodo_exec* data){
+	return (data->sock == sockCPU_a_buscar);
+}
+
 
 /******************************* DESBLOQUEAR ***************************************/
 
@@ -113,7 +147,9 @@ void desbloquear_proceso(t_evento evento, uint32_t parametro){
 	t_data_nodo_block *data_desbloqueado;
 	parametro_a_buscar = parametro;
 	evento_a_buscar = evento;
+	pthread_mutex_lock(&mutex_block);
 	data_desbloqueado = list_remove_by_condition(cola_block,(void*)es_el_tcbBuscado);
+	pthread_mutex_unlock(&mutex_block);
 	if (data_desbloqueado != NULL){
 		t_hilo * tcb_desbloqueado = data_desbloqueado->tcb;
 		encolar_en_ready(tcb_desbloqueado);
@@ -121,7 +157,9 @@ void desbloquear_proceso(t_evento evento, uint32_t parametro){
 }
 
 t_hilo* desbloquear_tcbKernel(){
+	pthread_mutex_lock(&mutex_block);
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbKernel);
+	pthread_mutex_unlock(&mutex_block);
 	if (data != NULL){
 		return data->tcb;
 	}else{
@@ -131,7 +169,9 @@ t_hilo* desbloquear_tcbKernel(){
 
 t_hilo* desbloquear_tcbSystcall(uint32_t tid){
 	tid_a_buscar = tid;
+	pthread_mutex_lock(&mutex_block);
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbSystcall);
+	pthread_mutex_unlock(&mutex_block);
 	if (data != NULL){
 		return data->tcb;
 	}else{
@@ -148,7 +188,10 @@ void desbloquear_por_semaforo(uint32_t sem){
 }
 
 t_data_nodo_block* desbloquear_alguno_por_systcall(t_hilo* tcb_kernel){
-	return list_remove_by_condition(cola_block, (void*)esta_por_systcall);
+	pthread_mutex_lock(&mutex_block);
+	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)esta_por_systcall);
+	pthread_mutex_unlock(&mutex_block);
+	return data;
 }
 
 /********************************* INICIO *******************************************/
@@ -156,14 +199,18 @@ t_data_nodo_block* desbloquear_alguno_por_systcall(t_hilo* tcb_kernel){
 void inicializar_ready_block(){
 	cola_ready = list_create();
 	cola_block = list_create();
+	cola_exec = list_create();
 }
 
 
-void inicializar_semaforo_ready(){
+void inicializar_semaforos_colas(){
 	pthread_mutex_init(&mutex_ready, NULL);
+	pthread_mutex_init(&mutex_block, NULL);
+	pthread_mutex_init(&mutex_exec, NULL);
 };
 
 void boot(char* systcalls_path){
+	// TODO usar el mismo socket para la msp del main.c
 	uint32_t dir_codigo;
 	uint32_t dir_stack;
 	int tamanio_codigo;
@@ -203,11 +250,8 @@ void boot(char* systcalls_path){
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-//EX SERVICIOS_CPU.C
-
-
 /*************************** SYSCALLS *******************************************/
+
 void copiar_tcb(t_hilo* original, t_hilo* copia){
 	copia->tid = original->tid;
 	copia->pid = original->pid;
@@ -257,19 +301,29 @@ void crear_nuevo_hilo(t_hilo* tcb_padre){
 /******************************** HANDLER CPU *****************************************/
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
+	t_data_nodo_exit* exit;
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
+		//TODO
 		//pido numero por consola
 		//Mando el numero obtenido con la señal D_STRUCT_INNN a cpu
 		break;
 	case D_STRUCT_ABORT:
 		//abortar
+		exit = malloc(sizeof(t_data_nodo_exit));
+		exit->fin = ABORTAR;
+		exit->tcb = obtener_tcb_de_cpu(sockCPU);
+		mandar_a_exit(exit);
 		break;
 	case D_STRUCT_PEDIR_TCB:
-		//darle otro tcb a cpu, si tiene
+		//TODO darle otro tcb a cpu, si tiene
 		break;
 	case D_STRUCT_TERMINO:
 		//terminar tcb
+		exit = malloc(sizeof(t_data_nodo_exit));
+		exit->fin = TERMINAR;
+		exit->tcb = obtener_tcb_de_cpu(sockCPU);
+		mandar_a_exit(exit);
 		break;
 	}
 }
@@ -305,6 +359,8 @@ void handler_cpu(int sockCPU){
 			printf("No llego el TCB para la operacion INTE\n");
 		}
 
+		atender_systcall(tcb, direccion_syscall);
+
 		break;
 	case D_STRUCT_NUMERO:
 
@@ -314,18 +370,22 @@ void handler_cpu(int sockCPU){
 	case D_STRUCT_INNC:
 
 		maximo_caracteres = ((t_struct_numero *) structRecibido)->numero;
-		//pido string por consola con el maximo de caracteres recibido
+		//TODO pido string por consola con el maximo de caracteres recibido
 
 		break;
 	case D_STRUCT_TCB_CREA:
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
+		// TODO invocar funcion crear_nuevo_hilo()
 
 		break;
 	case D_STRUCT_JOIN:
-
+		// TODO verificar si no es mejor que llegue el tcb directamente en lugar de su TID
 		tid_llamador = ((t_struct_join*) structRecibido)->tid_llamador;
 		tid_a_esperar = ((t_struct_join*) structRecibido)->tid_a_esperar;
+
+		tcb = obtener_tcb_de_cpu(sockCPU);
+		bloquear_tcbJoin(tcb, tid_a_esperar);
 
 		break;
 	case D_STRUCT_BLOCK:
@@ -341,23 +401,30 @@ void handler_cpu(int sockCPU){
 			printf("No se recibio el TCB para la operacion BLOCK\n");
 		}
 
+		// TODO revisar si está bien (idem WAKE)
+		// bloquear_tcbSemaforo espera un uint32_t en vez de un int32_t
+		bloquear_tcbSemaforo(tcb, id_semaforo);
+
 		break;
 	case D_STRUCT_WAKE:
 		//Recibo id semaforo
 		id_semaforo = ((t_struct_numero*) structRecibido)->numero;
+		desbloquear_por_semaforo(id_semaforo);
+
 		break;
 	case D_STRUCT_TCB_QUANTUM:
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
+		encolar_en_ready(tcb);
 
 		break;
 	case D_STRUCT_OUTN:
 		numero_consola = ((t_struct_numero*) structRecibido)->numero;
-		//Mandar ese numero a consola para ser mostrado
+		//TODO Mandar ese numero a consola para ser mostrado
 		break;
 	case D_STRUCT_OUTC:
 		cadena_consola = ((t_struct_string*) structRecibido)->string;
-		//Mandar esa cadena a consola para ser mostrada
+		//TODO Mandar esa cadena a consola para ser mostrada
 		break;
 	}
 }
