@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "sockets/enviar_recibir_paquete.h"
 #include "funcionesMSP.h"
 
 //Path para archivos swap

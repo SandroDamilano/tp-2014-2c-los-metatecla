@@ -26,6 +26,12 @@
 
 	#define S_ERROR 99	// Utilizada en socket_recibirSeñal, para decir que lo que se recibio no era una señal
 
+typedef struct direccion{
+	uint32_t segmento;
+	uint32_t pagina;
+	uint32_t desplazamiento;
+} t_direccion;
+
 // Vars globales ( referenciada por todos los procesos)
 	t_config* config_file;
 	t_log* logger;
@@ -172,6 +178,13 @@
 	void copiar_structRecibido_a_tcb(t_hilo* tcb, void* structRecibido);
 	void copiar_tcb_a_structTcb(t_hilo* tcb, t_struct_tcb* tcb_enviar);
 	int print_package_to_output(char* datos);
+
+	//Direcciones
+	uint32_t crearDireccion(uint32_t segmento,uint32_t pagina, uint32_t desplazamiento);
+	char *traducirABinario(uint32_t direccion, int cantidad_bits);
+	uint32_t traducirADecimal(char *binario, int cantidad_bits);
+	t_direccion traducirDireccion(uint32_t unaDireccion);
+	uint32_t sumar_desplazamiento(uint32_t direccion, uint32_t desplazamiento);
 
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */

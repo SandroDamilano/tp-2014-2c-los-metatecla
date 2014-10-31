@@ -47,10 +47,10 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 				paquete = serializeStruct_signal((t_struct_signal *) estructuraOrigen);
 				break;
 			case D_STRUCT_MALC:
-				paquete = serializeStruct_malc((t_struct_numero *) estructuraOrigen);
+				paquete = serializeStruct_malc((t_struct_malloc *) estructuraOrigen);
 				break;
 			case D_STRUCT_FREE:
-				paquete = serializeStruct_free((t_struct_numero *) estructuraOrigen);
+				paquete = serializeStruct_free((t_struct_free *) estructuraOrigen);
 				break;
 			case D_STRUCT_NUMERO:
 				paquete = serializeStruct_numero((t_struct_numero *) estructuraOrigen);
@@ -627,7 +627,7 @@ t_struct_malloc * deserializeStruct_malloc(char * dataPaquete, uint16_t length){
 }
 
 t_struct_free * deserializeStruct_free(char * dataPaquete, uint16_t length){
-	t_struct_join * estructuraDestino = malloc(sizeof(t_struct_free));
+	t_struct_free * estructuraDestino = malloc(sizeof(t_struct_free));
 
 	memcpy(estructuraDestino, dataPaquete, 2*sizeof(uint32_t)); //copio el data del paquete a la estructura.
 

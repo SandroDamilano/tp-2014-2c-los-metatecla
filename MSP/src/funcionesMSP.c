@@ -340,116 +340,6 @@ char* devolverInformacion(t_marco *marco, t_direccion direccion, uint32_t tamani
 		segmentation_fault();}
 	return buffer;
 }
-/*********************************************** DIRECCIONES *********************************************************/
-
-uint32_t elevar(uint32_t numero, uint32_t elevado){
-	int i;
-	uint32_t resultado;
-	resultado=numero;
-	switch(elevado){
-	case 0: resultado=1; break;
-	case 1: resultado=numero; break;
-	default: for(i=1;i<elevado;i++){resultado=resultado*numero;};
-
-	}
-return resultado;
-}
-
-
-char *traducirABinario(uint32_t direccion, int cantidad_bits) {
-
-	uint32_t binNumInv[cantidad_bits];
-	uint32_t counter;
-
-	uint32_t i;
-	uint32_t aux = direccion;
-
-
-	char bina[cantidad_bits];
-	char bina_inv[cantidad_bits];
-
-	for ( counter = 0 ; counter < cantidad_bits; counter++ ) {
-	binNumInv[counter] = aux % 2;
-
-
-	aux = aux / 2;
-
-	if(binNumInv[counter] == 0){
-
-	bina[counter] = '0'; } else { bina[counter] = '1';}
-	}
-
-	for (i=0;i<cantidad_bits;i++){
-		counter --;
-		bina_inv[counter]=bina[i];
-
-	}
-	return bina_inv;
-	}
-
-
-uint32_t traducirADecimal(char *binario, int cantidad_bits){
-
-	int i;
-	int j;
-	uint32_t decimal = 0;
-	for(i=cantidad_bits-1; i >= 0; i--){
-		j= cantidad_bits-1-i;
-		switch(binario[i]){
-		case '0':
-			break;
-		case '1':
-			decimal = elevar(2,j)+decimal;
-			break;
-		default:
-			break;
-		}
-	}
-	return decimal;
-}
-
-uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copado que reciba el desplazamiento por parametro
-	uint32_t direccionCreada;
-	char *binSegmento;
-	char *binPagina;
-	char *direccionCreadaBin = malloc(32);
-
-	binSegmento=malloc(12);
-	binPagina=malloc(13);
-	memcpy(binSegmento, traducirABinario(segmento, 12), 12);
-	memcpy(binPagina, traducirABinario(pagina, 12), 12);
-
-	memcpy(direccionCreadaBin, binSegmento, 12);
-	memcpy(direccionCreadaBin+12, binPagina, 12);
-	memcpy(direccionCreadaBin+24, "00000000", 8);
-
-	direccionCreada=traducirADecimal(direccionCreadaBin, 32);
-
-	free(binSegmento);
-	free(binPagina);
-	free(direccionCreadaBin);
-	return direccionCreada;
-}
-
- t_direccion traducirDireccion(uint32_t unaDireccion){
-	t_direccion direccionTraducida;
-	char direccionEnBinario[32];
-	memcpy(direccionEnBinario,traducirABinario(unaDireccion,32),32);
-
-	char segmento[12];
-	char pagina[12];
-	char desplazamiento[8];
-
-	memcpy(segmento, direccionEnBinario, 12);
-	memcpy(pagina, direccionEnBinario + 12, 12);
-	memcpy(desplazamiento, direccionEnBinario + 24, 8);
-
-	(direccionTraducida).segmento=traducirADecimal(segmento, 12);
-	(direccionTraducida).pagina=traducirADecimal(pagina, 12);
-	(direccionTraducida).desplazamiento=traducirADecimal(desplazamiento, 8);
-
-	return direccionTraducida;
-}
 
  /*********************************************** CONEXIONES ********************************************************/
 
@@ -461,6 +351,9 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 	 	t_struct_sol_bytes * solicitud;
 	 	t_struct_env_bytes* escritura;
 
+	 	t_struct_numero* respuesta;
+	 	int resultado;
+
 	 	while(1){
 	 		socket_recibir(sock, &tipoRecibido,&structRecibido);
 	 		switch(tipoRecibido){
@@ -468,9 +361,9 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 
 	 				solicitud = (t_struct_sol_bytes*) structRecibido;
 
-	 				pthread_mutex_lock(mutex_log);
+	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo lo que se solicita
-	 				pthread_mutex_unlock(mutex_log);
+	 				pthread_mutex_unlock(&mutex_log);
 
 	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
 	 				buffer->buffer= solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
@@ -485,38 +378,38 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 
 	 				escritura = (t_struct_env_bytes*) structRecibido;
 
-	 				pthread_mutex_lock(mutex_log);
+	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo lo que se envio
-	 				pthread_mutex_unlock(mutex_log);
+	 				pthread_mutex_unlock(&mutex_log);
 
-	 				int resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
-	 				t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
+	 				resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
+	 				respuesta = malloc(sizeof(t_struct_numero));
 	 				respuesta->numero = resultado;
 	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
 
-	 				pthread_mutex_lock(mutex_log);
+	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo si se pudo enviar correctamente
-	 				pthread_mutex_unlock(mutex_log);
+	 				pthread_mutex_unlock(&mutex_log);
 
 	 				free(structRecibido);
 	 				free(respuesta);
 	 				break;
 
 	 			case D_STRUCT_MALC:
-	 				pthread_mutex_lock(mutex_log);
+	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo que se va a crear un segmento con el tamaño recibido
-	 				pthread_mutex_unlock(mutex_log);
+	 				pthread_mutex_unlock(&mutex_log);
 
-	 				int resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
+	 				resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 
 	 				//Le comunico a la CPU si se pudo realizar operacion
-	 				t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
+	 				respuesta = malloc(sizeof(t_struct_numero));
 	 				respuesta->numero = resultado;
 	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
 
-	 				pthread_mutex_lock(mutex_log);
+	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo si se pudo crear correctamente (si es -1, poner error)
-	 				pthread_mutex_unlock(mutex_log);
+	 				pthread_mutex_unlock(&mutex_log);
 
 	 				free(respuesta);
 	 				free(structRecibido);
@@ -524,9 +417,9 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina){ //FIXME: seria copa
 
 	 			case D_STRUCT_FREE:
 
-	 				pthread_mutex_lock(mutex_log);
+	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo que se va a liberar un segmento de direccion tal
-	 				pthread_mutex_unlock(mutex_log);
+	 				pthread_mutex_unlock(&mutex_log);
 
 	 				destruirSegmento(((t_struct_free *) structRecibido)->PID, ((t_struct_free *) structRecibido)->direccion_base);
 
@@ -637,7 +530,7 @@ return NULL;
 
  void tabla_segmentos(){
 	void imprimirSegmento(t_lista_segmentos *segmento){
-		uint32_t base = crearDireccion((*segmento).numeroSegmento,0);
+		uint32_t base = crearDireccion((*segmento).numeroSegmento,0, 0);
 		printf("Numero segmento: %d,   Tamanio: %d,   Direccion Base: %d\n",(*segmento).numeroSegmento,(*segmento).tamanio, base);
 	}
 	void imprimirPID(t_lista_procesos *proceso){

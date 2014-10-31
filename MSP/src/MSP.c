@@ -199,7 +199,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 			 cantPagCargar=cantPagCargar-1;
 		 }
 	 }
-  direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0);
+  direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
 
 	//TODO Ver como imprimir direccion base del segmento
   	//FIXME no entiendo, tiene que devolver la direccion base del segmento o la direccion formada por seg, pag y desplazamiento? Es lo mismo?
