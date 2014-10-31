@@ -102,6 +102,7 @@ int asignarNumeroSegmento(int tamanioListaSegmentos, t_list *listaSegmentos){
 	return tamanioListaSegmentos;
 }
 
+//PUSE QUE SI ES ERROR, DEVUELVA -1 QUE ES MAS CLARO QUE 0
 uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 
 	uint32_t direccionBaseDelSegmento;
@@ -119,7 +120,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		printf("Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
 		//log_error(logger,"Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
 		pthread_mutex_unlock(&mutex_log);
-		return 0;
+		return -1;
 	}
 
 	if(tamanio_segmento > cant_mem_actual){
@@ -127,7 +128,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		printf("Error Memoria llena");
 		//log_error(logger,"Error Memoria Llena");
 		pthread_mutex_unlock(&mutex_log);
-		return 0;
+		return -1;
 	}
 	//2.Se fija si se existe el proceso
 
@@ -174,7 +175,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		//log_error(logger,"Se supera el maximo de segmentos por programa");
 		printf("Se supera el maximo de segmentos por programa");
 		pthread_mutex_unlock(&mutex_log);
-		return 0;
+		return -1;
 	}
 	//5.Crea tabla de paginas
 	int cantPaginas= (segmentoEnSwap+segmentoEnMP)/256; //no hace falta usar div, porque cantPaginas se queda con la parte entera por ser int
@@ -198,7 +199,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 			 cantPagCargar=cantPagCargar-1;
 		 }
 	 }
-  direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0);
+  direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
 
 	//TODO Ver como imprimir direccion base del segmento
   	//FIXME no entiendo, tiene que devolver la direccion base del segmento o la direccion formada por seg, pag y desplazamiento? Es lo mismo?
@@ -266,7 +267,9 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 free(proceso);
 }
 
-void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
+
+//PUSE QUE DEVUELVA -1 SI NO SE PUDO ESCRIBIR, Y 0 SI PUDO. ES PARA VALIDACIONES.
+int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
 	//1. traducir direccion y validarla
 
 	t_direccion direccion = traducirDireccion(direcc_log);
@@ -305,6 +308,7 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 
 					guardarInformacion(marco,direccion,bytes_escribir,tamanio);
 					free(marco);
+					return 0;
 				} else {//Traemos pagina a memoria ppal
 					t_marco *marcoLibre = malloc(sizeof(t_marco));
 					marcoLibre= list_find(lista_marcos,(void*) (*funcionMarcoLibre));
@@ -316,19 +320,24 @@ void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, ui
 						guardarInformacion(marcoLibre,direccion,bytes_escribir,tamanio);
 						marcoLibre->marco_libre = 0;
 						free(marcoLibre);
+						return 0;
 					} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
-
+						return 0;
 					}
 				}
 			free(pagina);
 			} else {
 				page_not_found_exception(direccion.pagina);
+				return -1;
 			}
 		} else {
 			segment_not_found_exception(direccion.segmento);
+			return -1;
 		}
 	free(segmento);} else {
-	PID_not_found_exception(PID);}
+	PID_not_found_exception(PID);
+	return -1;
+	}
 	free(proceso);
 }
 

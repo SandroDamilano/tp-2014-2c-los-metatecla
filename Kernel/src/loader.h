@@ -30,8 +30,10 @@
 	#include "funciones_kernel.h"
 
 	typedef struct arg_LOADER {	// Estructura para pasar argumentos al hilo
-		uint32_t puerto;
+		uint32_t puerto_kernel;
 		uint32_t tamanio_stack;
+		char* ip_msp;
+		char* puerto_msp;
 		t_log* logger;
 	} arg_LOADER;
 

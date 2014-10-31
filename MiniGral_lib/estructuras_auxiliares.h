@@ -26,6 +26,12 @@
 
 	#define S_ERROR 99	// Utilizada en socket_recibirSeñal, para decir que lo que se recibio no era una señal
 
+typedef struct direccion{
+	uint32_t segmento;
+	uint32_t pagina;
+	uint32_t desplazamiento;
+} t_direccion;
+
 // Vars globales ( referenciada por todos los procesos)
 	t_config* config_file;
 	t_log* logger;
@@ -121,13 +127,13 @@
 
 	typedef struct struct_sol_bytes{
 		uint32_t base;
-		uint32_t offset;
+		uint32_t PID;
 		uint32_t tamanio;
 	}__attribute__ ((__packed__)) t_struct_sol_bytes;
 
 	typedef struct struct_env_bytes{
 		uint32_t base;
-		uint32_t offset;
+		uint32_t PID;
 		uint32_t tamanio;
 		void* buffer;
 	}__attribute__ ((__packed__)) t_struct_env_bytes;
@@ -136,6 +142,16 @@
 		void* buffer;
 		uint32_t tamano_buffer;
 	}__attribute__((__packed__)) t_struct_respuesta_msp;
+
+	typedef struct struct_malloc{
+		uint32_t PID;
+		uint32_t tamano_segmento;
+	}__attribute__((__packed__)) t_struct_malloc;
+
+	typedef struct struct_free{
+		uint32_t PID;
+		uint32_t direccion_base;
+	}__attribute__((__packed__)) t_struct_free;
 
 	typedef struct struct_tcb{
 		uint32_t pid;
@@ -162,6 +178,13 @@
 	void copiar_structRecibido_a_tcb(t_hilo* tcb, void* structRecibido);
 	void copiar_tcb_a_structTcb(t_hilo* tcb, t_struct_tcb* tcb_enviar);
 	int print_package_to_output(char* datos);
+
+	//Direcciones
+	uint32_t crearDireccion(uint32_t segmento,uint32_t pagina, uint32_t desplazamiento);
+	char *traducirABinario(uint32_t direccion, int cantidad_bits);
+	uint32_t traducirADecimal(char *binario, int cantidad_bits);
+	t_direccion traducirDireccion(uint32_t unaDireccion);
+	uint32_t sumar_desplazamiento(uint32_t direccion, uint32_t desplazamiento);
 
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */

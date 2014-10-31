@@ -92,3 +92,126 @@ int print_package_to_output(char* datos) {
 	return 0;
 }
 
+/*********************************************** DIRECCIONES *********************************************************/
+
+uint32_t elevar(uint32_t numero, uint32_t elevado){
+	int i;
+	uint32_t resultado;
+	resultado=numero;
+	switch(elevado){
+	case 0: resultado=1; break;
+	case 1: resultado=numero; break;
+	default: for(i=1;i<elevado;i++){resultado=resultado*numero;};
+
+	}
+return resultado;
+}
+
+
+char *traducirABinario(uint32_t direccion, int cantidad_bits) {
+
+	uint32_t binNumInv[cantidad_bits];
+	uint32_t counter;
+
+	uint32_t i;
+	uint32_t aux = direccion;
+
+
+	char bina[cantidad_bits];
+	char bina_inv[cantidad_bits];
+
+	for ( counter = 0 ; counter < cantidad_bits; counter++ ) {
+	binNumInv[counter] = aux % 2;
+
+
+	aux = aux / 2;
+
+	if(binNumInv[counter] == 0){
+
+	bina[counter] = '0'; } else { bina[counter] = '1';}
+	}
+
+	for (i=0;i<cantidad_bits;i++){
+		counter --;
+		bina_inv[counter]=bina[i];
+
+	}
+	return bina_inv;
+	}
+
+
+uint32_t traducirADecimal(char *binario, int cantidad_bits){
+
+	int i;
+	int j;
+	uint32_t decimal = 0;
+	for(i=cantidad_bits-1; i >= 0; i--){
+		j= cantidad_bits-1-i;
+		switch(binario[i]){
+		case '0':
+			break;
+		case '1':
+			decimal = elevar(2,j)+decimal;
+			break;
+		default:
+			break;
+		}
+	}
+	return decimal;
+}
+
+uint32_t crearDireccion(uint32_t segmento, uint32_t pagina, uint32_t desplazamiento){ //FIXME: seria copado que reciba el desplazamiento por parametro
+	uint32_t direccionCreada;
+	char *binSegmento;
+	char *binPagina;
+	char *binDesplazamiento;
+	char *direccionCreadaBin = malloc(32);
+
+	binSegmento=malloc(12);
+	binPagina=malloc(13);
+	binDesplazamiento=malloc(8);
+	memcpy(binSegmento, traducirABinario(segmento, 12), 12);
+	memcpy(binPagina, traducirABinario(pagina, 12), 12);
+	memcpy(binDesplazamiento, traducirABinario(desplazamiento, 8), 8);
+
+	memcpy(direccionCreadaBin, binSegmento, 12);
+	memcpy(direccionCreadaBin+12, binPagina, 12);
+	memcpy(direccionCreadaBin+24, binDesplazamiento, 8);
+
+	direccionCreada=traducirADecimal(direccionCreadaBin, 32);
+
+	free(binSegmento);
+	free(binPagina);
+	free(binDesplazamiento);
+	free(direccionCreadaBin);
+	return direccionCreada;
+}
+
+ t_direccion traducirDireccion(uint32_t unaDireccion){
+	t_direccion direccionTraducida;
+	char direccionEnBinario[32];
+	memcpy(direccionEnBinario,traducirABinario(unaDireccion,32),32);
+
+	char segmento[12];
+	char pagina[12];
+	char desplazamiento[8];
+
+	memcpy(segmento, direccionEnBinario, 12);
+	memcpy(pagina, direccionEnBinario + 12, 12);
+	memcpy(desplazamiento, direccionEnBinario + 24, 8);
+
+	(direccionTraducida).segmento=traducirADecimal(segmento, 12);
+	(direccionTraducida).pagina=traducirADecimal(pagina, 12);
+	(direccionTraducida).desplazamiento=traducirADecimal(desplazamiento, 8);
+
+	return direccionTraducida;
+}
+
+uint32_t sumar_desplazamiento(uint32_t direccion, uint32_t desplazamiento){
+	t_direccion direccion_traducida= traducirDireccion(direccion);
+
+	direccion_traducida.desplazamiento += desplazamiento;
+
+	return crearDireccion(direccion_traducida.segmento, direccion_traducida.pagina, direccion_traducida.desplazamiento);
+}
+

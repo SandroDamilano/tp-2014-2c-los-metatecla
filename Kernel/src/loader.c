@@ -337,24 +337,23 @@ int atender_Proceso(uint32_t socket,uint32_t tamanio_stack)
 }
 
 void* main_LOADER(void* parametros) {
-/* El LOADER siempre acepta procesos, jamas rechaza.
- * TODO los programas nuevos se rechazan SOLAMENTE cuando falla un intento de reservarle un espacio de memoria.
+/* El LOADER siempre acepta procesos, JAMAS los rechaza. Otra historia es si despues no se pueden alojar en la MSP.
  * CICLO
  *
- * 1- CONECTAR A MSP
- * 2- PONER SOCKETS A LA ESCUCHA DE PROGRAMAS
- * 3- ATENDER PROCESO
- * 	3.1- Recibir BESO file
- * 	3.2- Asignar nuevo PID
- * 	3.4- Solicitar memoria a la MSP
- * 	3.5- Crear TCB e Init del PC (IP)
- * 	3.6- Encolar proceso (segun BBNP)
+ * 1- PONER SOCKETS A LA ESCUCHA DE PROGRAMAS
+ * 2- ATENDER PROCESO
+ * 	2.1- Recibir BESO file
+ * 	2.2- Asignar nuevo PID
+ * 	2.4- Solicitar memoria a la MSP
+ * 	2.5- Crear TCB e Init del PC (IP)
+ * 	2.6- Encolar proceso (segun BBNP)
 */
 
 	// parametros recibidos del Kernel
 	logger = ((arg_LOADER *)parametros)->logger;
 //	ip_kernel = ((arg_LOADER *)parametros)->ipKernel;
-//	puerto_consola = ((arg_LOADER *)parametros)->puertoConsola;
+	char *ip_kernel = "127.0.0.1";	// harcodeo..de momento
+	puerto_kernel = ((arg_LOADER *)parametros)->puerto_kernel;
 	ip_msp = ((arg_LOADER *)parametros)->ip_msp;
 	puerto_msp = ((arg_LOADER *)parametros)->puerto_msp;
 	tamanio_stack = ((arg_LOADER *)parametros)->tamanio_stack;
@@ -374,7 +373,7 @@ void* main_LOADER(void* parametros) {
 	tv.tv_usec = DELAY_CHECK_NEW_READY_USEC;
 
 	//2- Socket de escucha para Programas
-	crear_listener(ip_kernel, puerto_consola);
+	crear_listener(ip_kernel, puerto_kernel);
 
 	for(;;)
 	{

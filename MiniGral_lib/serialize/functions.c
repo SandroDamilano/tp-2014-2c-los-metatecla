@@ -47,10 +47,10 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 				paquete = serializeStruct_signal((t_struct_signal *) estructuraOrigen);
 				break;
 			case D_STRUCT_MALC:
-				paquete = serializeStruct_malc((t_struct_numero *) estructuraOrigen);
+				paquete = serializeStruct_malc((t_struct_malloc *) estructuraOrigen);
 				break;
 			case D_STRUCT_FREE:
-				paquete = serializeStruct_free((t_struct_numero *) estructuraOrigen);
+				paquete = serializeStruct_free((t_struct_free *) estructuraOrigen);
 				break;
 			case D_STRUCT_NUMERO:
 				paquete = serializeStruct_numero((t_struct_numero *) estructuraOrigen);
@@ -172,26 +172,26 @@ t_stream * serializeStruct_wake(t_struct_numero * estructuraOrigen){
 	return paquete;
 }
 
-t_stream * serializeStruct_malc(t_struct_numero * estructuraOrigen){
+t_stream * serializeStruct_malc(t_struct_malloc * estructuraOrigen){
 
 	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
 
-	paquete->length = sizeof(t_header) + sizeof(uint32_t);
+	paquete->length = sizeof(t_header) + 2*sizeof(uint32_t);
 
 	char * data = crearDataConHeader(D_STRUCT_MALC, paquete->length); //creo el data
 
-	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));		//copio a data el numero.
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_malloc));		//copio a data el numero.
 
 	paquete->data = data;
 
 	return paquete;
 }
 
-t_stream * serializeStruct_free(t_struct_numero * estructuraOrigen){
+t_stream * serializeStruct_free(t_struct_free * estructuraOrigen){
 
 	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
 
-	paquete->length = sizeof(t_header) + sizeof(uint32_t);
+	paquete->length = sizeof(t_header) + 2*sizeof(uint32_t);
 
 	char * data = crearDataConHeader(D_STRUCT_FREE, paquete->length); //creo el data
 
@@ -481,10 +481,14 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 			case D_STRUCT_OUTN:
 			case D_STRUCT_WAKE:
 			case D_STRUCT_BLOCK:
-			case D_STRUCT_MALC:
-			case D_STRUCT_FREE:
 			case D_STRUCT_NUMERO:
 				estructuraDestino = deserializeStruct_numero(dataPaquete, length);
+				break;
+			case D_STRUCT_MALC:
+				estructuraDestino = deserializeStruct_malloc(dataPaquete, length);
+				break;
+			case D_STRUCT_FREE:
+				estructuraDestino = deserializeStruct_free(dataPaquete, length);
 				break;
 			case D_STRUCT_INTE:
 			case D_STRUCT_DIRECCION:
@@ -573,6 +577,19 @@ t_struct_sol_bytes * deserializeStruct_sol_bytes(char * dataPaquete,uint16_t len
 	return estructuraDestino;
 }
 
+t_struct_env_bytes * despaquetizarStruct_env_bytes(char * dataPaquete,uint16_t length){
+
+	void * buffer = malloc(length - sizeof(t_struct_env_bytes));
+	t_struct_env_bytes * estructuraDestino = malloc(sizeof(t_struct_env_bytes));
+
+	memcpy(estructuraDestino, dataPaquete, sizeof(t_struct_env_bytes)); //copio el data del paquete a la estructura.
+	memcpy(buffer, dataPaquete + sizeof(t_struct_env_bytes), length - sizeof(t_struct_env_bytes)); // copiamos los bytes que queriamos enviar
+
+	estructuraDestino->buffer = buffer;
+
+	return estructuraDestino;
+}
+
 t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint16_t length){
 	void * buffer = malloc(length - sizeof(t_struct_respuesta_msp));
 	t_struct_respuesta_msp * estructuraDestino = malloc(sizeof(t_struct_respuesta_msp));
@@ -595,6 +612,22 @@ t_struct_tcb* deserializeStruct_tcb(char* dataPaquete, uint16_t lenght){
 
 t_struct_join * deserializeStruct_join(char * dataPaquete, uint16_t length){
 	t_struct_join * estructuraDestino = malloc(sizeof(t_struct_join));
+
+	memcpy(estructuraDestino, dataPaquete, 2*sizeof(uint32_t)); //copio el data del paquete a la estructura.
+
+	return estructuraDestino;
+}
+
+t_struct_malloc * deserializeStruct_malloc(char * dataPaquete, uint16_t length){
+	t_struct_malloc * estructuraDestino = malloc(sizeof(t_struct_malloc));
+
+	memcpy(estructuraDestino, dataPaquete, 2*sizeof(uint32_t)); //copio el data del paquete a la estructura.
+
+	return estructuraDestino;
+}
+
+t_struct_free * deserializeStruct_free(char * dataPaquete, uint16_t length){
+	t_struct_free * estructuraDestino = malloc(sizeof(t_struct_free));
 
 	memcpy(estructuraDestino, dataPaquete, 2*sizeof(uint32_t)); //copio el data del paquete a la estructura.
 

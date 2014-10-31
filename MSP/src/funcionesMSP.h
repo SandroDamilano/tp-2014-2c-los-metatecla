@@ -22,7 +22,8 @@
 #include "commons/log.h"
 #include "commons/txt.h"
 #include "commons/string.h"
-#include <estructuras_auxiliares.h>
+#include <sockets/enviar_recibir_paquete.h>
+
 
 
 char* path_config, *path_swap;
@@ -65,12 +66,6 @@ typedef struct marco{
 	uint32_t numeroMarco;
 } t_marco;
 
-typedef struct direccion{
-	uint32_t segmento;
-	uint32_t pagina;
-	uint32_t desplazamiento;
-} t_direccion;
-
 typedef struct info_memoria{
 	uint32_t tamanio_mem_ppal;
 	uint32_t tamanio_swap;
@@ -86,6 +81,7 @@ typedef struct conexion_entrante{
 	pthread_t *hiloDeConexion;
 	//TODO Archivo de logeo
 } t_conexion_entrante;
+
 
 extern uint32_t puertoMSP;
 extern uint32_t tamanio_mem_ppal;
@@ -112,16 +108,12 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento); // crea un nuev
 void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
 char* solicitar_memoria(uint32_t PID, uint32_t direccion_log, uint32_t tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
 //TODO no estamos seguros de que devuelta esta funcion. Consultar
-void escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
+int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 
+///////////CONEXIONES//////////
+void handler_cpu(int sock);
 
 ///////////Auxiliares//////////
-
-//Direcciones
-uint32_t crearDireccion(uint32_t segmento,uint32_t pagina);
-char *traducirABinario(uint32_t direccion, int cantidad_bits);
-uint32_t traducirADecimal(char *binario, int cantidad_bits);
-t_direccion traducirDireccion(uint32_t unaDireccion);
 
 //Excepciones
 void PID_not_found_exception(uint32_t PID);
