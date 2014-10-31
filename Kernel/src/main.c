@@ -101,9 +101,9 @@ void leer_config()
 	//PUERTO de escucha KERNEL
 	if(config_has_property(config_file, "PUERTO"))
 	{
-		puerto = config_get_int_value(config_file, "PUERTO");
+		puerto_kernel = config_get_int_value(config_file, "PUERTO");
 
-		sprintf(bufferLog, "PUERTO = [%d]", puerto);
+		sprintf(bufferLog, "PUERTO = [%d]", puerto_kernel);
 		log_debug(logger, bufferLog);
 	} else {
 		fprintf(stderr, "Falta key 'PUERTO' en archivo de configuracion.\n");
@@ -185,7 +185,9 @@ void leer_config()
 
 void cargar_arg_LOADER(arg_LOADER* arg)
 {
-	arg->puerto = puerto;
+	arg->puerto_kernel = puerto_kernel;
+	arg->puerto_msp = puerto_msp;
+	arg->ip_msp = ip_msp;
 	arg->tamanio_stack = tamanio_stack;
 	arg->logger = logger;
 }
@@ -194,7 +196,7 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 {
 	arg->quantum = quantum;
 	arg->syscalls_path = syscalls_path;
-	arg->puerto = puerto;	// parece que puede tratarse de cualquiera (CPU/Consola)
+	arg->puerto_kernel = puerto_kernel;	// parece que puede tratarse de cualquiera (CPU/Consola)
 	arg->logger = logger;
 }
 
@@ -244,7 +246,7 @@ int crear_cliente_MSP(const char *ip, const char* puerto)
 	return 0;
 }
 
-int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
+int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
 {
 	int res; // Resultado de cada handler
 
@@ -270,7 +272,7 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
 
 void conectar_a_MSP(char *ip, char *puerto)
 {
-	t_tipoEstructura operacion;
+	t_operaciones operacion;
 
 	if(bufferMSP != NULL)	{
 		free(bufferMSP);

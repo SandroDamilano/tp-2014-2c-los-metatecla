@@ -33,7 +33,7 @@
 	int cantidad_de_PIDs;
 
 	// Vars de config
-	uint32_t puerto, quantum, tamanio_stack;
+	uint32_t puerto_kernel, quantum, tamanio_stack;
 	char* ip_msp, *puerto_msp, *syscalls_path;
 
 	char bufferLog[80];
