@@ -108,7 +108,7 @@ void *reservarBloquePpal(uint32_t tamanioMemoria){
 }
 
 uint32_t calcularMarcos(uint32_t tamanioMemoria){
-	uint32_t cantidadmarcos = (tamanioMemoria*1024)/256;
+	uint32_t cantidadmarcos = (tamanioMemoria)/256;
 	return cantidadmarcos;
 }
 
@@ -568,6 +568,10 @@ return NULL;
  }
 
  void listar_marcos(){//FIXME ARREGLAR LISTA DE MARCOS!
-
+uint32_t i = 0;
+	 while(i<cant_marcos){
+		 printf("Numero de marco: %d,  Marco Libre: %d\n ",tabla_marcos[i].numeroMarco, tabla_marcos[i].marco_libre);
+	  i++;
+	 }
  }
 
