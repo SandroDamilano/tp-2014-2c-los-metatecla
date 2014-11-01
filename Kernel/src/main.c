@@ -101,9 +101,9 @@ void leer_config()
 	//PUERTO de escucha KERNEL
 	if(config_has_property(config_file, "PUERTO"))
 	{
-		puerto_kernel = config_get_int_value(config_file, "PUERTO");
+		puerto_kernel = config_get_string_value(config_file, "PUERTO");
 
-		sprintf(bufferLog, "PUERTO = [%d]", puerto_kernel);
+		sprintf(bufferLog, "PUERTO = [%s]", puerto_kernel);
 		log_debug(logger, bufferLog);
 	} else {
 		fprintf(stderr, "Falta key 'PUERTO' en archivo de configuracion.\n");
@@ -196,17 +196,8 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 {
 	arg->quantum = quantum;
 	arg->syscalls_path = syscalls_path;
-	arg->puerto_kernel = puerto_kernel;	// parece que puede tratarse de cualquiera (CPU/Consola)
+	arg->puerto_kernel = puerto_kernel;
 	arg->logger = logger;
-}
-
-void *get_in_addr(struct sockaddr *sa)
-{
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
-
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
 int crear_cliente_MSP(const char *ip, const char* puerto)
@@ -246,7 +237,7 @@ int crear_cliente_MSP(const char *ip, const char* puerto)
 	return 0;
 }
 
-int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
+int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
 {
 	int res; // Resultado de cada handler
 
@@ -255,7 +246,7 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
 	switch(*op) {
 		case HANDSHAKE_MSP_SUCCESS: case HANDSHAKE_MSP_FAIL:
 			log_trace(logger, "Respuesta Handshake, recibida.");
-			res = undo_struct_mensaje(paquete);
+			res = print_package_to_output(paquete);
 			break;
 		default:
 			return -1;
@@ -272,7 +263,7 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
 
 void conectar_a_MSP(char *ip, char *puerto)
 {
-	t_operaciones operacion;
+	t_tipoEstructura operacion;
 
 	if(bufferMSP != NULL)	{
 		free(bufferMSP);

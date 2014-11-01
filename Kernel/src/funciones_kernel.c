@@ -60,7 +60,7 @@ int obtener_pid(){
 
 int obtener_tid(){
 	pthread_mutex_lock(&mutex_TIDs);
-	cantidad_de_TIDs++;
+	cantidad_de_TIDs++;	// o usar function process_get_thread_id() que provee un id unico
 	int tid = cantidad_de_TIDs;
 	pthread_mutex_unlock(&mutex_TIDs);
 	return tid;
@@ -87,7 +87,8 @@ void poner_en_new(t_hilo* tcb){
 	producir_tcb(push_new, &sem_new, &mutex_new, tcb);
 }
 
-t_hilo *crear_TCB(int pid, uint32_t dir_codigo, uint32_t dir_stack, int tamanio_codigo)
+
+t_hilo *crear_TCB(uint32_t pid, uint32_t dir_codigo, uint32_t dir_stack, uint32_t tamanio_codigo)
 {
 	/*
 	 * Guardo en el TCB la dir logica (ficticia), asi lo abstraemos de los posibles movimientos en la MSP

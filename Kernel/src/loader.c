@@ -84,11 +84,11 @@ int crear_listener(const char *ip, const char *puerto)
 
 int handleFileLine(char* datos)
 {
-	t_struct_string *msg = undo_struct_mensaje(datos);
+	t_struct_string *msg = deserializeStruct_string(datos, 0);
 	char* dirty_file;
 	char* file = "";
 
-	dirty_file = msg->out;
+	dirty_file = msg->string;
 	file = malloc(strlen(dirty_file));
 
 	//Limpio el archivo ?
@@ -104,18 +104,18 @@ int handleFileLine(char* datos)
 
 //	printf("El archivo finalmente quedo: %s \n", file);
 
-	free(msg->out);
+	free(msg->string);
 	free(msg);
 
 	return 0;
 }
 
-int handleMemoriaSuccess(char* datos)
-{
-	paq_res_SolicitudMemoria *deserializado = deserialize_struct_res_SolicitudMemoria(datos);
-
-	return deserializado->posicion;
-}
+//int handleMemoriaSuccess(char* datos)
+//{
+//	paq_res_SolicitudMemoria *deserializado = deserialize_struct_res_SolicitudMemoria(datos);
+//
+//	return deserializado->posicion;
+//}
 
 int handleMemoriaFail(char* datos)
 {	//TODO: ver que hacer aca cuando la MSP no da memoria.
@@ -123,11 +123,11 @@ int handleMemoriaFail(char* datos)
 	return 0;
 }
 
-int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
+int analizar_paquete_loader(u_int32_t socket, char *paquete, t_tipoEstructura *op)
 {
 	int res; // Resultado de cada handler
 
-	recv_msg_from(socket, (int*)op, &paquete);
+	socket_recibir(socket, op, (void*)paquete);
 
 	switch(*op) {
 		case FILE_LINE:
@@ -137,8 +137,8 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
 			res = 0;
 			break;
 		case MEMORIA_MSP_SUCCESS:
-			res = handleMemoriaSuccess(paquete);
-			return res;
+//			res = handleMemoriaSuccess(paquete);
+//			return res;
 			break;
 		case MEMORIA_MSP_FAIL:
 			res = handleMemoriaFail(paquete);
@@ -159,64 +159,42 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_operaciones *op)
 // --------------------------------------
 // to SEND
 
-stream_t* do_struct_mensaje(stream_t* datos, int* size)
+
+//stream_t* do_struct_solicitud_memoria(paq_SolicitudMemoria* datos, int *size)
+//{
+//	stream_t *serializado = serialize_struct_solicitud_memoria(datos,size);
+//
+//	return serializado;
+//}
+//
+//stream_t *handleSolicitudMemoria(paq_SolicitudMemoria* datos, int *size)
+//{
+//	return do_struct_solicitud_memoria(datos, size);
+//}
+
+int preparar_paquete(u_int32_t socket, t_tipoEstructura op, void* estructura)
 {
-	stream_t *serializado = serialize_struct_mensaje(datos, size);
-
-	return serializado;
-}
-
-stream_t* do_struct_solicitud_memoria(paq_SolicitudMemoria* datos, int *size)
-{
-	stream_t *serializado = serialize_struct_solicitud_memoria(datos,size);
-
-	return serializado;
-}
-
-stream_t *handleHandshake(stream_t* datos, int* size)
-{
-	return do_struct_mensaje(datos, size);
-}
-
-stream_t *handleFileRecvResult(stream_t *datos, int *size)
-{
-	return do_struct_mensaje(datos, size);
-}
-
-stream_t *handleEndProgram(stream_t *datos, int *size)
-{
-	 return do_struct_mensaje(datos, size);
-}
-
-stream_t *handleSolicitudMemoria(paq_SolicitudMemoria* datos, int *size)
-{
-	return do_struct_solicitud_memoria(datos, size);
-}
-
-int preparar_paquete(u_int32_t socket, t_operaciones op, void* estructura)
-{
-	int tamanho = 0;
-	stream_t *paquete = NULL;
+	t_stream *paquete = NULL;
 
 	switch(op)
 	{
 		case HANDSHAKE_SUCCESS: case HANDSHAKE_FAIL:
-			paquete = handleHandshake((stream_t*)estructura, &tamanho);
+			paquete = serializeStruct_string((t_struct_string*)estructura);
 			break;
 		case FILE_RECV_SUCCESS: case FILE_RECV_FAIL:
-			paquete = handleFileRecvResult((stream_t*)estructura, &tamanho);
+			paquete = serializeStruct_string((t_struct_string*)estructura);
 			break;
 		case END_PROGRAM:
-			paquete = handleEndProgram((stream_t*)estructura, &tamanho);
+			paquete = serializeStruct_string((t_struct_string*)estructura);
 			break;
 		case SOLICITAR_MEMORIA_MSP:
-			paquete = handleSolicitudMemoria((paq_SolicitudMemoria*)estructura, &tamanho);
+//			paquete = handleSolicitudMemoria((paq_SolicitudMemoria*)estructura, &tamanho);
 			break;
 		default:
 			break;
 	}
 
-	send_msg_to(socket, op, paquete->data , tamanho);
+	socket_enviar(socket, op, paquete->data);
 
 	free(paquete->data);
 	free(paquete);
@@ -226,18 +204,18 @@ int preparar_paquete(u_int32_t socket, t_operaciones op, void* estructura)
 
 int recibir_BESO_file(u_int32_t socket)
 {
-	mensaje msg;
-	t_operaciones operacion;
+	t_struct_string msg;
+	t_tipoEstructura operacion;
 	char *buffer = NULL;
 
-	while (analizar_paquete(socket, buffer, &operacion) == 0)
+	while (analizar_paquete_loader(socket, buffer, &operacion) == 0)
 	{
 		if (operacion == FILE_EOF) {
 			break;
 		}
 	}
 
-	msg.out = "[Kernel-LDR]: BESO file recibido correctamente.";
+	msg.string = "[Kernel-LDR]: BESO file recibido correctamente.";
 	log_info(logger,"BESO file recibido correctamente.");
 
 	preparar_paquete(socket,FILE_RECV_SUCCESS, &msg);
@@ -245,16 +223,15 @@ int recibir_BESO_file(u_int32_t socket)
 	return 0;
 }
 
-int solicitarMemoria(u_int32_t pid, u_int32_t size, char* datos)
+uint32_t solicitarMemoria(u_int32_t pid, u_int32_t size, char* datos)
 {
-	int res;
+	uint32_t res;
 	paq_SolicitudMemoria solicitud;
-	t_operaciones resultadoSolicitudMemoria;
+	t_tipoEstructura resultado;
 
-	printf("\n================\n pid [%d], size [%d], datos[%s]\n",pid,size,datos);	// only for debug purpose
+//	printf("\n================\n pid [%d], size [%d], datos[%s]\n",pid,size,datos);	// only for debug purpose
 	solicitud.id_proceso = pid;
 	solicitud.size = size;
-	//Falta el malloc?
 	solicitud.datos = datos;
 
 	if((preparar_paquete(sockfd_cte, SOLICITAR_MEMORIA_MSP, &solicitud)) != 0) {	// Envia los datos para solicitar memoria
@@ -262,9 +239,9 @@ int solicitarMemoria(u_int32_t pid, u_int32_t size, char* datos)
 		return 1;
 	}
 
-	res = analizar_paquete(sockfd_cte, bufferMSP, &resultadoSolicitudMemoria);
+	res = analizar_paquete_loader(sockfd_cte, NULL, &resultado);
 
-	if(resultadoSolicitudMemoria == MEMORIA_MSP_FAIL) {
+	if(resultado == MEMORIA_MSP_FAIL) {
 		perror("[Kernel-LDR]: la MSP nego espacio en memoria.");
 		return 1;
 	}
@@ -283,57 +260,83 @@ int atender_Proceso(uint32_t socket,uint32_t tamanio_stack)
 	* 5- Encolar proceso (segun BBNP)
 	*/
 
-	u_int32_t pid_Proceso, long_beso_file;
+	u_int32_t pid, dir_code_segment, dir_stack_segment, long_beso_file;
 	char* beso_file = "";
 
 	//1- Recibir BESO file
 
-	if(recibir_BESO_file(socket) != 0) {
-		msg.out = "[Kernel-LDR]: Fallo la recepcion del BESO code. Se cierra la conexion.";
+	if(!recibir_BESO_file(socket)) {
+		msg.string = "[Kernel-LDR]: Fallo la recepcion del BESO code. Se cierra la conexion.";
 		preparar_paquete(socket, FILE_RECV_FAIL, &msg);
-		free(msg.out);
+		free(msg.string);
 		FD_CLR(socket, &master);
 		close(socket);
 		return 1;
 	}
+	long_beso_file = strlen(beso_file);
 
 	//2- Asignar nuevo PID
-	pid.identificador = process_getpid();	// returns the process ID of the calling process. These functions are always successful.
+	pid = process_getpid();	// returns the process ID of the calling process. These functions are always successful.
 
 	//2- Asignar TID
-	tid.identificador = process_get_thread_id();	// In single threaded code both PID & TID are same.
+//	u_int32_t tid = process_get_thread_id();	// In single threaded code both PID & TID are same.
 
 	//3- Solicitar memoria a la MSP
 	// TODO: Evaluar si hay necesidad de contar con un dictionary de procesos(programas)
-	pid_Proceso = pid.identificador;
-	long_beso_file = strlen(beso_file);
 
 		// CODE segment
-	if((info_mem_MSP.segmento_codigo = solicitarMemoria(pid_Proceso, long_beso_file, beso_file)) < 0)	{
-		msg.out = "[Kernel-LDR]: Fallo en la solicitud de memoria a la MSP. Se cierra la conexion.";
+	if((dir_code_segment = solicitarMemoria(pid, long_beso_file, beso_file)) < 0)	{
+		msg.string = "[Kernel-LDR]: Fallo en la solicitud de memoria a la MSP. Se cierra la conexion.";
 		preparar_paquete(socket, END_PROGRAM, &msg);
-		free(msg.out);
+		free(msg.string);
 		FD_CLR(socket, &master);
 		close(socket);
 		return 2;
 	}
 
 		// STACK segment
-	if((info_mem_MSP.base_stack = solicitarMemoria(pid_Proceso, tamanio_stack, "")) < 0) {
-		msg.out = "[Kernel-LDR]: Fallo en la solicitud de memoria a la UMV. Se cierra la conexion.";
+	if((dir_stack_segment = solicitarMemoria(pid, tamanio_stack, "")) < 0) {
+		msg.string = "[Kernel-LDR]: Fallo en la solicitud de memoria a la UMV. Se cierra la conexion.";
 		preparar_paquete(socket, END_PROGRAM, &msg);
-		free(msg.out);
+		free(msg.string);
 		FD_CLR(socket, &master);
 		close(socket);
 		return 2;
 	}
 
 	//4- Crear TCB e Init del PC (IP)
-	t_hilo *crear_TCB(u_int32_t pid, u_int32_t tid, t_hilo *mem_result)
+	t_hilo *tcb = crear_TCB(pid, dir_code_segment, dir_stack_segment, long_beso_file);
 
 	//5- Encolar proceso (segun BBNP)
+	poner_en_new(tcb);
 
 	return 0;
+}
+
+void check_exit()
+{
+	//Terminar Programa (mensaje a traves del file descriptor)
+	//Cierra conexion socket
+	//TODO Borrar todos los segmentos del TCB en MSP
+	//Eliminar file descriptor
+	//Remove and destroy
+
+	t_struct_string msg;
+	t_hilo* elemento;
+	u_int32_t *socket;
+
+	if(!queue_is_empty(cola_exit))
+	{
+//		pthread_mutex_lock(&mutex_cola_exit);
+		elemento = queue_pop(cola_exit);
+		msg.string = "[Kernel-PLP]: Fin de instruccion alcanzado. Hasta la vista Programa!";
+		preparar_paquete(*socket, END_PROGRAM, &msg);
+		close(*socket);
+		FD_CLR(*socket, &master);
+//		pthread_mutex_unlock(&mutex_cola_exit);
+
+		free(elemento);
+	}
 }
 
 void* main_LOADER(void* parametros) {
@@ -351,18 +354,16 @@ void* main_LOADER(void* parametros) {
 
 	// parametros recibidos del Kernel
 	logger = ((arg_LOADER *)parametros)->logger;
-//	ip_kernel = ((arg_LOADER *)parametros)->ipKernel;
 	char *ip_kernel = "127.0.0.1";	// harcodeo..de momento
-	puerto_kernel = ((arg_LOADER *)parametros)->puerto_kernel;
-	ip_msp = ((arg_LOADER *)parametros)->ip_msp;
-	puerto_msp = ((arg_LOADER *)parametros)->puerto_msp;
-	tamanio_stack = ((arg_LOADER *)parametros)->tamanio_stack;
+	char *puerto_kernel = ((arg_LOADER *)parametros)->puerto_kernel;
+//	char *ip_msp = ((arg_LOADER *)parametros)->ip_msp;
+//	char *puerto_msp = ((arg_LOADER *)parametros)->puerto_msp;
+	uint32_t tamanio_stack = ((arg_LOADER *)parametros)->tamanio_stack;
 
 	log_trace(logger,"INICIO de registro de actividades del Hilo LOADER.");
 
 	// creacion de estructuras
 	cola_new = queue_create();
-	cola_ready = queue_create();
 	cola_exit = queue_create();
 
 	log_info(logger,"Se crean las estructuras necesarias del hilo.");
@@ -403,6 +404,8 @@ void* main_LOADER(void* parametros) {
 					newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen);
 					if (newfd == -1) {
 						perror("[Kernel-LDR]: Error on 'accept()' function.");
+						msg.string = "[Kernel-LDR] Handshake con Consola, sin exito.";
+						preparar_paquete(newfd, HANDSHAKE_FAIL, &msg);
 					} else {
 						FD_SET(newfd, &master); // add to master set
 						if (newfd > fdmax)
@@ -417,7 +420,7 @@ void* main_LOADER(void* parametros) {
 //										remoteIP, INET6_ADDRSTRLEN
 //										),
 //										newfd);
-						msg.out = "[Kernel-LDR] Handshake con Consola, exitoso!";
+						msg.string = "[Kernel-LDR] Handshake con Consola, exitoso!";
 						preparar_paquete(newfd, HANDSHAKE_SUCCESS, &msg);
 					}
 				}

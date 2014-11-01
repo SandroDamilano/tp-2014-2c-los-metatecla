@@ -107,7 +107,7 @@ uint32_t elevar(uint32_t numero, uint32_t elevado){
 return resultado;
 }
 
-
+// FIXME porque chilla
 char *traducirABinario(uint32_t direccion, int cantidad_bits) {
 
 	uint32_t binNumInv[cantidad_bits];

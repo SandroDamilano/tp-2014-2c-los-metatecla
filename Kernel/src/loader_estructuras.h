@@ -8,11 +8,6 @@
 #ifndef LOADER_ESTRUCTURAS_H_
 #define LOADER_ESTRUCTURAS_H_
 
-#include <commons/string.h>
-
-#include <sockets/enviar_recibir_paquete.h>
-//#include <estructuras_auxiliares.h>
-
 typedef struct __attribute__((__packed__)) PaqueteSolicitudMemoria {
 	u_int32_t id_proceso;
 	u_int32_t size;

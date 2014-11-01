@@ -28,28 +28,18 @@
 	#include <estructuras_auxiliares.h>
 	#include <serialize/functions.h>
 	#include "funciones_kernel.h"
+	#include "loader_estructuras.h"
 
 	typedef struct arg_LOADER {	// Estructura para pasar argumentos al hilo
-		uint32_t puerto_kernel;
+		char* puerto_kernel;
 		uint32_t tamanio_stack;
 		char* ip_msp;
 		char* puerto_msp;
 		t_log* logger;
 	} arg_LOADER;
 
-	typedef struct ID {	// Estructura que contiene el ID del proceso o hilo
-		u_int32_t identificador;
-	} t_id;
-
-	typedef struct Mensaje {	// Estructura para la impresion por pantalla
-		char* out;
-	} mensaje;
-
 	// Vars globales LOADER
-//	t_queue* cola_new, cola_ready, cola_exit; Los puse en funciones_kernel.h
-	mensaje msg;
-	t_hilo info_mem_MSP;
-	t_id pid, tid;
+	t_struct_string msg;
 
 	// Funciones operaciones con cola
 	extern int encolar(t_cola cola, t_hilo* tcb);
@@ -57,5 +47,6 @@
 	extern void check_exit();
 
 	void* main_LOADER(void* parametros);
+	void *get_in_addr(struct sockaddr *sa);
 
 #endif /* LOADER_H_ */

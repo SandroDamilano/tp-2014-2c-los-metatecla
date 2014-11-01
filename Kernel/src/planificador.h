@@ -26,7 +26,7 @@
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;
 		char* syscalls_path;
-		uint32_t puerto_kernel;
+		char* puerto_kernel;
 		t_log* logger;
 	} arg_PLANIFICADOR;
 
