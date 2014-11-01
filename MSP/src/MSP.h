@@ -18,12 +18,14 @@ extern char* path_swap;
 
 //Variables de Memoria Principal
 void *memoria_ppal = NULL;
-int memoriaSwapActual = 0;
-int memoriaPpalActual = 0;
+uint32_t memoriaSwapActual = 0;
+uint32_t memoriaPpalActual = 0;
+uint32_t cant_marcos=0;
+
 
 //Variables de estructuras administrativas
 t_list *listaProcesos = NULL;
-t_list *lista_marcos = NULL;
+t_marco *tabla_marcos = NULL;
 
 //Variables para hilos
 pthread_t consola;

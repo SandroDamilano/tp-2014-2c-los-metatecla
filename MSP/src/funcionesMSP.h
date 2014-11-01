@@ -61,9 +61,9 @@ typedef struct pagina{
 }t_pagina;
 
 typedef struct marco{
-	void *memoria;
 	uint32_t marco_libre;
 	uint32_t numeroMarco;
+	uint32_t bitAlgoritmo;
 } t_marco;
 
 typedef struct info_memoria{
@@ -88,7 +88,8 @@ extern uint32_t tamanio_mem_ppal;
 extern uint32_t cant_mem_swap;
 extern char* alg_sustitucion;
 extern t_list *listaProcesos;
-extern t_list *lista_marcos;
+extern t_marco *tabla_marcos;
+extern uint32_t cant_marcos;
 
 //Semaforos
 extern pthread_mutex_t mutex_consola;
@@ -122,8 +123,8 @@ void page_not_found_exception(uint32_t pagina);
 void segmentation_fault();
 
 //Manejo de informacion
-char* devolverInformacion(t_marco* marco, t_direccion direccion, uint32_t tamanio);
-void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
+char* devolverInformacion(void *baseMarco, t_direccion direccion, uint32_t tamanio);
+void guardarInformacion(void *baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
 
 
 ////////////INICIO////////////
@@ -132,16 +133,16 @@ void crear_logger();			//Crea archivos de log
 
 
 //////MEMORIA PRINCIPAL//////
-void *reservarBloquePpal(int tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
-t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
-
+void *reservarBloquePpal(uint32_t tamanioMemoria); //Crea bloque de memoria principal con el tamaño especificado
+uint32_t calcularMarcos(uint32_t tamanioMemoria); //Calcula cantidad en que se divide la MP
+t_marco *crearTablaDeMarcos(); //Divide el bloque de memoria principal en marcos de tamaño 256bytes y devuelve la lista de ellos
+uint32_t buscarMarcoLibre(t_marco *unaTabla);//Busca un marco libre, en caso no encontrar devuelve -1
 
 ////////////SWAP////////////
 void swap_out(t_pagina pagina);
 t_pagina swap_in(int pid, int seg, int pag);
 DIR* abrir_directorio_swap();
 t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
-void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
 void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
 void destruir_archivo(char* nombre_archivo);
 

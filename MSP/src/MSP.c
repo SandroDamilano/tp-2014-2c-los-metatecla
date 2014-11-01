@@ -33,22 +33,21 @@ int main(int argc, char *argv[]) {
 	//2. Reservar bloque de memoria principal
 	memoria_ppal = reservarBloquePpal(tamanio_mem_ppal);
 	printf("pase la mem ppal \n");	//DEBUG
-
+	cant_marcos = calcularMarcos(tamanio_mem_ppal);
 	//3. Generar estructuras administrativas
-	lista_marcos = dividirMemoriaEnMarcos(memoria_ppal, tamanio_mem_ppal);
+	tabla_marcos = crearTablaDeMarcos();
 	printf("pase division de marcos\n");	//DEBUG
 	memoriaPpalActual = tamanio_mem_ppal;
 	memoriaSwapActual = cant_mem_swap;
 	listaProcesos = list_create();
 
 	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
-	//FIXME Por que esta comentado de aca para abajo ???
 	//4. Abrir conexiones con Kernel y CPU, y levantar Consola MSP
 
 	//Se crea el hilo para la consola
-/*		pthread_create(&consola, NULL, inciarConsola, NULL); //TODO pasar info de la memoria a la consola (4 parametro diferente a null)
+		pthread_create(&consola, NULL, inciarConsola, NULL); //TODO pasar info de la memoria a la consola (4 parametro diferente a null)
 
-		//Se crea socket servidor de la MSP
+		/*//Se crea socket servidor de la MSP
 
 		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
@@ -183,7 +182,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	int numeroPag=0;
 	while(cantPaginas>0){
 		t_lista_paginas *pagina= malloc(sizeof(t_lista_paginas));
-		(*pagina).swap=0;
+		(*pagina).swap=1;
 		(*pagina).marcoEnMemPpal=0;
 		(*pagina).numeroPagina=numeroPag;
 		list_add( (*nuevoSegmento).lista_Paginas , pagina);
@@ -221,13 +220,9 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 	void liberarMemoria(t_lista_paginas *unaPagina){
 		if((*unaPagina).swap==0){
 			uint32_t numeroDeMarco = (*unaPagina).marcoEnMemPpal;
-			bool mismoMarco(t_marco *marco){
-									return marco->numeroMarco==numeroDeMarco;
-								}
-		t_marco *marcoEnMemoria=list_find(lista_marcos,(void*) (*mismoMarco));
-		(*marcoEnMemoria).marco_libre=true;
-		free((*marcoEnMemoria).memoria);
-		}
+			memset(memoria_ppal+(numeroDeMarco*256),0,256);
+			tabla_marcos[numeroDeMarco].marco_libre=1;
+			tabla_marcos[numeroDeMarco].bitAlgoritmo=0;}
 		else {
 		//1. Destruir el archivo
 		destruir_archivo_swap(PID, (direccionTraducida).segmento, (*unaPagina).numeroPagina);
@@ -267,7 +262,6 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 free(proceso);
 }
 
-
 //PUSE QUE DEVUELVA -1 SI NO SE PUDO ESCRIBIR, Y 0 SI PUDO. ES PARA VALIDACIONES.
 int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
 	//1. traducir direccion y validarla
@@ -285,9 +279,6 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 	bool mismaPagina(t_lista_paginas *numeroPagina){
 							return numeroPagina->numeroPagina==direccion.pagina;
 				}
-	bool funcionMarcoLibre(t_marco *marco){
-		return marco->marco_libre == 1;
-	}
 
 	t_lista_procesos* proceso = malloc(sizeof(t_lista_procesos));
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
@@ -300,26 +291,19 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 			pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 			if(pagina != NULL){
 				if(pagina->swap == 0){ //Esta en memoria principal
-					bool mismoMarco(t_marco *marco){
-						return marco->numeroMarco == (*pagina).marcoEnMemPpal;
-					}
-					t_marco *marco = malloc(sizeof(t_marco));
-					marco=list_find(lista_marcos,(void*) (*mismoMarco)); //Busca el marco de memoria ppal
-
-					guardarInformacion(marco,direccion,bytes_escribir,tamanio);
-					free(marco);
+					guardarInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,bytes_escribir,tamanio);
 					return 0;
 				} else {//Traemos pagina a memoria ppal
-					t_marco *marcoLibre = malloc(sizeof(t_marco));
-					marcoLibre= list_find(lista_marcos,(void*) (*funcionMarcoLibre));
-
-					if(marcoLibre!=NULL){//Hay un marco libre en memoria principal donde cargar la pagina
-						t_pagina *pagina = malloc(sizeof(t_pagina));
-						*pagina= swap_in(PID, direccion.segmento, direccion.pagina);
-						memcpy(marcoLibre, pagina->codigo, pagina->tamanio_buffer); //FIXME el tamaño buffer es el tamaño de lo que tiene el archivo adentro ?
-						guardarInformacion(marcoLibre,direccion,bytes_escribir,tamanio);
-						marcoLibre->marco_libre = 0;
-						free(marcoLibre);
+					uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
+					if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
+						t_pagina *paginaACargar = malloc(sizeof(t_pagina));
+						*paginaACargar= swap_in(PID, direccion.segmento, direccion.pagina);
+						printf("abri el archivo pedido"); //DEBUG
+						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+						pagina->marcoEnMemPpal=numeroDeMarcoLibre;
+						pagina->swap=0;
+						printf("guarde el archivo en memoria"); //DEBUG
+						tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
 						return 0;
 					} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
 						return 0;
@@ -355,9 +339,6 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 	bool mismaPagina(t_lista_paginas *numeroPagina){
 			return numeroPagina->numeroPagina==direccion.pagina;
 		}
-	bool funcionMarcoLibre(t_marco *marco){
-			return marco->marco_libre == 1;
-		}
 
 	t_lista_procesos* proceso = malloc(sizeof(t_lista_procesos));
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
@@ -370,32 +351,23 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 				pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 				if(pagina != NULL){
 					if(pagina->swap == 0){ //Esta en memoria principal
-
-						bool mismoMarco(t_marco *marco){
-							return marco->numeroMarco == (*pagina).marcoEnMemPpal;
-						}
-
-						t_marco *marco = malloc(sizeof(t_marco));
-						marco=list_find(lista_marcos,(void*) (*mismoMarco)); //Busca el marco de memoria ppal
-
-						bytes_solicitados = devolverInformacion(marco, direccion, tamanio);
-						free(marco);
+						bytes_solicitados= devolverInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,tamanio);
 						return bytes_solicitados;
 						//TODO: cuando se terminen de usar los bytes solicitados, AFUERA de esta funcion, liberar memoria. LIBERAR RECURSOS
 
 					} else {//Traemos pagina a memoria ppal
-						t_marco *marcoLibre = malloc(sizeof(t_marco));
-						marcoLibre= list_find(lista_marcos,(void*) (*funcionMarcoLibre));
-
-						if(marcoLibre!=NULL){//Hay un marco libre en memoria principal donde cargar la pagina
-							t_pagina *pagina = malloc(sizeof(t_pagina));
-							*pagina= swap_in(PID, direccion.segmento, direccion.pagina);
-							memcpy(marcoLibre, pagina->codigo, pagina->tamanio_buffer);
-
-							bytes_solicitados = devolverInformacion(marcoLibre, direccion, tamanio);
-
-							marcoLibre->marco_libre = 0;
-							free(marcoLibre);
+						uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
+						if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
+							t_pagina *paginaACargar = malloc(sizeof(t_pagina));
+							*paginaACargar= swap_in(PID, direccion.segmento, direccion.pagina);
+							printf("abri el archivo pedido"); //DEBUG
+							guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+							tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
+							pagina->marcoEnMemPpal=numeroDeMarcoLibre;
+							pagina->swap=0;
+							printf("guarde la info en memoria"); //DEBUG
+							bytes_solicitados = devolverInformacion(memoria_ppal+(numeroDeMarcoLibre*256), direccion, tamanio);
+							printf("copie la info de memoria"); //DEBUG
 							return bytes_solicitados;
 						} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
 

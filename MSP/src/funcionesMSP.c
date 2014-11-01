@@ -93,7 +93,7 @@ int inicializar_semaforos(){
 	return EXIT_SUCCESS;
 }
 /******************************************** MEMORIA PRINCIPAL ******************************************************/
-void *reservarBloquePpal(int tamanioMemoria){
+void *reservarBloquePpal(uint32_t tamanioMemoria){
 
      void *bloquePrincipal = malloc(tamanioMemoria);
      if(NULL == bloquePrincipal){
@@ -107,23 +107,34 @@ void *reservarBloquePpal(int tamanioMemoria){
  	return bloquePrincipal;
 }
 
-t_list *dividirMemoriaEnMarcos(void *memoria, int tamanioMemoria){//FIXME Reveer lista de marcos, preguntar sabado (BitArray?)
-	t_list *lista_marcos = list_create();
-	int cant_marcos = (tamanioMemoria*1024)/256;
-	int i ;
-	for(i=0; i<cant_marcos; i++)
-	{
-		t_marco *marco = malloc(sizeof(t_marco));
-		(*marco).memoria= malloc(256);
-		(*marco).memoria = memoria + i*256;
-		(*marco).numeroMarco = i;
-		list_add(lista_marcos, marco);
-		//free((*marco).memoria);
-		//free(marco);
-	}
-return lista_marcos; //TODO Preguntar a ayudante
+uint32_t calcularMarcos(uint32_t tamanioMemoria){
+	uint32_t cantidadmarcos = (tamanioMemoria*1024)/256;
+	return cantidadmarcos;
 }
 
+t_marco *crearTablaDeMarcos(){
+
+	t_marco *nuevaTabla = malloc(sizeof(t_marco)*cant_marcos);
+	int i ;
+	for(i=0; i<cant_marcos; i++){
+		nuevaTabla[i].marco_libre=1;
+		nuevaTabla[i].numeroMarco=i;
+		nuevaTabla[i].bitAlgoritmo=0;
+	}
+return nuevaTabla;
+free(nuevaTabla);
+}
+
+uint32_t buscarMarcoLibre(t_marco *unaTabla){//Devuelve -1 en caso no encontrar un marco vacio
+	uint32_t i =0;
+	uint32_t marcoEncontrado = -1;
+	while((i<cant_marcos) && marcoEncontrado==-1){
+		if(tabla_marcos[i].marco_libre==1){
+			marcoEncontrado=tabla_marcos[i].numeroMarco;
+		}
+	}
+	return marcoEncontrado;
+}
 /************************************ EXCEPCIONES ************************************/
 void PID_not_found_exception(uint32_t PID){
 	printf("No se encontro el PID %d\n", PID);
@@ -323,20 +334,19 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 }
 
 /********************************* MANEJO DE INFORMACION ******************************************/
-void guardarInformacion(t_marco *marco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
+void guardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
 
-	if(((*marco).memoria + direccion.desplazamiento + tamanio) < ((*marco).memoria+256)){ // Se fija que no se quiera escribir fuera de los limites del marco
-			memcpy((*marco).memoria + direccion.desplazamiento, bytes_escribir, tamanio);}
+	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+256)){ // Se fija que no se quiera escribir fuera de los limites del marco
+			memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);}
 	else {
 			segmentation_fault();
 	}
 }
 
-char* devolverInformacion(t_marco *marco, t_direccion direccion, uint32_t tamanio){
-	//TODO VALIDAR QUE NO SE PASE DEL LIMITE
+char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t tamanio){
 	char* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
-	if(((*marco).memoria + direccion.desplazamiento + tamanio) < ((*marco).memoria+256)){
-	memcpy(buffer, marco->memoria + direccion.desplazamiento, tamanio);} else {
+	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+256)){
+	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio);} else {
 		segmentation_fault();}
 	return buffer;
 }
@@ -483,7 +493,7 @@ char* devolverInformacion(t_marco *marco, t_direccion direccion, uint32_t tamani
 				printf("Ingrese un tamaño:\n");
 				scanf("%d", &tamanio_escritura);
 				printf("Ingrese un texto:\n");
-				char* texto; //CAPAZ DEBERIA SER CHAR[ALGUN TAMANIO MAX]
+				char texto[256]; //CAPAZ DEBERIA SER CHAR[ALGUN TAMANIO MAX]
 				scanf("%s", texto);
 				escribirMemoria(PID, direcVir, texto, tamanio_escritura);
 				indicaciones_consola();
@@ -496,7 +506,8 @@ char* devolverInformacion(t_marco *marco, t_direccion direccion, uint32_t tamani
 				scanf("%d", &direcVir);
 				printf("Ingrese un tamaño:\n");
 				scanf("%d", &tamanio_escritura);
-				solicitar_memoria(PID, direcVir, tamanio_escritura);
+				char* bytesEnMemoria =solicitar_memoria(PID, direcVir, tamanio_escritura);
+				printf("En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);
 				indicaciones_consola();
 
 	break;
