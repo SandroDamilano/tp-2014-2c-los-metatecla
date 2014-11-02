@@ -34,7 +34,7 @@ long int calcular_tamanio_archivo(FILE* archivo){
 }
 
 FILE* abrir_archivo(char* nombre_archivo, t_log* log, pthread_mutex_t *mutex){
-	FILE* archivo = fopen(nombre_archivo, "w+");
+	FILE* archivo = fopen(nombre_archivo, "r");
 
 	if(archivo == NULL){
 		//pthread_mutex_lock(mutex);

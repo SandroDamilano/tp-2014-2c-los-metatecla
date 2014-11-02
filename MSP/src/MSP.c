@@ -140,15 +140,15 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 
 	if(tamanio_segmento<=memoriaSwapActual){
 		segmentoEnSwap=tamanio_segmento;
-		memoriaSwapActual=memoriaSwapActual-tamanio_segmento;
+		memoriaSwapActual -= tamanio_segmento;
 	} else { if(memoriaSwapActual>0){
 				segmentoEnSwap = memoriaSwapActual;
-				tamanio_segmento=tamanio_segmento-memoriaSwapActual;
+				tamanio_segmento -= memoriaSwapActual;
 				memoriaSwapActual = 0;
 				segmentoEnMP=tamanio_segmento;
-				memoriaPpalActual= memoriaPpalActual-tamanio_segmento;
+				memoriaPpalActual -= tamanio_segmento;
 	} else { segmentoEnMP=tamanio_segmento;
-			 memoriaPpalActual= memoriaPpalActual-tamanio_segmento;}
+			 memoriaPpalActual -= tamanio_segmento;}
 	}
 
 	//4.Crea lista de segmentos o agrega nuevo segmento
@@ -200,8 +200,6 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	 }
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
 
-	//TODO Ver como imprimir direccion base del segmento
-  	//FIXME no entiendo, tiene que devolver la direccion base del segmento o la direccion formada por seg, pag y desplazamiento? Es lo mismo?
 	return direccionBaseDelSegmento ;
 }
 
@@ -294,11 +292,21 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 					guardarInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,bytes_escribir,tamanio);
 					return 0;
 				} else {//Traemos pagina a memoria ppal
+					t_pagina contenido_disco;
+					contenido_disco.PID = PID;
+					contenido_disco.num_segmento = segmento->numeroSegmento;
+					contenido_disco.num_pag = pagina->numeroPagina;
+					contenido_disco.codigo = malloc(tamanio); //TODO liberar esta memoria en algun momento
+					contenido_disco.tamanio_buffer = tamanio;
+					memcpy(contenido_disco.codigo, bytes_escribir, tamanio);
+
+					swap_out(contenido_disco);
+
 					uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 					if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
 						t_pagina *paginaACargar = malloc(sizeof(t_pagina));
 						*paginaACargar= swap_in(PID, direccion.segmento, direccion.pagina);
-						printf("abri el archivo pedido"); //DEBUG
+						printf("abri el archivo pedido\n"); //DEBUG
 						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,paginaACargar->codigo,paginaACargar->tamanio_buffer);
 						pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 						pagina->swap=0;
@@ -306,6 +314,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 						tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
 						return 0;
 					} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
+						printf("tendria que hacer algoritmo\n");
 						return 0;
 					}
 				}

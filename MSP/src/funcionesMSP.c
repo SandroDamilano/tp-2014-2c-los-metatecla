@@ -122,7 +122,6 @@ t_marco *crearTablaDeMarcos(){
 		nuevaTabla[i].bitAlgoritmo=0;
 	}
 return nuevaTabla;
-free(nuevaTabla);
 }
 
 uint32_t buscarMarcoLibre(t_marco *unaTabla){//Devuelve -1 en caso no encontrar un marco vacio
@@ -179,6 +178,7 @@ void swap_out(t_pagina pagina){
 	//Pongo la informacion necesaria en el archivo
 	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
 
+
 	/*pthread_mutex_lock(&mutex_log);
 	log_debug(logger,"Creado el archivo %s",file_name);
 	pthread_mutex_unlock(&mutex_log);*/
@@ -191,7 +191,6 @@ void swap_out(t_pagina pagina){
 }
 
 t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros el segmento y la pagina. En un futuro, si quieren, pasan la direccion y la traducen adentro de la funcion
-
 	//struct dirent *dirent;
 	DIR* dir;
 	t_pagina pag;
@@ -207,6 +206,10 @@ t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros 
 	}
 
 	pag = buscar_archivo(pid, seg, pagina, dir);
+
+	if(pag.PID == -1){
+		printf("no se encontro archivo\n");
+	}
 
 	long int tamanio_archivo = calcular_tamanio_archivo(pag.archivo);
 
@@ -225,7 +228,7 @@ t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros 
 
 	fclose(pag.archivo);
 
-	destruir_archivo(pag.nombre_archivo);
+	//destruir_archivo(pag.nombre_archivo);
 	free(code);
 	closedir(dir);
 	return pag;
@@ -337,16 +340,18 @@ t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
 void guardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
 
 	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+256)){ // Se fija que no se quiera escribir fuera de los limites del marco
-			memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);}
+			memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);
+	}
 	else {
 			segmentation_fault();
 	}
 }
 
 char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t tamanio){
-	char* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
+	void* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
 	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+256)){
-	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio);} else {
+	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio+1);
+	} else {
 		segmentation_fault();}
 	return buffer;
 }
@@ -495,6 +500,7 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 				printf("Ingrese un texto:\n");
 				char texto[256]; //CAPAZ DEBERIA SER CHAR[ALGUN TAMANIO MAX]
 				scanf("%s", texto);
+				printf("Se ingreso %s\n", texto);
 				escribirMemoria(PID, direcVir, texto, tamanio_escritura);
 				indicaciones_consola();
 
