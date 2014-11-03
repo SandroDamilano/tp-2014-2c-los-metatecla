@@ -731,10 +731,17 @@ void ejecutarLinea(int* bytecode){
 
 		list_clean(parametros);
 		break;
-	case XXXX://FIXME: COMO MANEJO LO DE ENVIAR TCB TERMINADO Y PEDIR OTRO?
+	case XXXX://PIDO OTRO Y LO RECIBO EN EL WHILE
 		ejecucion_instruccion("XXXX",parametros);
 
 		copiar_registros_a_tcb();
+		copiar_tcb_a_structTcb(tcb, tcb_enviar);
+		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
+		controlar_envio(resultado, D_STRUCT_TCB);
+
+		fin_ejecucion();
+
+		terminoEjecucion = true;
 
 		list_clean(parametros);
 		break;

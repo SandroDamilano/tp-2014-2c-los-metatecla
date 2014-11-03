@@ -22,6 +22,7 @@ extern t_config_cpu config_struct_cpu;
 extern int sock_kernel;
 extern int sock_msp;
 extern t_hilo* tcb;
+bool terminoEjecucion;
 
 void leer_configuracion();
 void inicializar_configuracion();

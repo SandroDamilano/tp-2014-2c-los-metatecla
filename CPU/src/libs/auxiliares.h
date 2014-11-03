@@ -32,6 +32,7 @@ int cantidad_lineas_ejecutadas;
 t_config_cpu config_struct_cpu;
 int sockMSP;
 int sockKernel;
+extern bool terminoEjecucion;
 
 void obtener_direccion(char* parametros, int posicion, uint32_t* direccion, char* aux);
 void obtener_numero(char* parametros, int posicion,int32_t* numero, char* aux);
