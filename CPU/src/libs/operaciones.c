@@ -8,14 +8,21 @@
 #include "operaciones.h"
 #include <estructuras_auxiliares.h>
 
+int sockMSP = 3; //HARDCODEADO
+int sockKernel;
+
 void ejecutarLinea(int* bytecode){
+
+	printf("entre a ejecutar\n");
+
 	int bytecodeLetras = convertirAString(bytecode);
 	t_list* parametros = list_create();
 	char* aux;
 	char* param;
 	aux = malloc(sizeof(uint32_t));
 	param = malloc(sizeof(int32_t)+2*sizeof(char)); //El maximo de parametros que me puede llegar es un numero y dos registros
-	char reg1, reg2;
+	char reg1;
+	char reg2;
 	int32_t numero;
 	uint32_t direccion;
 	uint32_t direccionMSP;
@@ -29,13 +36,13 @@ void ejecutarLinea(int* bytecode){
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
 
-	incrementar_pc(4); //corro el PC 4 lugares por el bytecode
-
 	//socket a MSP pidiendo parametros
 	//socket de MSP recibiendolos
 
 	switch(bytecodeLetras){
 	case LOAD:
+
+		printf("entre al LOAD\nnumero de socket de MSP es %d\n", sockMSP);
 
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
@@ -160,6 +167,7 @@ void ejecutarLinea(int* bytecode){
 		list_clean(parametros);
 		break;
 	case ADDR:
+		printf("entre al ADDR\n");
 
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
@@ -222,7 +230,7 @@ void ejecutarLinea(int* bytecode){
 		list_clean(parametros);
 		break;
 	case MULR:
-
+		printf("entre al MULR\n");
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
@@ -245,6 +253,8 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros, &reg2);
 
 		ejecucion_instruccion("MULR",parametros);
+
+		printf("reg1 %c y reg2 %c\n", reg1, reg2);
 
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] * registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
@@ -734,6 +744,8 @@ void ejecutarLinea(int* bytecode){
 	case XXXX://PIDO OTRO Y LO RECIBO EN EL WHILE
 		ejecucion_instruccion("XXXX",parametros);
 
+		printf("A TERMINO CON %d\n", registros_cpu.registros_programacion[0]);
+
 		copiar_registros_a_tcb();
 		copiar_tcb_a_structTcb(tcb, tcb_enviar);
 		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
@@ -923,12 +935,15 @@ void ejecutarLinea(int* bytecode){
 		break;
 	}
 
+	printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
+	printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
+
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
 	free(id_semaforo);
 	free(tcb_enviar);
-	free(((t_struct_respuesta_msp*) structRecibido)->buffer);
-	free(structRecibido); //FIXME En las operaciones que no reciben parametros, va a fallar
-	free(datos_recibidos);
+	//free(((t_struct_respuesta_msp*) structRecibido)->buffer);
+	//free(structRecibido); //FIXME En las operaciones que no reciben parametros, va a fallar
+	//free(datos_recibidos);
 	free(datos_solicitados);
 	free(datos_enviados);
 	free(aux);

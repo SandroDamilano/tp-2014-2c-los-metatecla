@@ -19,8 +19,8 @@ extern int quantum;
 extern t_log* log_cpu;
 extern t_config* config_cpu;
 extern t_config_cpu config_struct_cpu;
-extern int sock_kernel;
-extern int sock_msp;
+extern int sockKernel;
+extern int sockMsp;
 extern t_hilo* tcb;
 bool terminoEjecucion;
 

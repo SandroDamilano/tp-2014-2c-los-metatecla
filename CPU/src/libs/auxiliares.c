@@ -7,6 +7,9 @@
 
 #include "auxiliares.h"
 
+int sockMSP;
+int sockKernel;
+
 void copiar_tcb_a_registros(){
 	registros_cpu.I = tcb->pid;
 	registros_cpu.K = tcb->kernel_mode;
@@ -104,7 +107,7 @@ void abortar(){
 void controlar_struct_recibido(int struct_recibido, int struct_posta){
 
 	if(struct_recibido == struct_posta){
-		printf("Se recibio correctamente el mensaje %d\n", struct_posta);
+		//printf("Se recibio correctamente el mensaje %d\n", struct_posta);
 	} else{
 		if(struct_recibido == D_STRUCT_SEG_FAULT){
 		printf("Hubo un segmentation fault\n");
@@ -119,7 +122,7 @@ void controlar_struct_recibido(int struct_recibido, int struct_posta){
 
 void controlar_envio(int resultado, int tipo){
 	if(resultado == 1){
-		printf("Se envio correctamente el mensaje de tipo %d\n", tipo);
+		//printf("Se envio correctamente el mensaje de tipo %d\n", tipo);
 	}
 }
 

@@ -41,13 +41,34 @@ int main(int argc, char *argv[]) {
 	memoriaSwapActual = cant_mem_swap;
 	listaProcesos = list_create();
 
+	/*********************************************************/
+	crearSegmento(0, 98);
+
+	FILE* beso = fopen("/home/utnso/out.bc", "r");
+
+				fseek(beso, 0L, SEEK_END); //Averiguo tamaño del archivo
+				long tamanio_archivo = ftell(beso);
+				fseek(beso, 0L, SEEK_SET);
+
+				char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
+
+				while(!feof(beso)){
+				fread(buffer, 1, sizeof(buffer), beso);
+				}
+
+				buffer[tamanio_archivo]= '\0';
+
+	escribirMemoria(0,0,buffer, 98);
+
+	/*********************************************************/
+
 	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
 	//4. Abrir conexiones con Kernel y CPU, y levantar Consola MSP
 
 	//Se crea el hilo para la consola
 		pthread_create(&consola, NULL, inciarConsola, NULL); //TODO pasar info de la memoria a la consola (4 parametro diferente a null)
 
-		/*//Se crea socket servidor de la MSP
+		//Se crea socket servidor de la MSP
 
 		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
@@ -62,7 +83,7 @@ int main(int argc, char *argv[]) {
 
 		t_info_mem *informacion_memoria= malloc(sizeof(t_info_mem)); //Informacion de memoria que va a utilizar el hilo
 		(*informacion_memoria).algoritmo_sust=alg_sustitucion;
-		(*informacion_memoria).lista_marcos=lista_marcos;
+		(*informacion_memoria).lista_marcos=tabla_marcos;
 		(*informacion_memoria).tamanio_mem_ppal=tamanio_mem_ppal;
 		(*informacion_memoria).tamanio_swap=cant_mem_swap;
 		(*informacion_memoria).memoriaPpalActual=memoriaPpalActual;
@@ -75,9 +96,9 @@ int main(int argc, char *argv[]) {
 
 		*nuevoSocket=socket_aceptarCliente(socketServidorMSP);
 
-		pthread_create(hiloDeConexion,NULL,inciarConsola,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
+		pthread_create(hiloDeConexion,NULL,(void*)&handler_cpu,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}*/
+	}
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);

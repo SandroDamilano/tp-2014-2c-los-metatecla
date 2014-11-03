@@ -69,14 +69,14 @@ typedef struct marco{
 typedef struct info_memoria{
 	uint32_t tamanio_mem_ppal;
 	uint32_t tamanio_swap;
-	t_list *lista_marcos;
+	t_marco *lista_marcos;
 	char *algoritmo_sust;
 	uint32_t memoriaSwapActual;
 	uint32_t memoriaPpalActual;
 } t_info_mem;
 
 typedef struct conexion_entrante{
-	uint32_t *socket;
+	int32_t *socket;
 	t_info_mem *informacion_memoria;
 	pthread_t *hiloDeConexion;
 	//TODO Archivo de logeo
@@ -112,7 +112,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direccion_log, uint32_t tamanio_m
 int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 
 ///////////CONEXIONES//////////
-void handler_cpu(int sock);
+void handler_cpu(t_conexion_entrante* conexion);
 
 ///////////Auxiliares//////////
 

@@ -12,6 +12,8 @@
 #include <sockets/enviar_recibir_paquete.h>
 
 int* param;
+//int sockMSP;
+//int sockKernel;
 
 void ejecutarLinea(int codigo[]);
 int convertirAString(int* bytecode);

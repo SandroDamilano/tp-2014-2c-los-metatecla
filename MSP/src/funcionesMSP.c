@@ -358,8 +358,10 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 
  /*********************************************** CONEXIONES ********************************************************/
 
- void handler_cpu(int sock){
+ void handler_cpu(t_conexion_entrante* conexion){
 	 	//pthread_detach(pthread_self());
+
+	 	int sock = *conexion->socket;
 
 	 	t_tipoEstructura tipoRecibido;
 	 	void* structRecibido;
@@ -381,10 +383,15 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
-	 				buffer->buffer= solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
-	 				buffer->tamano_buffer = sizeof(buffer->buffer); //FIXME: es con sizeof?
-	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, &buffer);
+	 				printf("pido PID %d, base %d y tamanio %d\n", solicitud->PID, solicitud->base, solicitud->tamanio);
+	 				//buffer->buffer = malloc(solicitud->tamanio);
+	 				//memcpy(buffer->buffer,solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio), solicitud->tamanio);
+	 				buffer->buffer = solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
+	 				buffer->tamano_buffer = solicitud->tamanio;
+	 				printf("a enviar buffer %s, de tamanio %d\n",(char*) buffer->buffer, buffer->tamano_buffer);
+	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, buffer);
 
+	 				free(buffer->buffer);
 	 				free(buffer);
 	 				free(structRecibido);
 	 				break;
@@ -400,7 +407,7 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 	 				resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
 	 				respuesta = malloc(sizeof(t_struct_numero));
 	 				respuesta->numero = resultado;
-	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
+	 				socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
 
 	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo si se pudo enviar correctamente
