@@ -24,6 +24,40 @@ t_tipoEstructura tipo_struct;
 void* datos_recibidos;
 int resultado;
 
+void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]) {
+	//socket a MSP con PC
+	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
+	uint32_t direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
+	datos_solicitados->base = direccionMSP;
+	datos_solicitados->PID = tcb->pid;
+	datos_solicitados->tamanio = 4; //tamaño bytecode
+	int resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+	controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+	socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+	controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+	memcpy(bytecode, ((t_struct_respuesta_msp*) structRecibido)->buffer, ((t_struct_respuesta_msp*) structRecibido)->tamano_buffer);
+	incrementar_pc(4);
+	free(datos_solicitados);
+	ejecutarLinea(bytecode);
+}
+
+t_struct_numero* terminar_y_pedir_tcb(t_hilo* tcb) {
+	//socket a Kernel pidiendo tcb
+	t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
+	int resultado = socket_enviar(sockKernel, D_STRUCT_PEDIR_TCB, pedir_tcb);
+	if (resultado != 1) {
+		printf("No se pudo pedir TCB\n");
+	}
+	//socket de Kernel con tcb
+	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+	copiar_structRecibido_a_tcb(tcb, structRecibido);
+	cantidad_lineas_ejecutadas = 0;
+	terminoEjecucion = false;
+	free(pedir_tcb);
+	comienzo_ejecucion(tcb, quantum);
+	return pedir_tcb;
+}
+
 int main(int argc, char** argv) {
 
 	PATH = argv[1];
@@ -33,8 +67,6 @@ int main(int argc, char** argv) {
 
 	//Abrir conexion de sockets con Kernel y MSP.
 	//int sockKernel = socket_crearYConectarCliente(config_struct_cpu.ip_kernel, config_struct_cpu.puerto_kernel);
-
-	printf("me voy a conectar a msp\n");
 
 	int sockMSP = socket_crearYConectarCliente(config_struct_cpu.ip_msp, config_struct_cpu.puerto_msp);
 
@@ -82,9 +114,6 @@ int main(int argc, char** argv) {
 
 	int bytecode[4];// = malloc(sizeof(uint32_t));
 
-	uint32_t direccionMSP;
-	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
-
 	cantidad_lineas_ejecutadas = 0;
 	copiar_tcb_a_registros();
 	comienzo_ejecucion(tcb,quantum);
@@ -94,22 +123,8 @@ int main(int argc, char** argv) {
 	if(registros_cpu.K == false){ //SI NO ES MODO KERNEL
 
 		if(terminoEjecucion == true){
-			//socket a Kernel pidiendo tcb
-			t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
-			int resultado = socket_enviar(sockKernel, D_STRUCT_PEDIR_TCB, pedir_tcb);
-			if(resultado != 1){
-				printf("No se pudo pedir TCB\n");
-			}
 
-			//socket de Kernel con tcb
-			socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-			copiar_structRecibido_a_tcb(tcb, structRecibido);
-
-			cantidad_lineas_ejecutadas = 0;
-
-			terminoEjecucion = false;
-
-			comienzo_ejecucion(tcb,quantum);
+			terminar_y_pedir_tcb(tcb);
 
 		} else {
 			if(cantidad_lineas_ejecutadas == quantum){
@@ -118,50 +133,15 @@ int main(int argc, char** argv) {
 				copiar_registros_a_tcb();
 				t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
 				copiar_tcb_a_structTcb(tcb, tcb_enviar);
-				resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
-				controlar_envio(resultado, D_STRUCT_TCB);
+				resultado = socket_enviar(sockKernel, D_STRUCT_TCB_QUANTUM, tcb_enviar);
+				controlar_envio(resultado, D_STRUCT_TCB_QUANTUM);
 
 				fin_ejecucion();
 
-				//socket a Kernel pidiendo tcb
-				t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
-				int resultado = socket_enviar(sockKernel, D_STRUCT_PEDIR_TCB, pedir_tcb);
-				if(resultado != 1){
-					printf("No se pudo pedir TCB\n");
-				}
-
-				//socket de Kernel con tcb
-				socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-				copiar_structRecibido_a_tcb(tcb, structRecibido);
-
-				cantidad_lineas_ejecutadas = 0;
-
-				copiar_tcb_a_registros();
-				comienzo_ejecucion(tcb,quantum);
+				terminar_y_pedir_tcb(tcb);
 
 			} else{
-				//socket a MSP con PC
-				direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
-				datos_solicitados->base = direccionMSP;
-				datos_solicitados->PID = tcb->pid;
-				datos_solicitados->tamanio = 4; //tamaño bytecode
-
-				resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
-				controlar_envio(resultado, D_STRUCT_SOL_BYTES);
-
-				//socket de MSP con bytecode
-
-				socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-				controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
-
-				datos_recibidos = malloc(sizeof(int32_t)); //numero
-				datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
-
-				obtener_num(datos_recibidos,0,bytecode);
-
-				free(datos_recibidos);
-				ejecutarLinea(bytecode);
 				cantidad_lineas_ejecutadas++;
 			}
 		}
@@ -169,53 +149,15 @@ int main(int argc, char** argv) {
 
 	if(registros_cpu.K == true){ //SI ES MODO KERNEL
 		if(terminoEjecucion == true){
-			//socket a Kernel pidiendo tcb
-			t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
-			int resultado = socket_enviar(sockKernel, D_STRUCT_PEDIR_TCB, pedir_tcb);
-			if(resultado != 1){
-				printf("No se pudo pedir TCB\n");
-			}
-
-			//socket de Kernel con tcb
-			socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-			copiar_structRecibido_a_tcb(tcb, structRecibido);
-
-			cantidad_lineas_ejecutadas = 0;
-
-			terminoEjecucion = false;
-
-			comienzo_ejecucion(tcb,quantum);
+			terminar_y_pedir_tcb(tcb);
 		} else{
-			//socket a MSP con PC
-			direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
-
-			datos_solicitados->base = direccionMSP;
-			datos_solicitados->PID = tcb->pid;
-			datos_solicitados->tamanio = 4; //tamaño bytecode
-
-			resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
-			controlar_envio(resultado, D_STRUCT_SOL_BYTES);
-
-			//socket de MSP con bytecode
-
-			socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-			controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
-
-			//printf("recibi %s de tam %d\n", ((t_struct_respuesta_msp*) structRecibido)->buffer, ((t_struct_respuesta_msp*) structRecibido)->tamano_buffer);
-			memcpy(bytecode,((t_struct_respuesta_msp*) structRecibido)->buffer, ((t_struct_respuesta_msp *) structRecibido)->tamano_buffer);
-			printf("bytecode %s\n", bytecode);
-			incrementar_pc(4);
-			ejecutarLinea(bytecode);
+			ejecutar_otra_linea(sockMSP,tcb,bytecode);
 			}
 		}
 
 	esperar_retardo();
 
 	}
-
-	//free(bytecode);
-	free(datos_solicitados);
-	//free(pedir_tcb);
 
 	return EXIT_SUCCESS;
 }

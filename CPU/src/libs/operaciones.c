@@ -13,14 +13,10 @@ int sockKernel;
 
 void ejecutarLinea(int* bytecode){
 
-	printf("entre a ejecutar\n");
-
 	int bytecodeLetras = convertirAString(bytecode);
 	t_list* parametros = list_create();
 	char* aux;
-	char* param;
 	aux = malloc(sizeof(uint32_t));
-	param = malloc(sizeof(int32_t)+2*sizeof(char)); //El maximo de parametros que me puede llegar es un numero y dos registros
 	char reg1;
 	char reg2;
 	int32_t numero;
@@ -36,13 +32,9 @@ void ejecutarLinea(int* bytecode){
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
 
-	//socket a MSP pidiendo parametros
-	//socket de MSP recibiendolos
 
 	switch(bytecodeLetras){
 	case LOAD:
-
-		printf("entre al LOAD\nnumero de socket de MSP es %d\n", sockMSP);
 
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
@@ -89,8 +81,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -120,9 +112,9 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(int32_t) + 2*sizeof(char)); //numero + registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_numero(param,0,&numero,aux);
-		obtener_registro(param,4,&reg1);
-		obtener_registro(param,5,&reg2);
+		obtener_numero(datos_recibidos,0,&numero,aux);
+		obtener_registro(datos_recibidos,4,&reg1);
+		obtener_registro(datos_recibidos,5,&reg2);
 		list_add(parametros,&numero);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
@@ -153,8 +145,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -167,7 +159,6 @@ void ejecutarLinea(int* bytecode){
 		list_clean(parametros);
 		break;
 	case ADDR:
-		printf("entre al ADDR\n");
 
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
@@ -185,8 +176,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -216,8 +207,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -230,7 +221,7 @@ void ejecutarLinea(int* bytecode){
 		list_clean(parametros);
 		break;
 	case MULR:
-		printf("entre al MULR\n");
+
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
@@ -247,16 +238,14 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		ejecucion_instruccion("MULR",parametros);
 
-		printf("reg1 %c y reg2 %c\n", reg1, reg2);
-
-		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] * registros_cpu.registros_programacion[elegirRegistro(reg2)];
+		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] * registros_cpu.registros_programacion[elegirRegistro(reg2)]);
 
 		incrementar_pc(sizeof(char)*2);
 
@@ -280,8 +269,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -311,8 +300,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
@@ -347,7 +336,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
+		obtener_registro(datos_recibidos,0,&reg1);
 		list_add(parametros,&reg1);
 		ejecucion_instruccion("INCR",parametros);
 
@@ -375,7 +364,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
+		obtener_registro(datos_recibidos,0,&reg1);
 		list_add(parametros,&reg1);
 		ejecucion_instruccion("DECR",parametros);
 
@@ -403,8 +392,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 		ejecucion_instruccion("COMP",parametros);
@@ -433,8 +422,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 		ejecucion_instruccion("CGEQ",parametros);
@@ -463,8 +452,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
-		obtener_registro(param,1,&reg2);
+		obtener_registro(datos_recibidos,0,&reg1);
+		obtener_registro(datos_recibidos,1,&reg2);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 		ejecucion_instruccion("CLEQ",parametros);
@@ -493,7 +482,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_registro(param,0,&reg1);
+		obtener_registro(datos_recibidos,0,&reg1);
 		list_add(parametros,&reg1);
 		ejecucion_instruccion("GOTO",parametros);
 
@@ -519,7 +508,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_direccion(param,0,&direccion,aux);
+		obtener_direccion(datos_recibidos,0,&direccion,aux);
 		list_add(parametros,&direccion);
 		ejecucion_instruccion("JMPZ",parametros);
 
@@ -547,7 +536,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_direccion(param,0,&direccion,aux);
+		obtener_direccion(datos_recibidos,0,&direccion,aux);
 		list_add(parametros,&direccion);
 		ejecucion_instruccion("JPNZ",parametros);
 
@@ -575,7 +564,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_direccion(param,0,&direccion,aux);
+		obtener_direccion(datos_recibidos,0,&direccion,aux);
 		list_add(parametros,&direccion);
 		ejecucion_instruccion("INTE",parametros);
 
@@ -619,8 +608,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 
-		obtener_numero(param,0,&numero,aux);
-		obtener_registro(param,4,&reg1);
+		obtener_numero(datos_recibidos,0,&numero,aux);
+		obtener_registro(datos_recibidos,4,&reg1);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 		ejecucion_instruccion("SHIF",parametros);
@@ -660,8 +649,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_numero(param,0,&numero,aux);
-		obtener_registro(param,4,&reg1);
+		obtener_numero(datos_recibidos,0,&numero,aux);
+		obtener_registro(datos_recibidos,4,&reg1);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 		ejecucion_instruccion("PUSH",parametros);
@@ -708,8 +697,8 @@ void ejecutarLinea(int* bytecode){
 		free(datos_recibidos);
 		free(structRecibido);
 
-		obtener_numero(param,0,&numero,aux);
-		obtener_registro(param,4,&reg1);
+		obtener_numero(datos_recibidos,0,&numero,aux);
+		obtener_registro(datos_recibidos,4,&reg1);
 		list_add(parametros,&numero);
 		list_add(parametros, &reg1);
 		ejecucion_instruccion("TAKE",parametros);
@@ -732,7 +721,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(sizeof(int32_t)); //numero
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_numero(param,0,&numero,aux);
+		obtener_numero(datos_recibidos,0,&numero,aux);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = numero;
 
@@ -947,6 +936,6 @@ void ejecutarLinea(int* bytecode){
 	free(datos_solicitados);
 	free(datos_enviados);
 	free(aux);
-	free(param);
+	free(datos_recibidos);
 }
 
