@@ -86,7 +86,10 @@ void escribir_consola(uint32_t pid, char* mensaje){
 	t_data_nodo_consolas* data = list_find(consolas, (void*)es_el_pid_consola);
 	pthread_mutex_unlock(&mutex_consolas);
 	int socket = data->socket;
-	//TODO Mandarle a la consola el mensaje para que escriba
+	t_struct_string* impresion = malloc(sizeof(t_struct_string));
+	impresion->string = mensaje;
+	socket_enviar(socket, ENVIAR_IMPRIMIR_TEXTO, impresion);
+	free(impresion);
 }
 
 void terminar_proceso(t_hilo* tcb){
@@ -103,7 +106,17 @@ void terminar_hilo(t_hilo* tcb){
 }
 
 void liberar_memoria(t_hilo* tcb){
-	//TODO pedirle a la MSP que elimine los segmentos
+	//Libero segmento de codigo
+	t_struct_free* free_segmento = malloc(sizeof(t_struct_free));
+	free_segmento->PID = tcb->pid;
+	free_segmento->direccion_base = tcb->segmento_codigo;
+
+	socket_enviar(sockMSP, D_STRUCT_FREE, free_segmento);
+
+	//Libero segmento de stack
+	free_segmento->direccion_base = tcb->base_stack;
+	socket_enviar(sockMSP, D_STRUCT_FREE, free_segmento);
+
 	free(tcb);
 }
 
@@ -387,7 +400,7 @@ void boot(char* systcalls_path){
 	free(datos_recibidos);
 
 	//Crea hilo en modo kernel y lo encola en bloqueados
-	t_hilo *tcb_kernel = crear_TCB(obtener_pid(), dir_codigo, dir_stack, tamanio_codigo);
+	t_hilo *tcb_kernel = crear_TCB(0, dir_codigo, dir_stack, tamanio_codigo);
 	tcb_kernel->kernel_mode = true;
 	bloquear_tcbKernel(tcb_kernel);
 }
@@ -413,7 +426,7 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 		tcb_kernel->puntero_instruccion = dir_systcall;
 		encolar_en_ready(tcb_kernel);
 	}
-	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
+	//Avisarle a la cpu que pida otro proceso para ejecutar
 };
 
 bool esta_por_systcall(t_data_nodo_block* data){
@@ -430,7 +443,7 @@ void retornar_de_systcall(t_hilo* tcb_kernel){
 	bloquear_tcbKernel(tcb_kernel);
 	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall(tcb_kernel);
 
-	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
+	//Avisarle a la cpu que pida otro proceso para ejecutar
 
 	if (data_otro_tcb != NULL){
 		atender_systcall(data_otro_tcb->tcb, data_otro_tcb->parametro);
@@ -519,11 +532,10 @@ void handler_cpu(int sockCPU){
 
 		break;
 	case D_STRUCT_JOIN:
-		// TODO verificar si no es mejor que llegue el tcb directamente en lugar de su TID
 		tid_llamador = ((t_struct_join*) structRecibido)->tid_llamador;
 		tid_a_esperar = ((t_struct_join*) structRecibido)->tid_a_esperar;
 
-		tcb = obtener_tcb_de_cpu(sockCPU);
+		tcb = desbloquear_tcbSystcall(tid_llamador);
 		bloquear_tcbJoin(tcb, tid_a_esperar);
 
 		break;
@@ -566,5 +578,6 @@ void handler_cpu(int sockCPU){
 		//TODO Mandar esa cadena a consola para ser mostrada
 		break;
 	}
+	free(structRecibido);
 }
 
