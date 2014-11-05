@@ -51,15 +51,15 @@ int main(int argc, char **argv){
 	inicializar_colas_new_exit();
 
 	// 6- Levantar HILOS
-		//6.1- Levantar Hilo KERNEL
-/*	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&main_KERNEL, &param_KERNEL))) //TODO: definir main_KERNEL
+		//6.1- Levantar Hilo HANDSHAKE
+	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&handshake_thread, NULL)))
 	{
-		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d\n", ret_KERNEL);
-		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo KERNEL: %d", ret_KERNEL);
+		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo HANDSHAKE: %d\n", ret_KERNEL);
+		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo HANDSHAKE: %d", ret_KERNEL);
 		log_error(logger, bufferLog);
 		exit(EXIT_FAILURE);
 	}
-*/
+
 		//6.2- Levantar Hilo LOADER
 /*	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
 	{
@@ -101,9 +101,9 @@ void leer_config()
 	//PUERTO de escucha KERNEL
 	if(config_has_property(config_file, "PUERTO"))
 	{
-		puerto_kernel = config_get_string_value(config_file, "PUERTO");
+		puerto_kernel = config_get_int_value(config_file, "PUERTO");
 
-		sprintf(bufferLog, "PUERTO = [%s]", puerto_kernel);
+		sprintf(bufferLog, "PUERTO = [%d]", puerto_kernel);
 		log_debug(logger, bufferLog);
 	} else {
 		fprintf(stderr, "Falta key 'PUERTO' en archivo de configuracion.\n");
@@ -129,9 +129,9 @@ void leer_config()
 	//PUERTO_MSP
 	if(config_has_property(config_file, "PUERTO_MSP"))
 	{
-		puerto_msp = config_get_string_value(config_file, "PUERTO_MSP");
+		puerto_msp = config_get_int_value(config_file, "PUERTO_MSP");
 
-		sprintf(bufferLog, "PUERTO_MSP = [%s]", puerto_msp);
+		sprintf(bufferLog, "PUERTO_MSP = [%d]", puerto_msp);
 		log_debug(logger, bufferLog);
 	} else {
 		fprintf(stderr, "Falta key 'PUERTO_MSP' en archivo de configuracion.\n");
@@ -200,9 +200,15 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 	arg->logger = logger;
 }
 
+int crear_cliente_MSP(char* ip, uint32_t puerto){
+	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%d]\n", ip, puerto);
+	sockfd_cte = socket_crearServidor(ip, puerto);
+	return sockfd_cte;
+}
+/*
 int crear_cliente_MSP(const char *ip, const char* puerto)
 {
-	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%s]\n", ip, puerto);
+	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%d]\n", ip, puerto);
 
 	memset(&hints_clt, 0, sizeof hints_clt);
 	hints_clt.ai_family = AF_INET;
@@ -236,6 +242,7 @@ int crear_cliente_MSP(const char *ip, const char* puerto)
 
 	return 0;
 }
+*/
 
 int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
 {
@@ -261,7 +268,7 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
 	return res;
 }
 
-void conectar_a_MSP(char *ip, char *puerto)
+void conectar_a_MSP(char *ip, uint32_t puerto)
 {
 	t_tipoEstructura operacion;
 
@@ -270,7 +277,7 @@ void conectar_a_MSP(char *ip, char *puerto)
 		bufferMSP = NULL;
 	}
 
-	if(crear_cliente_MSP(ip, puerto) != 0)	{
+	if(crear_cliente_MSP(ip, puerto) == -1)	{// antes: != 0
 		perror("[Kernel]: No se puede conectar a la MSP. Abortando.");
 		exit(1);
 	}
@@ -286,4 +293,15 @@ void conectar_a_MSP(char *ip, char *puerto)
 
 	printf("[Kernel]: Conexion a MSP establecida.\n");
 	log_info(logger, "Conexion a MSP establecida.");
+}
+
+void handshake_thread(){
+
+	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
+
+	while(1){
+		int socket_atendido = socket_aceptarCliente(socket_escucha);
+		//TODO Hacer el handshake
+	}
+
 }

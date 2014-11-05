@@ -29,7 +29,8 @@
 	//TODO Inicializar cantidad de PIDs y TIDs
 	extern int cantidad_de_PIDs;
 	extern int cantidad_de_TIDs;
-	//TODO Poner el mismo nombre en todos lados (me gusta más sockMSP)
+
+	//Socket de la MSP
 	extern int sockfd_cte;
 
 	typedef struct data_nodo_consolas {

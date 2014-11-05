@@ -34,7 +34,8 @@
 
 	// Vars de config
 	uint32_t quantum, tamanio_stack;
-	char* puerto_kernel, *ip_msp, *puerto_msp, *syscalls_path;
+	char *ip_msp, *syscalls_path;
+	uint32_t puerto_kernel, puerto_msp;
 
 	char bufferLog[80];
 	char* bufferMSP = NULL;
@@ -49,6 +50,6 @@
 	void leer_config();				// Lee configuracion y asigna a variables.
 	void cargar_arg_LOADER();		// Carga estructura para mandar a hilo LOADER
 	void cargar_arg_PLANIFICADOR();	// Carga estructura para mandar a hilo PLANIFICADOR
-	void conectar_a_MSP(char *ip, char* puerto);
+	void conectar_a_MSP(char *ip, uint32_t puerto);
 
 #endif /* MAIN_H_ */
