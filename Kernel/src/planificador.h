@@ -12,7 +12,7 @@
 	#include <commons/log.h>
 	#include "funciones_kernel.h"
 
-	int sockMSP;
+	int sockfd_cte;//sockMSP;
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
 
@@ -22,6 +22,8 @@
 
 	t_list* consolas;
 	pthread_mutex_t mutex_consolas;
+
+	t_list* solicitudes_tcb;
 
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;

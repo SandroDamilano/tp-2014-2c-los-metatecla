@@ -111,11 +111,11 @@ void liberar_memoria(t_hilo* tcb){
 	free_segmento->PID = tcb->pid;
 	free_segmento->direccion_base = tcb->segmento_codigo;
 
-	socket_enviar(sockMSP, D_STRUCT_FREE, free_segmento);
+	socket_enviar(sockfd_cte, D_STRUCT_FREE, free_segmento);
 
 	//Libero segmento de stack
 	free_segmento->direccion_base = tcb->base_stack;
-	socket_enviar(sockMSP, D_STRUCT_FREE, free_segmento);
+	socket_enviar(sockfd_cte, D_STRUCT_FREE, free_segmento);
 
 	free(tcb);
 }
@@ -356,6 +356,7 @@ void inicializar_ready_block(){
 	cola_ready = list_create();
 	cola_block = list_create();
 	cola_exec = list_create();
+	solicitudes_tcb = list_create();
 }
 
 
@@ -366,7 +367,7 @@ void inicializar_semaforos_colas(){
 };
 
 void boot(char* systcalls_path){
-	// TODO usar el mismo socket para la msp del main.c
+	// Usar el mismo socket para la msp del main.c
 	uint32_t dir_codigo;
 	uint32_t dir_stack;
 	int tamanio_codigo;
@@ -380,13 +381,13 @@ void boot(char* systcalls_path){
 	t_struct_string* paquete_syscalls = malloc(sizeof(t_struct_string));
 	paquete_syscalls->string = syscalls_code;
 
-	socket_enviar(sockMSP, D_STRUCT_STRING, paquete_syscalls);
+	socket_enviar(sockfd_cte, D_STRUCT_STRING, paquete_syscalls);//sockMSP
 	free(paquete_syscalls);
 
 	void * structRecibido;
 	t_tipoEstructura tipoStruct;
 
-	socket_recibir(sockMSP, &tipoStruct, &structRecibido);
+	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);//sockMSP
 	if (tipoStruct != D_STRUCT_RESPUESTA_MSP) {
 		printf("No se ha recibido correctamente direccion del codigo y direccion de stack\n");
 	}
@@ -435,11 +436,13 @@ bool esta_por_systcall(t_data_nodo_block* data){
 
 void retornar_de_systcall(t_hilo* tcb_kernel){
 	t_hilo* tcb = desbloquear_tcbSystcall(tcb_kernel->tid);
-	int i;
-	for(i=0; i<=4; i++){
-		tcb->registros[i] = tcb_kernel->registros[i];
+	if (tcb!=NULL){
+		int i;
+		for(i=0; i<=4; i++){
+			tcb->registros[i] = tcb_kernel->registros[i];
+		}
+		encolar_en_ready(tcb);
 	}
-	encolar_en_ready(tcb);
 	bloquear_tcbKernel(tcb_kernel);
 	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall(tcb_kernel);
 
@@ -470,7 +473,20 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		mandar_a_exit(tcb, ABORTAR);
 		break;
 	case D_STRUCT_PEDIR_TCB:
-		//TODO darle otro tcb a cpu, si tiene
+		//darle otro tcb a cpu, si tiene
+		tcb = obtener_tcb_a_ejecutar();
+
+		if (tcb!=NULL){
+			//Había un tcb en ready, entonces se lo mando
+			t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
+			copiar_tcb_a_structTcb(tcb, paquete_tcb);
+			socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
+			free(paquete_tcb);
+		}else{
+			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
+			list_add(solicitudes_tcb, sockCPU);
+		}
+
 		break;
 	case D_STRUCT_TERMINO:
 		//terminar tcb
@@ -506,7 +522,7 @@ void handler_cpu(int sockCPU){
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 
 		if(tipoRecibido == D_STRUCT_TCB){
-			copiar_structRecibido_a_tcb(tcb, structRecibido);
+			copiar_structRecibido_a_tcb(tcb, structRecibido);//Chupala toga
 		} else {
 			printf("No llegó el TCB para la operacion INTE\n");
 		}
@@ -552,7 +568,7 @@ void handler_cpu(int sockCPU){
 			printf("No se recibio el TCB para la operacion BLOCK\n");
 		}
 
-		// TODO revisar si está bien (idem WAKE)
+		// Revisar si está bien (idem WAKE)
 		// bloquear_tcbSemaforo espera un uint32_t en vez de un int32_t
 		bloquear_tcbSemaforo(tcb, id_semaforo);
 
