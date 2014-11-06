@@ -750,7 +750,7 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("MALC",parametros);
 
 		t_struct_numero* crear_segmento_struct = malloc(sizeof(t_struct_numero));
-		crear_segmento_struct->numero = registros_cpu.registros_programacion['A'];
+		crear_segmento_struct->numero = registros_cpu.registros_programacion[0];
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_MALC, crear_segmento_struct);
 		controlar_envio(resultado, D_STRUCT_MALC);
@@ -758,7 +758,7 @@ void ejecutarLinea(int* bytecode){
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		controlar_struct_recibido(tipo_struct, D_STRUCT_DIRECCION);
 
-		registros_cpu.registros_programacion['A'] = ((t_struct_direccion*) structRecibido)->numero;
+		registros_cpu.registros_programacion[0] = ((t_struct_direccion*) structRecibido)->numero;
 
 		free(crear_segmento_struct);
 		list_clean(parametros);
@@ -767,7 +767,7 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("FREE",parametros);
 
 		t_struct_numero* liberar_segmento_struct = malloc(sizeof(t_struct_numero));
-		liberar_segmento_struct->numero = registros_cpu.registros_programacion['A'];
+		liberar_segmento_struct->numero = registros_cpu.registros_programacion[0];
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_FREE, liberar_segmento_struct);
 		controlar_envio(resultado, D_STRUCT_FREE);
@@ -790,7 +790,7 @@ void ejecutarLinea(int* bytecode){
 		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 		controlar_struct_recibido(tipo_struct, D_STRUCT_INNN);
 
-		registros_cpu.registros_programacion['A'] = ((t_struct_numero*) structRecibido)->numero;
+		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
 
 		list_clean(parametros);
 		break;
@@ -799,7 +799,7 @@ void ejecutarLinea(int* bytecode){
 
 		//Mando señal con el numero D_STRUCT_INNC
 		t_struct_numero* INNC = malloc(sizeof(t_struct_numero));
-		INNC->numero = registros_cpu.registros_programacion['B'];
+		INNC->numero = registros_cpu.registros_programacion[1];
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_INNC, INNC);
 		controlar_envio(resultado, D_STRUCT_INNC);
@@ -812,7 +812,7 @@ void ejecutarLinea(int* bytecode){
 		//Envio cadena recibida a memoria
 		char* cadena = ((t_struct_string*) structRecibido)->string;
 
-		datos_enviados->base = registros_cpu.registros_programacion['A'];
+		datos_enviados->base = registros_cpu.registros_programacion[0];
 		datos_enviados->PID = tcb->pid;
 		datos_enviados->buffer = cadena;
 		datos_enviados->tamanio = strlen(cadena);
@@ -826,7 +826,7 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("OUTN",parametros);
 
 		t_struct_numero* OUTN = malloc(sizeof(t_struct_numero));
-		OUTN->numero = registros_cpu.registros_programacion['A'];
+		OUTN->numero = registros_cpu.registros_programacion[0];
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_OUTN, OUTN);
 		controlar_envio(resultado, D_STRUCT_OUTN);
@@ -838,9 +838,9 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("OUTC",parametros);
 
 		//Pido la cadena apuntada por registro A en memoria
-		datos_solicitados->base = registros_cpu.registros_programacion['A'];
+		datos_solicitados->base = registros_cpu.registros_programacion[0];
 		datos_solicitados->PID = tcb->pid;
-		datos_solicitados->tamanio = registros_cpu.registros_programacion['B'];
+		datos_solicitados->tamanio = registros_cpu.registros_programacion[1];
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
@@ -849,7 +849,7 @@ void ejecutarLinea(int* bytecode){
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
 
-		datos_recibidos = malloc(registros_cpu.registros_programacion['B']); //tamaño determinado por reg B
+		datos_recibidos = malloc(registros_cpu.registros_programacion[1]); //tamaño determinado por reg B
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		//Envio cadena a kernel para ser mostrada por consola
@@ -874,7 +874,7 @@ void ejecutarLinea(int* bytecode){
 
 		//Mando PC
 		t_struct_numero* program_counter = malloc(sizeof(t_struct_numero));
-		program_counter->numero = registros_cpu.registros_programacion['B'];
+		program_counter->numero = registros_cpu.registros_programacion[1];
 		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, program_counter);
 		controlar_envio(resultado, D_STRUCT_NUMERO);
 		free(program_counter);
@@ -885,7 +885,7 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("JOIN",parametros);
 
 		t_struct_join* join = malloc(sizeof(t_struct_join));
-		join->tid_a_esperar = registros_cpu.registros_programacion['A'];
+		join->tid_a_esperar = registros_cpu.registros_programacion[0];
 		join->tid_llamador = tcb->tid;
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_JOIN, join);
@@ -898,7 +898,7 @@ void ejecutarLinea(int* bytecode){
 	case BLOK:
 		ejecucion_instruccion("BLOK",parametros);
 
-		id_semaforo->numero = registros_cpu.registros_programacion['B'];
+		id_semaforo->numero = registros_cpu.registros_programacion[1];
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
 		controlar_envio(resultado, D_STRUCT_BLOCK);
@@ -915,7 +915,7 @@ void ejecutarLinea(int* bytecode){
 	case WAKE:
 		ejecucion_instruccion("WAKE",parametros);
 
-		id_semaforo->numero = registros_cpu.registros_programacion['B'];
+		id_semaforo->numero = registros_cpu.registros_programacion[1];
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
 		controlar_envio(resultado, D_STRUCT_BLOCK);
