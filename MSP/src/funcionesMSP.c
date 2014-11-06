@@ -108,7 +108,7 @@ void *reservarBloquePpal(uint32_t tamanioMemoria){
 }
 
 uint32_t calcularMarcos(uint32_t tamanioMemoria){
-	uint32_t cantidadmarcos = (tamanioMemoria)/256;
+	uint32_t cantidadmarcos = (tamanioMemoria*1024)/256;
 	return cantidadmarcos;
 }
 
@@ -156,7 +156,7 @@ void segmentation_fault(){
 }
 /*********************************** FUNCIONES DE SWAP *******************************/
 
-void swap_out(t_pagina pagina){
+void crearArchivoSwapEnDisco(t_pagina pagina){
 	char* file_name = string_new();
 
 	//Concateno el path donde se ubicaran los archivos, con el nombre del archivo en creacion
@@ -190,9 +190,8 @@ void swap_out(t_pagina pagina){
 
 }
 
-t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros el segmento y la pagina. En un futuro, si quieren, pasan la direccion y la traducen adentro de la funcion
-	//struct dirent *dirent;
-	DIR* dir;
+t_pagina extraerInfoDeArchSwap(uint32_t pid, uint32_t seg, uint32_t pagina){ //Abrimos directorio, abrimos archivo, sacamos la info, lo destruimos y la retornamos
+	DIR *dir;
 	t_pagina pag;
 	pag.PID = -1;
 	pag.num_pag = -1;
@@ -204,8 +203,8 @@ t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros 
 	if(dir == NULL){
 		return pag; //Devuelvo t_pagina con valores negativos => Error
 	}
-
-	pag = buscar_archivo(pid, seg, pagina, dir);
+    printf("Abri el directorio, ahora abro archivo\n");
+	pag = abrir_archivo_en_direcctorio(pid, seg, pagina);
 
 	if(pag.PID == -1){
 		printf("no se encontro archivo\n");
@@ -228,12 +227,24 @@ t_pagina swap_in(int pid, int seg, int pagina){ //FIXME le paso como parametros 
 
 	fclose(pag.archivo);
 
-	//destruir_archivo(pag.nombre_archivo);
+	destruir_archivo(pag.nombre_archivo);
 	free(code);
 	closedir(dir);
 	return pag;
 }
-//FIXME juli esta funcion hay que cambiarla, no hace lo que necesitamos, te lo tenemos que explicar por skype si queres. Cuando puedas hablamos
+
+/*FIXME Juli necesitamos que extraerinfodearchswap haga lo siguiente:
+1- Abra el directorio
+2- Abre el archivo ( NO LO TIENE QUE BUSCAR por que SIEMPRE va a existir y si no existe la funcion fopen en w+ lo crea)
+3- Saca la informacion del archivo (si lo acaba de crear va a estar vacio)
+4- Carga la info en el t_pagina y la retorna
+
+Ponemos por que vos agregaste el swap_out en escribir y esto no tendria ser necesario ya que si esta funcion hace lo que pusimos no es necesario que se cree el archivo antes de abrirse
+Nosotros tratamos de arreglar pero cuando lo corremos la consola se queda haciendo "nada" no tira error ni nada, no sabemos que puede ser, capaz vos te das cuenta.
+Fijate que agregamos un par de prints y el error esta en abrir_archivo_en_direcctorio no sale de ahi
+*/
+
+
 /**************** AUXILIARES DE SWAPPING *****************/
 
 void destruir_archivo(char* nombre_archivo) {
@@ -286,54 +297,29 @@ DIR* abrir_directorio_swap(){
 	return dir;
 }
 
-t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir){
-	struct dirent* dirent;
+t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 	t_pagina pag;
-	pag.PID = -1;
-	pag.num_pag = -1;
-	pag.num_segmento = -1;
-	pag.codigo = NULL;
-	pag.nombre_archivo = NULL;
+	char* file_name = string_new();
 
-	while((dirent = readdir(dir)) != NULL){ //mientras que el directorio tenga archivos para buscar
-	char** partes_nombre_archivo = string_split(dirent->d_name, "-"); //agarro el nombre del archivo y divido por cada "-" que tiene el nombre
-																		//ejemplo: pid:3-pag:5-seg:6 => [pid:3, pag:5, seg:6]
-	int i = 0;
-	while(partes_nombre_archivo[i] != NULL){//mientras que no se me terminen las partes del nombre del archivo
-		char** partes_pid = string_split(partes_nombre_archivo[i], ":");//Divido cada parte en otras si esta el separador ":"
+		string_append(&file_name, path_swap);
+		string_append(&file_name, "PID:");
+		string_append(&file_name, string_itoa(PID));
+		string_append(&file_name, "-");
+		string_append(&file_name, "SEG:");
+		string_append(&file_name, string_itoa(SEG));
+		string_append(&file_name, "-");
+		string_append(&file_name, "PAG:");
+		string_append(&file_name, string_itoa(PAG));
+		string_append(&file_name, ".bc");
+		FILE* arch_swap = fopen(file_name, "w+");
 
-		if(string_starts_with(partes_pid[0],"PID")  && (atoi(partes_pid[1]) == PID)){
-			char** partes_seg = string_split(partes_nombre_archivo[i+1], ":");
-
-			if(string_starts_with(partes_seg[0], "SEG") && (atoi(partes_seg[1]) == SEG)){
-				char** partes_pag = string_split(partes_nombre_archivo[i+2], ":");
-
-				if(string_starts_with(partes_pag[0], "PAG") && (atoi(partes_pag[1]) == PAG)){
-
-					//PID, pagina y segmento para completar la t_pagina
-					pag.PID = atoi(partes_pid[1]);
-
-					pag.num_segmento = atoi(partes_seg[1]);
-
-					pag.num_pag = atoi(partes_pag[1]);
-
-					char* nombre_archivo = string_new();//Concateno el path con el nombre del archivo seleccionado
-					string_append(&nombre_archivo,path_swap);
-					string_append(&nombre_archivo,dirent->d_name);
-
-					pag.nombre_archivo = nombre_archivo;
-
-					FILE* arch_swap = abrir_archivo(nombre_archivo, logger, &mutex_log);
-
-					pag.archivo = arch_swap;
-
-					}
-				}
-			}
-			i++;
-		}
-	}
-	return pag;
+	//PID, pagina y segmento para completar la t_pagina
+		pag.PID = PID;
+		pag.num_segmento = SEG;
+		pag.num_pag = PAG;
+		pag.nombre_archivo = file_name;
+		pag.archivo = arch_swap;
+		return pag;
 }
 
 /********************************* MANEJO DE INFORMACION ******************************************/

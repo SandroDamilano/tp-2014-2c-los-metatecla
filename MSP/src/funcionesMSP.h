@@ -139,10 +139,10 @@ t_marco *crearTablaDeMarcos(); //Divide el bloque de memoria principal en marcos
 uint32_t buscarMarcoLibre(t_marco *unaTabla);//Busca un marco libre, en caso no encontrar devuelve -1
 
 ////////////SWAP////////////
-void swap_out(t_pagina pagina);
-t_pagina swap_in(int pid, int seg, int pag);
+void crearArchivoSwapEnDisco(t_pagina pagina);
+t_pagina extraerInfoDeArchSwap(uint32_t pid, uint32_t seg, uint32_t pag);
 DIR* abrir_directorio_swap();
-t_pagina buscar_archivo(int PID, int SEG, int PAG, DIR* dir);
+t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG);
 void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
 void destruir_archivo(char* nombre_archivo);
 
