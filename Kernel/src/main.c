@@ -320,6 +320,7 @@ void handshake_thread(){
 		int resultado = socket_recibir(socket_atendido, &tipoStruct, &structRecibido);
 		if(resultado == -1 || tipoStruct != D_STRUCT_NUMERO){
 			printf("No se recibio correctamente a quien atiendo en el kernel\n");
+			printf("d struct %d, rdo %d\n", tipoStruct, resultado);
 		}
 
 		switch(((t_struct_numero *)structRecibido)->numero){
@@ -346,6 +347,7 @@ void handshake_thread(){
 
 			t_struct_numero* quantum = malloc(sizeof(t_struct_numero));
 			socket_enviar(socket_atendido, D_STRUCT_NUMERO, quantum);
+			printf("envie quantum\n");
 			free(quantum);
 
 			break;

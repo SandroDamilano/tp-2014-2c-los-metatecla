@@ -551,8 +551,9 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		mandar_a_exit(tcb, ABORTAR);
 		break;
 	case D_STRUCT_PEDIR_TCB:
+		printf("me pidieron TCB\n");
 		//darle otro tcb a cpu, si tiene
-		tcb = obtener_tcb_a_ejecutar();
+		/*tcb = obtener_tcb_a_ejecutar();
 
 		if (tcb!=NULL){
 			//Había un tcb en ready, entonces se lo mando
@@ -564,7 +565,15 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
-		}
+		}*/
+		tcb = malloc(sizeof(t_hilo));
+		tcb->segmento_codigo = 0;
+		tcb->puntero_instruccion = 0;
+		t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
+					copiar_tcb_a_structTcb(tcb, paquete_tcb);
+					socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
+					printf("envie tcb\n");
+					free(paquete_tcb);
 
 		break;
 	case D_STRUCT_TERMINO:

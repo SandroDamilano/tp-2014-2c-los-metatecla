@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	/*crearSegmento(0, 98);
+	crearSegmento(0, 98);
 
 	FILE* beso = fopen("/home/utnso/out.bc", "r");
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
 				buffer[tamanio_archivo]= '\0';
 
-	escribirMemoria(0,0,buffer, 98);*/
+	escribirMemoria(0,0,buffer, 98);
 
 	/*********************************************************/
 

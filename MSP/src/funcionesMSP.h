@@ -114,6 +114,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 ///////////CONEXIONES//////////
 void handler_conexiones(t_conexion_entrante* conexion);
 void handler_cpu(t_conexion_entrante* conexion);
+void handler_kernel(t_conexion_entrante* conexion);
 
 ///////////Auxiliares//////////
 

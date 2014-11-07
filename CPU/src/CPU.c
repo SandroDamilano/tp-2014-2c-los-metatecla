@@ -44,11 +44,11 @@ int main(int argc, char** argv) {
 	}
 
 	if(sockKernel == -1){
-		printf("no se pudo conectar a MSP\n");
+		printf("no se pudo conectar a Kernel\n");
 	} else {
 		t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
 		es_cpu->numero = ES_CPU;
-		socket_enviar(sockKernel, ES_CPU, es_cpu);
+		socket_enviar(sockKernel, D_STRUCT_NUMERO, es_cpu);
 		free(es_cpu);
 	}
 
@@ -61,7 +61,8 @@ int main(int argc, char** argv) {
 
 	//socket a Kernel pidiendo tcb
 	t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
-	resultado = socket_enviar(sockKernel, D_STRUCT_PEDIR_TCB, pedir_tcb);
+	pedir_tcb->numero = D_STRUCT_PEDIR_TCB;
+	resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
 	if(resultado != 1){
 		printf("No se pudo pedir TCB\n");
 	}
