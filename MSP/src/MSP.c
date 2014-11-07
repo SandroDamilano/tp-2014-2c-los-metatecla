@@ -321,7 +321,12 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 						*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
 						printf("extraida info de archivo\n");
 						printf("abri el archivo pedido\n"); //DEBUG
-						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+						t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
+						direccion_base.segmento = segmento->numeroSegmento;
+						direccion_base.pagina = pagina->numeroPagina;
+						direccion_base.desplazamiento = 0;
+						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanio); //Una vez que tengo toda la pagina reestablecida en MP, escribo lo que me llega por parametro en la direccion correspondiente
 						pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 						pagina->swap=0;
 						printf("guarde el archivo en memoria"); //DEBUG

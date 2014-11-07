@@ -214,9 +214,14 @@ t_pagina extraerInfoDeArchSwap(uint32_t pid, uint32_t seg, uint32_t pagina){ //A
 
 	char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
 
-	char* code = leer_archivo(pag.archivo, tamanio_archivo);
+	if(tamanio_archivo != 0){
+		char* code = leer_archivo(pag.archivo, tamanio_archivo);
+		memcpy(buffer,code, tamanio_archivo);
+		free(code);
+	} else {
+		buffer[0] = '\0';
+	}
 
-	memcpy(buffer,code, tamanio_archivo);
 
 
 	//Actualizo la estructura t_pagina con el codigo rescatado
@@ -228,7 +233,6 @@ t_pagina extraerInfoDeArchSwap(uint32_t pid, uint32_t seg, uint32_t pagina){ //A
 	fclose(pag.archivo);
 
 	destruir_archivo(pag.nombre_archivo);
-	free(code);
 	closedir(dir);
 	return pag;
 }
@@ -311,7 +315,7 @@ t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 		string_append(&file_name, "PAG:");
 		string_append(&file_name, string_itoa(PAG));
 		string_append(&file_name, ".bc");
-		FILE* arch_swap = fopen(file_name, "w+");
+		FILE* arch_swap = fopen(file_name, "a+");
 
 	//PID, pagina y segmento para completar la t_pagina
 		pag.PID = PID;
