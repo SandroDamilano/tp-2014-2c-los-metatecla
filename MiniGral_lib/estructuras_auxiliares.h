@@ -77,6 +77,7 @@ typedef struct direccion{
 		D_STRUCT_WAKE=21,
 		D_STRUCT_TERMINO=22,
 		D_STRUCT_ABORT=23,
+		ES_CPU=24,
 
 		//Comunicacion KERNEL - CONSOLA
 		HANDSHAKE_SUCCESS = 100,// TODO: serializar segun estas señales
@@ -87,6 +88,7 @@ typedef struct direccion{
 		FILE_RECV_SUCCESS = 105,
 		FILE_RECV_FAIL = 106,
 		END_PROGRAM = 107,
+		ES_CONSOLA=119,
 
 		//Comunicacion KERNEL - MSP
 		HANDSHAKE_MSP_SUCCESS = 108,
