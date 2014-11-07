@@ -117,7 +117,7 @@ void leer_config()
 	//IP_MSP
 	if(config_has_property(config_file, "IP_MSP"))
 	{
-		ip_msp = config_get_string_value(config_file, "IP_MPS");
+		ip_msp = config_get_string_value(config_file, "IP_MSP");
 
 		sprintf(bufferLog, "IP_MSP = [%s]", ip_msp);
 		log_debug(logger, bufferLog);
@@ -204,7 +204,7 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 
 int crear_cliente_MSP(char* ip, uint32_t puerto){
 	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%d]\n", ip, puerto);
-	sockfd_cte = socket_crearServidor(ip, puerto);
+	sockfd_cte = socket_crearYConectarCliente(ip, puerto);
 	return sockfd_cte;
 }
 /*
@@ -284,14 +284,14 @@ void conectar_a_MSP(char *ip, uint32_t puerto)
 		exit(1);
 	}
 
-	analizar_paquete(sockfd_cte, bufferMSP, &operacion); //Espera respuesta Handshake
+	/*analizar_paquete(sockfd_cte, bufferMSP, &operacion); //Espera respuesta Handshake
 
 	if(operacion == HANDSHAKE_MSP_FAIL)	{
 		perror("[Kernel]: Handshake con MSP, sin exito!");
 		log_error(logger, "Handshake con MSP, sin exito!");
 		close(sockfd_cte);
 		exit(1);
-	}
+	}*/
 
 	printf("[Kernel]: Conexion a MSP establecida.\n");
 	log_info(logger, "Conexion a MSP establecida.");
@@ -309,6 +309,8 @@ void inicializar_multiplex(){
 void handshake_thread(){
 
 	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
+	void* structRecibido;
+	t_tipoEstructura tipoStruct;
 
 	while(1){
 		int socket_atendido = socket_aceptarCliente(socket_escucha);
@@ -341,6 +343,7 @@ void handshake_thread(){
 			pthread_mutex_lock(&mutex_master_cpus);
 			FD_SET(socket_atendido, &master_cpus);
 			pthread_mutex_unlock(&mutex_master_cpus);
+
 
 			break;
 

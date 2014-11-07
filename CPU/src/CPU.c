@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
 
 	//////////////////////
-	quantum = 3;
+	/*quantum = 3;
 
 	tcb->pid = 0;
 	tcb->tid = 0;
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 	tcb->registros[2] = 0;
 	tcb->registros[3] = 0;
 	tcb->registros[4] = 0;
-	tcb->puntero_instruccion = 0;
+	tcb->puntero_instruccion = 0;*/
 	///////////////////////
 
 
