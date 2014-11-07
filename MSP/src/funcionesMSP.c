@@ -645,9 +645,17 @@ return NULL;
  }
 
  void tabla_paginas(uint32_t PID){
+	 char* trueofalse(uint32_t unNumero){
+			char* resultado;
+			 if(unNumero==0){
+				resultado = "En Memoria Principal";
+			 } else {
+				 resultado = "En Memoria Swap";
+			 }
+	 return resultado;}
 	 t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
 	 void imprimirPagina(t_lista_paginas *pagina){
-	 		printf("Numero pagina: %d,   Swapeada: %d\n",(*pagina).numeroPagina,(*pagina).swap);
+	 		printf("Numero pagina: %d,   Ubicacion: %s\n",(*pagina).numeroPagina,trueofalse((*pagina).swap));
 	 	}
 	 void imprimirSegmento(t_lista_segmentos *segmento){
 	 		printf("Numero segmento: %d\n",(*segmento).numeroSegmento);
@@ -657,13 +665,25 @@ return NULL;
 	 			return PIDEncontrado->pid==PID;
 	 		}
 	 proceso=list_find(listaProcesos,(void*) (*mismoPID));
+	 if(proceso!=NULL){
 	 list_iterate((*proceso).lista_Segmentos, (void*) (*imprimirSegmento));
+ }else {
+	 printf("El PID ingresado: %d, no existe en el sistema", PID);}
  }
 
  void listar_marcos(){//FIXME ARREGLAR LISTA DE MARCOS!
-uint32_t i = 0;
+	 char* trueofalse(uint32_t unNumero){
+		char* resultado;
+		 if(unNumero==0){
+			resultado = "Ocupado";
+		 } else {
+			 resultado = "Libre";
+		 }
+	 return resultado;
+	 }
+	 uint32_t i = 0;
 	 while(i<cant_marcos){
-		 printf("Numero de marco: %d,  Marco Libre: %d\n ",tabla_marcos[i].numeroMarco, tabla_marcos[i].marco_libre);
+		 printf("Numero de marco: %d,  Marco: %s\n ",tabla_marcos[i].numeroMarco, trueofalse(tabla_marcos[i].marco_libre));
 	  i++;
 	 }
  }

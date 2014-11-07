@@ -37,12 +37,12 @@ int main(int argc, char *argv[]) {
 	//3. Generar estructuras administrativas
 	tabla_marcos = crearTablaDeMarcos();
 	printf("pase division de marcos\n");	//DEBUG
-	memoriaPpalActual = tamanio_mem_ppal;
-	memoriaSwapActual = cant_mem_swap;
+	memoriaPpalActual = tamanio_mem_ppal; //*1024; TODO Agregar los 1024
+	memoriaSwapActual = cant_mem_swap;//*1024*1024 ;
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	crearSegmento(0, 98);
+	/*crearSegmento(0, 98);
 
 	FILE* beso = fopen("/home/utnso/out.bc", "r");
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
 				buffer[tamanio_archivo]= '\0';
 
-	escribirMemoria(0,0,buffer, 98);
+	escribirMemoria(0,0,buffer, 98);*/
 
 	/*********************************************************/
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
 		//Se crea socket servidor de la MSP
 
-		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+	/*	socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}
+	}*/
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -123,7 +123,7 @@ int asignarNumeroSegmento(int tamanioListaSegmentos, t_list *listaSegmentos){
 }
 
 //PUSE QUE SI ES ERROR, DEVUELVA -1 QUE ES MAS CLARO QUE 0
-uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
+uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar cargar paginas TIRA SEGMENTATION FAULT
 
 	uint32_t direccionBaseDelSegmento;
 
@@ -212,17 +212,28 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	}
     //6. Carga paginas en memoria principal si es necesario
 	 if(segmentoEnMP>0){
-		 int cantPagCargar=segmentoEnMP/256;
+		printf("Tengo que cargar paginas\n");
+		 uint32_t cantPagCargar=segmentoEnMP/256;
 		 if ((segmentoEnMP%256) > 0){ cantPagCargar++;}
 		 while(cantPagCargar>0){
-			 	//TODO carga paginas en MP funcion a definir cuando se haga el EscribirMemoria y algoritmos de reemplazo
-			 cantPagCargar=cantPagCargar-1;
-		 }
-	 }
-  direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
+			/* bool mismaPagina(t_lista_paginas *pagina){
+			 			return pagina->numeroPagina==cantPagCargar;
+			 }
 
+			uint32_t marcoLibre = buscarMarcoLibre(tabla_marcos);
+			tabla_marcos[marcoLibre].marco_libre=0;
+			t_lista_paginas *paginaACargar=malloc(sizeof(t_lista_paginas));
+			paginaACargar=list_find((*nuevoSegmento).lista_Paginas,(void*) (*mismaPagina));
+			(*paginaACargar).marcoEnMemPpal= marcoLibre;
+			(*paginaACargar).swap=0;*/
+			cantPagCargar=cantPagCargar-1;
+		 }
+		 }
+  direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
+  	 free(proceso);
 	return direccionBaseDelSegmento ;
 }
+
 
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
 	//1. Traduce direccion base
@@ -319,8 +330,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 						t_pagina *paginaACargar = malloc(sizeof(t_pagina));
 						printf("extraigo info de archivo\n");
 						*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
-						printf("extraida info de archivo\n");
-						printf("abri el archivo pedido\n"); //DEBUG
+						printf("extraida info de archivo\n"); //DEBUG
 						t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
 						direccion_base.segmento = segmento->numeroSegmento;
 						direccion_base.pagina = pagina->numeroPagina;
@@ -384,6 +394,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 						//TODO: cuando se terminen de usar los bytes solicitados, AFUERA de esta funcion, liberar memoria. LIBERAR RECURSOS
 
 					} else {//Traemos pagina a memoria ppal
+						printf("Buscando archivo \n");
 						uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 						if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
 							t_pagina *paginaACargar = malloc(sizeof(t_pagina));
