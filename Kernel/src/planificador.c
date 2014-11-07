@@ -40,7 +40,7 @@ void atender_cpus(){
 	fd_set read_cpus;
 	FD_ZERO(&read_cpus);
 
-	//Tiempo que se queda bloqueado esperando conexiones. En este caso o se va a esperar.
+	//Tiempo que se queda bloqueado esperando conexiones. En este caso no se va a esperar.
 	struct timeval tv;
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
@@ -518,6 +518,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 			copiar_tcb_a_structTcb(tcb, paquete_tcb);
 			socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
 			free(paquete_tcb);
+			agregar_a_exec(sockCPU, tcb);//TODO
 		}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
@@ -628,6 +629,7 @@ void handler_cpu(int sockCPU){
 	case D_STRUCT_TCB_QUANTUM:
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
+		sacar_de_exec(sockCPU);//TODO
 		encolar_en_ready(tcb);
 
 		break;

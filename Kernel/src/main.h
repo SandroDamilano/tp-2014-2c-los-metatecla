@@ -59,5 +59,6 @@
 	void cargar_arg_PLANIFICADOR();	// Carga estructura para mandar a hilo PLANIFICADOR
 	void conectar_a_MSP(char *ip, uint32_t puerto);
 	void handshake_thread();
+	void inicializar_multiplex();
 
 #endif /* MAIN_H_ */

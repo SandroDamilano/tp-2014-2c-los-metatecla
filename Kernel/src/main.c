@@ -50,6 +50,8 @@ int main(int argc, char **argv){
 	inicializar_semaforos();
 	inicializar_colas_new_exit();
 
+	inicializar_multiplex();
+
 	// 6- Levantar HILOS
 		//6.1- Levantar Hilo HANDSHAKE
 	if((ret_KERNEL = pthread_create(&thread_KERNEL, NULL, (void*)&handshake_thread, NULL)))
@@ -295,15 +297,18 @@ void conectar_a_MSP(char *ip, uint32_t puerto)
 	log_info(logger, "Conexion a MSP establecida.");
 }
 
-void handshake_thread(){
-
-	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
+void inicializar_multiplex(){
 	consolas_fdmax = 0;
 	cpus_fdmax = 0;
 	pthread_mutex_init(&mutex_master_consolas, NULL);
 	pthread_mutex_init(&mutex_master_cpus, NULL);
 	FD_ZERO(&master_cpus);
 	FD_ZERO(&master_consolas);
+}
+
+void handshake_thread(){
+
+	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
 
 	while(1){
 		int socket_atendido = socket_aceptarCliente(socket_escucha);
