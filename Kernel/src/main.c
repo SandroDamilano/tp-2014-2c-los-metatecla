@@ -272,7 +272,7 @@ int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
 
 void conectar_a_MSP(char *ip, uint32_t puerto)
 {
-	t_tipoEstructura operacion;
+	//t_tipoEstructura operacion;
 
 	if(bufferMSP != NULL)	{
 		free(bufferMSP);
@@ -344,6 +344,9 @@ void handshake_thread(){
 			FD_SET(socket_atendido, &master_cpus);
 			pthread_mutex_unlock(&mutex_master_cpus);
 
+			t_struct_numero* quantum = malloc(sizeof(t_struct_numero));
+			socket_enviar(socket_atendido, D_STRUCT_NUMERO, quantum);
+			free(quantum);
 
 			break;
 
