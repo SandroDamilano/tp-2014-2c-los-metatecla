@@ -348,6 +348,28 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 
  /*********************************************** CONEXIONES ********************************************************/
 
+void handler_conexiones(t_conexion_entrante* conexion){
+	int sock = *conexion->socket;
+	t_tipoEstructura tipoRecibido;
+	void* structRecibido;
+
+	socket_recibir(sock, &tipoRecibido,&structRecibido);
+
+	switch (tipoRecibido) {
+	case ES_CPU:
+		handler_cpu(conexion);
+		break;
+	case ES_KERNEL:
+		handler_kernel(conexion);
+		break;
+	}
+
+}
+
+void handler_kernel(t_conexion_entrante* conexion){
+
+}
+
  void handler_cpu(t_conexion_entrante* conexion){
 	 	//pthread_detach(pthread_self());
 

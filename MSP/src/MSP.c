@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
 		//Se crea socket servidor de la MSP
 
-	/*	socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -96,9 +96,9 @@ int main(int argc, char *argv[]) {
 
 		*nuevoSocket=socket_aceptarCliente(socketServidorMSP);
 
-		pthread_create(hiloDeConexion,NULL,(void*)&handler_cpu,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
+		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}*/
+	}
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -398,7 +398,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 							printf("copie la info de memoria"); //DEBUG
 							return bytes_solicitados;
 						} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
-
+							return NULL; //cambiar
 						}
 					}
 					free(pagina);
@@ -414,6 +414,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 		PID_not_found_exception(PID);
 		return NULL;}
 free(proceso);
-
 }
+
+
 

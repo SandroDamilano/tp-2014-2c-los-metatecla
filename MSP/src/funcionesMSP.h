@@ -112,6 +112,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direccion_log, uint32_t tamanio_m
 int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 
 ///////////CONEXIONES//////////
+void handler_conexiones(t_conexion_entrante* conexion);
 void handler_cpu(t_conexion_entrante* conexion);
 
 ///////////Auxiliares//////////

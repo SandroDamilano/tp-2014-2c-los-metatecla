@@ -420,6 +420,9 @@ void inicializar_semaforos_colas(){
 };
 
 void boot(char* systcalls_path){
+	void * structRecibido;
+	t_tipoEstructura tipoStruct;
+
 	// Usar el mismo socket para la msp del main.c
 	uint32_t dir_codigo;
 	uint32_t dir_stack;
@@ -430,15 +433,35 @@ void boot(char* systcalls_path){
 	tamanio_codigo = calcular_tamanio_archivo(syscalls_file);
 	char* syscalls_code = leer_archivo(syscalls_file, tamanio_codigo);
 
+	//Mando identificacion kernel
+	t_struct_numero* es_kernel = malloc(sizeof(t_struct_numero));
+	es_kernel->numero = ES_KERNEL;
+	socket_enviar(sockfd_cte, D_STRUCT_NUMERO, es_kernel);
+	free(es_kernel);
+
+	//Creo segmento para las syscalls
+	t_struct_malloc* crear_seg = malloc(sizeof(t_struct_malloc));
+	crear_seg->PID = 0; //Pid del tcb kernel
+	crear_seg->tamano_segmento = tamanio_codigo;
+	int resultado = socket_enviar(sockfd_cte, D_STRUCT_MALC, crear_seg);
+	if(resultado != 1){
+		printf("No se pudo crear segmento para las syscalls\n");
+	}
+	free(crear_seg);
+
+	//Recibo direccion del nuevo segmento
+	socket_recibir(sockfd_cte, &tipoStruct, structRecibido);
+
 	//Manda codigo de syscalls a la MSP y recibe las direcciones de segmento de codigo y stack
-	t_struct_string* paquete_syscalls = malloc(sizeof(t_struct_string));
-	paquete_syscalls->string = syscalls_code;
+	t_struct_env_bytes* paquete_syscalls = malloc(sizeof(t_struct_env_bytes));
+	paquete_syscalls->buffer = syscalls_code;
+	paquete_syscalls->tamanio = tamanio_codigo;
+	paquete_syscalls->base = ((t_struct_direccion *) structRecibido)->numero;
+	paquete_syscalls->PID = 0; //Pid del tcb kernel
 
-	socket_enviar(sockfd_cte, D_STRUCT_STRING, paquete_syscalls);//sockMSP
+	socket_enviar(sockfd_cte, D_STRUCT_ENV_BYTES, paquete_syscalls);//sockMSP
 	free(paquete_syscalls);
-
-	void * structRecibido;
-	t_tipoEstructura tipoStruct;
+	free(structRecibido);
 
 	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);//sockMSP
 	if (tipoStruct != D_STRUCT_RESPUESTA_MSP) {
@@ -452,6 +475,7 @@ void boot(char* systcalls_path){
 	memcpy(&dir_stack,datos_recibidos + sizeof(uint32_t),sizeof(uint32_t));
 
 	free(datos_recibidos);
+	free(structRecibido);
 
 	//Crea hilo en modo kernel y lo encola en bloqueados
 	t_hilo *tcb_kernel = crear_TCB(0, dir_codigo, dir_stack, tamanio_codigo);
@@ -514,6 +538,7 @@ void crear_nuevo_hilo(t_hilo* tcb_padre){
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	t_hilo* tcb;
+
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
 		//TODO
