@@ -25,6 +25,10 @@
 
 	t_list* solicitudes_tcb;
 
+	fd_set master_cpus;
+	int cpus_fdmax;
+	pthread_mutex_t mutex_master_cpus;
+
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;
 		char* syscalls_path;
@@ -103,6 +107,9 @@
 	bool es_el_pid_exec(t_data_nodo_exec* data);
 
 	bool esta_por_systcall(t_data_nodo_block* data);
+
+	void atender_cpus();
+	void handler_cpu(int sockCPU);
 
 	void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros);
 

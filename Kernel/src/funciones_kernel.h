@@ -33,6 +33,15 @@
 	//Socket de la MSP
 	extern int sockfd_cte;
 
+	// Variables de uso para los multiplexores del loader y el planificador
+	extern fd_set master_consolas;
+	extern int consolas_fdmax;
+	extern pthread_mutex_t mutex_master_consolas;
+
+	extern fd_set master_cpus;
+	extern int cpus_fdmax;
+	extern pthread_mutex_t mutex_master_cpus;
+
 	typedef struct data_nodo_consolas {
 		int socket;
 		uint32_t pid;

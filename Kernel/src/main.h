@@ -46,10 +46,18 @@
 	arg_LOADER param_KERNEL, param_LOADER;	// tipo de los argumentos pasados al hilo KERNEL e hilo LOADER
 	arg_PLANIFICADOR param_PLANIFICADOR;	// tipo de los argumentos pasados al hilo PLANIFICADOR
 
+	fd_set master_consolas;
+	int consolas_fdmax;
+	pthread_mutex_t mutex_master_consolas;
+
+	fd_set master_cpus;
+	int cpus_fdmax;
+	pthread_mutex_t mutex_master_cpus;
 	// Funciones ppales
 	void leer_config();				// Lee configuracion y asigna a variables.
 	void cargar_arg_LOADER();		// Carga estructura para mandar a hilo LOADER
 	void cargar_arg_PLANIFICADOR();	// Carga estructura para mandar a hilo PLANIFICADOR
 	void conectar_a_MSP(char *ip, uint32_t puerto);
+	void handshake_thread();
 
 #endif /* MAIN_H_ */

@@ -19,10 +19,45 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 
 	boot(parametros->syscalls_path);
 
+	while(1){
+	/*
+	 * 1 - Mandar a ejecutar TCBs a CPUs que lo hayan requerido
+	 * 2 - Mandarle a los CPUs imputs de la Consola
+	 * 3 - Atender nuevas solicitudes de CPUs
+	 */
+		atender_cpus();
+
+	}
+
 	pthread_join(thr_consumidor_new, NULL);
 	pthread_join(thr_parca, NULL);
 
 return 0;
+}
+
+void atender_cpus(){
+	int i;
+	fd_set read_cpus;
+	FD_ZERO(&read_cpus);
+
+	//Tiempo que se queda bloqueado esperando conexiones. En este caso o se va a esperar.
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+
+	pthread_mutex_lock(&mutex_master_cpus);
+	read_cpus = master_cpus;
+	pthread_mutex_unlock(&mutex_master_cpus);
+
+	if (select(cpus_fdmax+1, &read_cpus, NULL, NULL, &tv) == -1) {
+		perror("select");
+		exit(1);
+	}
+	for(i=0; i<=cpus_fdmax; i++){
+		if(FD_ISSET(i, &read_cpus)){
+			handler_cpu(i);
+		}
+	}
 }
 
 /*********************** HILOS DEDICADOS ******************************/
@@ -117,6 +152,7 @@ void liberar_memoria(t_hilo* tcb){
 	free_segmento->direccion_base = tcb->base_stack;
 	socket_enviar(sockfd_cte, D_STRUCT_FREE, free_segmento);
 
+	free(free_segmento);
 	free(tcb);
 }
 
@@ -484,7 +520,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 			free(paquete_tcb);
 		}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
-			list_add(solicitudes_tcb, sockCPU);
+			list_add(solicitudes_tcb, (void*)&sockCPU);
 		}
 
 		break;
@@ -511,7 +547,17 @@ void handler_cpu(int sockCPU){
 	t_tipoEstructura tipoRecibido2;
 	void* structRecibido;
 	void* structRecibido2;
-	socket_recibir(sockCPU, &tipoRecibido, &structRecibido);
+
+	//TODO cambiar socket_recibir()
+	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==0){
+		//Cierro la conexión
+		printf("Se perdió la comunicación con la CPU: %d\n", sockCPU);
+		//TODO eliminar de cola_exec
+		close(sockCPU);
+		pthread_mutex_lock(&mutex_master_cpus);
+		FD_CLR(sockCPU, &master_cpus);
+		pthread_mutex_unlock(&mutex_master_cpus);
+	}
 
 	//TODO: PONER LOGS!
 	switch(tipoRecibido){

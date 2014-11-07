@@ -298,10 +298,33 @@ void conectar_a_MSP(char *ip, uint32_t puerto)
 void handshake_thread(){
 
 	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
+	consolas_fdmax = 0;
+	cpus_fdmax = 0;
+	pthread_mutex_init(&mutex_master_consolas, NULL);
+	pthread_mutex_init(&mutex_master_cpus, NULL);
+	FD_ZERO(&master_cpus);
+	FD_ZERO(&master_consolas);
 
 	while(1){
 		int socket_atendido = socket_aceptarCliente(socket_escucha);
 		//TODO Hacer el handshake
+
+		// Si es una consola
+		if (socket_atendido>consolas_fdmax){
+			consolas_fdmax = socket_atendido;
+		}
+		pthread_mutex_lock(&mutex_master_consolas);
+		FD_SET(socket_atendido, &master_consolas);
+		pthread_mutex_unlock(&mutex_master_consolas);
+
+		// Si es una cpu
+		if (socket_atendido>cpus_fdmax){
+			cpus_fdmax = socket_atendido;
+		}
+		pthread_mutex_lock(&mutex_master_cpus);
+		FD_SET(socket_atendido, &master_cpus);
+		pthread_mutex_unlock(&mutex_master_cpus);
+
 	}
 
 }
