@@ -313,6 +313,19 @@ void handshake_thread(){
 	while(1){
 		int socket_atendido = socket_aceptarCliente(socket_escucha);
 		//TODO Hacer el handshake
+		void * structRecibido;
+		t_tipoEstructura tipoStruct;
+		int resultado = socket_recibir(socket_atendido, &tipoStruct, &structRecibido);
+		if(resultado == -1 || tipoStruct != D_STRUCT_NUMERO){
+			printf("No se recibio correctamente a quien atiendo en el kernel\n");
+		}
+
+		switch(((t_struct_numero *)structRecibido)->numero){
+
+		case ES_CONSOLA:
+			break;
+		case ES_CPU:
+			break;
 
 		// Si es una consola
 		if (socket_atendido>consolas_fdmax){
@@ -330,6 +343,7 @@ void handshake_thread(){
 		FD_SET(socket_atendido, &master_cpus);
 		pthread_mutex_unlock(&mutex_master_cpus);
 
+		}
 	}
 
 }

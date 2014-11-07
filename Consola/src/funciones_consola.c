@@ -146,14 +146,16 @@ void liberarMemoria()
 	exit(1);
 }
 
-void conectar_a_Kernel(char *ip, char *puerto)
+int conectar_a_Kernel(char *ip, char *puerto)
 {
-	if(crear_socket_cliente(ip,puerto))
+	int sockKernel;
+	if((sockKernel=crear_socket_cliente(ip,puerto)))
 	{
 		fprintf(stderr,"[Programa]: No se pudo contactar al Kernel. Programa abortado.\n");
 		log_error(logger,"No se pudo conectar al Kernel. Programa abortado.");
 		exit(1);
 	}
+	return sockKernel;
 }
 
 void leer_config()

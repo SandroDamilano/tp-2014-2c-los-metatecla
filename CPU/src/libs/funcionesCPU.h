@@ -26,6 +26,8 @@ bool terminoEjecucion;
 
 void leer_configuracion();
 void inicializar_configuracion();
+t_struct_numero* terminar_y_pedir_tcb(t_hilo* tcb);
+void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]);
 
 
 #endif /* FUNCIONESCPU_H_ */
