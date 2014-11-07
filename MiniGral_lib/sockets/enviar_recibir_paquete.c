@@ -81,6 +81,12 @@ int socket_recibir(int socketEmisor, t_tipoEstructura * tipoEstructura, void** e
 		return 0;
 	}
 
+	//Si se recibe 0, es porque se desconectó el socketEmisor
+	if(cantBytesRecibidos == 0){
+		free(bufferHeader);
+		return -1;
+	}
+
 	header = despaquetizarHeader(bufferHeader);
 	free(bufferHeader);
 
@@ -101,6 +107,12 @@ int socket_recibir(int socketEmisor, t_tipoEstructura * tipoEstructura, void** e
 		free(buffer);
 		perror("Error al recibir datos\n");
 		return 0;
+	}
+
+	//Si se recibe 0, es porque se desconectó el socketEmisor
+	if(cantBytesRecibidos == 0){
+		free(buffer);
+		return -1;
 	}
 
 	if(estructura != NULL) {

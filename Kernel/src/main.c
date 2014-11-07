@@ -323,25 +323,26 @@ void handshake_thread(){
 		switch(((t_struct_numero *)structRecibido)->numero){
 
 		case ES_CONSOLA:
+			// Si es una consola
+			if (socket_atendido>consolas_fdmax){
+				consolas_fdmax = socket_atendido;
+			}
+			pthread_mutex_lock(&mutex_master_consolas);
+			FD_SET(socket_atendido, &master_consolas);
+			pthread_mutex_unlock(&mutex_master_consolas);
+
 			break;
+
 		case ES_CPU:
+			// Si es una cpu
+			if (socket_atendido>cpus_fdmax){
+				cpus_fdmax = socket_atendido;
+			}
+			pthread_mutex_lock(&mutex_master_cpus);
+			FD_SET(socket_atendido, &master_cpus);
+			pthread_mutex_unlock(&mutex_master_cpus);
+
 			break;
-
-		// Si es una consola
-		if (socket_atendido>consolas_fdmax){
-			consolas_fdmax = socket_atendido;
-		}
-		pthread_mutex_lock(&mutex_master_consolas);
-		FD_SET(socket_atendido, &master_consolas);
-		pthread_mutex_unlock(&mutex_master_consolas);
-
-		// Si es una cpu
-		if (socket_atendido>cpus_fdmax){
-			cpus_fdmax = socket_atendido;
-		}
-		pthread_mutex_lock(&mutex_master_cpus);
-		FD_SET(socket_atendido, &master_cpus);
-		pthread_mutex_unlock(&mutex_master_cpus);
 
 		}
 	}

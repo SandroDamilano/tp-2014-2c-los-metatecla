@@ -65,7 +65,7 @@ void atender_cpus(){
 //Este hilo se queda haciendo loop hasta que termine la ejecución
 void poner_new_a_ready(){
 	while(1){
-		t_hilo* tcb = malloc(sizeof(t_hilo));
+		t_hilo* tcb;// = malloc(sizeof(t_hilo));
 		sacar_de_new(tcb);
 		encolar_en_ready(tcb);
 	}
@@ -107,7 +107,7 @@ void terminar_TCBs(){
 bool es_padre(t_hilo* tcb){
 	tid_de_consola = tcb->tid;
 	pthread_mutex_lock(&mutex_consolas);
-	t_data_nodo_consolas* data = list_remove_by_condition(consolas, (void*)es_el_tid_consola);
+	t_data_nodo_consolas* data = list_find(consolas, (void*)es_el_tid_consola);
 	pthread_mutex_unlock(&mutex_consolas);
 	if(data!=NULL){
 		return true;
@@ -176,6 +176,7 @@ void eliminar_block(uint32_t pid){
 	pthread_mutex_unlock(&mutex_block);
 	while(data!=NULL){
 		mandar_a_exit(data->tcb, TERMINAR);
+		free(data);
 		pthread_mutex_lock(&mutex_block);
 		data = list_remove_by_condition(cola_block, (void*)es_el_pid_block);
 		pthread_mutex_unlock(&mutex_block);
@@ -190,6 +191,7 @@ void eliminar_exec(uint32_t pid){
 	while(data!=NULL){
 		//TODO decirle a la cpu que aborte su ejecución (¿Eliminar solicitud de atención?)
 		mandar_a_exit(data->tcb, TERMINAR);
+		free(data);
 		pthread_mutex_lock(&mutex_exec);
 		data = list_remove_by_condition(cola_exec, (void*)es_el_pid_exec);
 		pthread_mutex_unlock(&mutex_exec);
@@ -239,6 +241,7 @@ void mandar_a_exit(t_hilo* tcb, t_fin fin){
 	push_exit(data);
 	pthread_mutex_unlock(&mutex_exit);
 	sem_post(&sem_exit);
+	data->tcb->cola = EXIT;
 }
 
 t_hilo* obtener_tcb_a_ejecutar(){
@@ -251,15 +254,27 @@ t_hilo* obtener_tcb_a_ejecutar(){
 t_hilo* obtener_tcb_de_cpu(int sock_cpu){
 	sockCPU_a_buscar = sock_cpu;
 	t_data_nodo_exec* data;
+	t_hilo* tcb;
 	pthread_mutex_lock(&mutex_exec);
 	data = list_remove_by_condition(cola_exec, (void*)es_el_tcbCPU);
 	pthread_mutex_unlock(&mutex_exec);
 	if (data!=NULL){
-		return data->tcb;
+		tcb = data->tcb;
 	}else{
 		printf("ERROR: No fue encontrado el CPU\n");
 	};
-	return NULL;
+	free(data);
+	return tcb;
+}
+
+void agregar_a_exec(int sockCPU, t_hilo* tcb){
+	t_data_nodo_exec* data = malloc(sizeof(t_data_nodo_exec));
+	data->sock = sockCPU;
+	data->tcb = tcb;
+	pthread_mutex_lock(&mutex_exec);
+	list_add(cola_exec, data);
+	pthread_mutex_unlock(&mutex_exec);
+	tcb->cola = EXEC;
 }
 
 /********************************** BLOQUEAR ***************************************/
@@ -346,17 +361,19 @@ void desbloquear_proceso(t_evento evento, uint32_t parametro){
 		t_hilo * tcb_desbloqueado = data_desbloqueado->tcb;
 		encolar_en_ready(tcb_desbloqueado);
 	}
+	free(data_desbloqueado);
 }
 
 t_hilo* desbloquear_tcbKernel(){
 	pthread_mutex_lock(&mutex_block);
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbKernel);
 	pthread_mutex_unlock(&mutex_block);
+	t_hilo* tcbKM;
 	if (data != NULL){
-		return data->tcb;
-	}else{
-		return NULL;
+		tcbKM = data->tcb;
 	}
+	free(data);
+	return tcbKM;
 };
 
 t_hilo* desbloquear_tcbSystcall(uint32_t tid){
@@ -364,11 +381,12 @@ t_hilo* desbloquear_tcbSystcall(uint32_t tid){
 	pthread_mutex_lock(&mutex_block);
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbSystcall);
 	pthread_mutex_unlock(&mutex_block);
+	t_hilo* tcb;
 	if (data != NULL){
-		return data->tcb;
-	}else{
-		return NULL;
+		tcb = data->tcb;
 	}
+	free(data);
+	return tcb;
 }
 
 void desbloquear_por_join(uint32_t tid){
@@ -394,7 +412,6 @@ void inicializar_ready_block(){
 	cola_exec = list_create();
 	solicitudes_tcb = list_create();
 }
-
 
 void inicializar_semaforos_colas(){
 	pthread_mutex_init(&mutex_ready, NULL);
@@ -518,7 +535,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 			copiar_tcb_a_structTcb(tcb, paquete_tcb);
 			socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
 			free(paquete_tcb);
-			agregar_a_exec(sockCPU, tcb);//TODO
+			agregar_a_exec(sockCPU, tcb);
 		}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
@@ -549,11 +566,11 @@ void handler_cpu(int sockCPU){
 	void* structRecibido;
 	void* structRecibido2;
 
-	//TODO cambiar socket_recibir()
-	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==0){
+	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//Cierro la conexión
 		printf("Se perdió la comunicación con la CPU: %d\n", sockCPU);
-		//TODO eliminar de cola_exec
+		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
+		mandar_a_exit(tcb, ABORTAR);
 		close(sockCPU);
 		pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);
@@ -574,6 +591,7 @@ void handler_cpu(int sockCPU){
 			printf("No llegó el TCB para la operacion INTE\n");
 		}
 
+		obtener_tcb_de_cpu(sockCPU);
 		atender_systcall(tcb, direccion_syscall);
 
 		break;
@@ -615,6 +633,8 @@ void handler_cpu(int sockCPU){
 			printf("No se recibio el TCB para la operacion BLOCK\n");
 		}
 
+		obtener_tcb_de_cpu(sockCPU);
+
 		// Revisar si está bien (idem WAKE)
 		// bloquear_tcbSemaforo espera un uint32_t en vez de un int32_t
 		bloquear_tcbSemaforo(tcb, id_semaforo);
@@ -629,7 +649,7 @@ void handler_cpu(int sockCPU){
 	case D_STRUCT_TCB_QUANTUM:
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
-		sacar_de_exec(sockCPU);//TODO
+		obtener_tcb_de_cpu(sockCPU);
 		encolar_en_ready(tcb);
 
 		break;
