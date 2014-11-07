@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	crearSegmento(0, 98);
+	/*crearSegmento(0, 98);
 
 	FILE* beso = fopen("/home/utnso/out.bc", "r");
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
 				buffer[tamanio_archivo]= '\0';
 
-	escribirMemoria(0,0,buffer, 98);
+	escribirMemoria(0,0,buffer, 98);*/
 
 	/*********************************************************/
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
 		//Se crea socket servidor de la MSP
 
-		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+	/*	socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_cpu,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}
+	}*/
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -215,7 +215,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		 int cantPagCargar=segmentoEnMP/256;
 		 if ((segmentoEnMP%256) > 0){ cantPagCargar++;}
 		 while(cantPagCargar>0){
-			 	//carga paginas en MP funcion a definir cuando se haga el EscribirMemoria y algoritmos de reemplazo
+			 	//TODO carga paginas en MP funcion a definir cuando se haga el EscribirMemoria y algoritmos de reemplazo
 			 cantPagCargar=cantPagCargar-1;
 		 }
 	 }
@@ -313,22 +313,20 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 					guardarInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,bytes_escribir,tamanio);
 					return 0;
 				} else {//Traemos pagina a memoria ppal
-					t_pagina contenido_disco;
-					contenido_disco.PID = PID;
-					contenido_disco.num_segmento = segmento->numeroSegmento;
-					contenido_disco.num_pag = pagina->numeroPagina;
-					contenido_disco.codigo = malloc(tamanio); //TODO liberar esta memoria en algun momento
-					contenido_disco.tamanio_buffer = tamanio;
-					memcpy(contenido_disco.codigo, bytes_escribir, tamanio);
-
-					swap_out(contenido_disco);
-
+					printf("Cargando el archivo en memoria\n");
 					uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 					if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
 						t_pagina *paginaACargar = malloc(sizeof(t_pagina));
-						*paginaACargar= swap_in(PID, direccion.segmento, direccion.pagina);
+						printf("extraigo info de archivo\n");
+						*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
+						printf("extraida info de archivo\n");
 						printf("abri el archivo pedido\n"); //DEBUG
-						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+						t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
+						direccion_base.segmento = segmento->numeroSegmento;
+						direccion_base.pagina = pagina->numeroPagina;
+						direccion_base.desplazamiento = 0;
+						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanio); //Una vez que tengo toda la pagina reestablecida en MP, escribo lo que me llega por parametro en la direccion correspondiente
 						pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 						pagina->swap=0;
 						printf("guarde el archivo en memoria"); //DEBUG
@@ -389,7 +387,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 						uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 						if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
 							t_pagina *paginaACargar = malloc(sizeof(t_pagina));
-							*paginaACargar= swap_in(PID, direccion.segmento, direccion.pagina);
+							*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
 							printf("abri el archivo pedido"); //DEBUG
 							guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,paginaACargar->codigo,paginaACargar->tamanio_buffer);
 							tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
