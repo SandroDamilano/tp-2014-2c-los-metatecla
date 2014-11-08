@@ -71,6 +71,7 @@
 	void encolar_en_ready(t_hilo* tcb);
 	void sacar_de_new(t_hilo* tcb);
 	void mandar_a_exit(t_hilo* tcb, t_fin fin);
+	t_hilo* obtener_tcb_a_ejecutar();
 
 	void desbloquear_por_semaforo(uint32_t sem);
 	void desbloquear_por_join(uint32_t tid);
@@ -108,6 +109,8 @@
 
 	bool esta_por_systcall(t_data_nodo_block* data);
 
+	void mandar_a_ejecutar(t_hilo* tcb, int sockCPU);
+	void atender_solicitudes_pendientes();
 	void atender_cpus();
 	void handler_cpu(int sockCPU);
 

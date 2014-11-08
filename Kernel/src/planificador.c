@@ -25,6 +25,7 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 	 * 2 - Mandarle a los CPUs imputs de la Consola
 	 * 3 - Atender nuevas solicitudes de CPUs
 	 */
+		atender_solicitudes_pendientes();
 		atender_cpus();
 
 	}
@@ -33,6 +34,21 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 	pthread_join(thr_parca, NULL);
 
 return 0;
+}
+
+bool hay_en_ready(){
+	pthread_mutex_lock(&mutex_ready);
+	bool resp = !list_is_empty(cola_ready);
+	pthread_mutex_unlock(&mutex_ready);
+	return resp; //Este valor puede quedar desactualizado, pero no importa
+}
+
+void atender_solicitudes_pendientes(){
+	while((!list_is_empty(solicitudes_tcb)) && (hay_en_ready())){
+		t_hilo* tcb = obtener_tcb_a_ejecutar();
+		int* sockCPU = list_remove(solicitudes_tcb, 0);
+		mandar_a_ejecutar(tcb, *sockCPU);
+	}
 }
 
 void atender_cpus(){
@@ -511,23 +527,34 @@ bool esta_por_systcall(t_data_nodo_block* data){
 	return (data->evento == SYSTCALL);
 }
 
-void retornar_de_systcall(t_hilo* tcb_kernel){
-	t_hilo* tcb = desbloquear_tcbSystcall(tcb_kernel->tid);
-	if (tcb!=NULL){
-		int i;
-		for(i=0; i<=4; i++){
-			tcb->registros[i] = tcb_kernel->registros[i];
-		}
-		encolar_en_ready(tcb);
-	}
-	bloquear_tcbKernel(tcb_kernel);
+void atender_otra_systcall_si_hay(t_hilo* tcb_kernel){
 	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall(tcb_kernel);
-
-	//Avisarle a la cpu que pida otro proceso para ejecutar
 
 	if (data_otro_tcb != NULL){
 		atender_systcall(data_otro_tcb->tcb, data_otro_tcb->parametro);
 	};
+}
+
+void retornar_de_systcall(t_hilo* tcb_kernel, t_fin fin){
+	t_hilo* tcb = desbloquear_tcbSystcall(tcb_kernel->tid);
+	int i;
+
+	if (tcb!=NULL){
+		switch(fin){
+		case TERMINAR:
+			for(i=0; i<=4; i++){
+				tcb->registros[i] = tcb_kernel->registros[i];
+			}
+			encolar_en_ready(tcb);
+			break;
+
+		case ABORTAR:
+			mandar_a_exit(tcb, fin);
+		}
+	}
+	bloquear_tcbKernel(tcb_kernel);
+
+	atender_otra_systcall_si_hay(tcb_kernel);
 }
 
 void crear_nuevo_hilo(t_hilo* tcb_padre){
@@ -535,6 +562,14 @@ void crear_nuevo_hilo(t_hilo* tcb_padre){
 }
 
 /******************************** HANDLER CPU *****************************************/
+
+void mandar_a_ejecutar(t_hilo* tcb, int sockCPU){
+	t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
+	copiar_tcb_a_structTcb(tcb, paquete_tcb);
+	socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
+	free(paquete_tcb);
+	agregar_a_exec(sockCPU, tcb);
+}
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	t_hilo* tcb;
@@ -546,40 +581,41 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		//Mando el numero obtenido con la señal D_STRUCT_INNN a cpu
 		break;
 	case D_STRUCT_ABORT:
-		//abortar
+
 		tcb = obtener_tcb_de_cpu(sockCPU);
-		mandar_a_exit(tcb, ABORTAR);
+
+		//Verifico si es el de Kernel
+		if(tcb->kernel_mode == true){
+			//TODO Consultar: si es el de Kernel, aborto sólo el proceso que hizo a la systcall?
+			retornar_de_systcall(tcb, ABORTAR);
+		}else{
+			mandar_a_exit(tcb, ABORTAR);
+		}
+
 		break;
+
 	case D_STRUCT_PEDIR_TCB:
 		printf("me pidieron TCB\n");
 		//darle otro tcb a cpu, si tiene
-		/*tcb = obtener_tcb_a_ejecutar();
+		tcb = obtener_tcb_a_ejecutar();
 
 		if (tcb!=NULL){
 			//Había un tcb en ready, entonces se lo mando
-			t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
-			copiar_tcb_a_structTcb(tcb, paquete_tcb);
-			socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
-			free(paquete_tcb);
-			agregar_a_exec(sockCPU, tcb);
+			mandar_a_ejecutar(tcb, sockCPU);
 		}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
-		}*/
+		}
+		/* PARA TESTEAR
 		tcb = malloc(sizeof(t_hilo));
 		tcb->segmento_codigo = 0;
 		tcb->puntero_instruccion = 0;
 		t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
-					copiar_tcb_a_structTcb(tcb, paquete_tcb);
-					socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
-					printf("envie tcb\n");
-					free(paquete_tcb);
-
-		break;
-	case D_STRUCT_TERMINO:
-		//terminar tcb
-		tcb = obtener_tcb_de_cpu(sockCPU);
-		mandar_a_exit(tcb, TERMINAR);
+		copiar_tcb_a_structTcb(tcb, paquete_tcb);
+		socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
+		printf("envie tcb\n");
+		free(paquete_tcb);
+		*/
 		break;
 	}
 }
@@ -601,7 +637,7 @@ void handler_cpu(int sockCPU){
 	void* structRecibido2;
 
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
-		//Cierro la conexión
+		//La CPU cerró la conexión
 		printf("Se perdió la comunicación con la CPU: %d\n", sockCPU);
 		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
 		mandar_a_exit(tcb, ABORTAR);
@@ -683,10 +719,27 @@ void handler_cpu(int sockCPU){
 	case D_STRUCT_TCB_QUANTUM:
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
+		//Lo saco de EXEC
 		obtener_tcb_de_cpu(sockCPU);
 		encolar_en_ready(tcb);
 
 		break;
+	case D_STRUCT_TCB:
+
+		copiar_structRecibido_a_tcb(tcb, structRecibido);
+		//Lo saco de EXEC
+		obtener_tcb_de_cpu(sockCPU);
+
+		//Verifico si es el de Kernel
+		if(tcb->kernel_mode == true){
+			retornar_de_systcall(tcb, TERMINAR);
+		}else{
+			//terminar tcb
+			mandar_a_exit(tcb, TERMINAR);
+		}
+
+		break;
+
 	case D_STRUCT_OUTN:
 		numero_consola = ((t_struct_numero*) structRecibido)->numero;
 		//TODO Mandar ese numero a consola para ser mostrado
