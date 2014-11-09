@@ -606,16 +606,25 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
 		}
-		/* PARA TESTEAR
-		tcb = malloc(sizeof(t_hilo));
+		// PARA TESTEAR
+		/*tcb = malloc(sizeof(t_hilo));
 		tcb->segmento_codigo = 0;
 		tcb->puntero_instruccion = 0;
+		tcb->pid = 0;
+		tcb->tid = 0;
+		tcb->kernel_mode = true;
+		tcb->registros[0] = 0;
+		tcb->registros[1] = 0;
+		tcb->registros[2] = 0;
+		tcb->registros[3] = 0;
+		tcb->registros[4] = 0;*/
+
 		t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
 		copiar_tcb_a_structTcb(tcb, paquete_tcb);
 		socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
 		printf("envie tcb\n");
 		free(paquete_tcb);
-		*/
+
 		break;
 	}
 }

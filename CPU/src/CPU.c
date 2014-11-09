@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 	tcb = malloc(sizeof(t_hilo));
 
 	//Abrir conexion de sockets con Kernel y MSP.
-	//int sockKernel = socket_crearYConectarCliente(config_struct_cpu.ip_kernel, config_struct_cpu.puerto_kernel);
+	int sockKernel = socket_crearYConectarCliente(config_struct_cpu.ip_kernel, config_struct_cpu.puerto_kernel);
 
 	int sockMSP = socket_crearYConectarCliente(config_struct_cpu.ip_msp, config_struct_cpu.puerto_msp);
 
@@ -43,12 +43,14 @@ int main(int argc, char** argv) {
 		printf("numero de socket de MSP es %d\n", sockMSP);
 	}
 
-	/*if(sockKernel == -1){
+	if(sockKernel == -1){
 		printf("no se pudo conectar a Kernel\n");
 	} else {
+		printf("Me conecte al Kernel\n");
 		t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
 		es_cpu->numero = ES_CPU;
 		socket_enviar(sockKernel, D_STRUCT_NUMERO, es_cpu);
+		printf("Envie el aviso\n");
 		free(es_cpu);
 	}
 
@@ -57,6 +59,7 @@ int main(int argc, char** argv) {
 	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 	if(tipo_struct == D_STRUCT_NUMERO){
 		quantum = ((t_struct_numero *) structRecibido)->numero;
+		printf("recibi quantum de %d\n", quantum);
 	}
 
 	//socket a Kernel pidiendo tcb
@@ -69,11 +72,11 @@ int main(int argc, char** argv) {
 
 	//socket de Kernel con tcb
 	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-	copiar_structRecibido_a_tcb(tcb, structRecibido);*/
+	copiar_structRecibido_a_tcb(tcb, structRecibido);
 
 
 	//////////////////////
-	quantum = 3;
+	/*quantum = 3;
 
 	tcb->pid = 0;
 	tcb->tid = 0;
@@ -85,7 +88,7 @@ int main(int argc, char** argv) {
 	tcb->registros[2] = 0;
 	tcb->registros[3] = 0;
 	tcb->registros[4] = 0;
-	tcb->puntero_instruccion = 0;
+	tcb->puntero_instruccion = 0;*/
 	///////////////////////
 
 

@@ -307,12 +307,10 @@ void inicializar_multiplex(){
 }
 
 void handshake_thread(){
-
 	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
-//	void* structRecibido;
-//	t_tipoEstructura tipoStruct;
 
 	while(1){
+
 		int socket_atendido = socket_aceptarCliente(socket_escucha);
 
 		void * structRecibido;
@@ -322,6 +320,7 @@ void handshake_thread(){
 			printf("No se recibio correctamente a quien atiendo en el kernel\n");
 			printf("d struct %d, rdo %d\n", tipoStruct, resultado);
 		}
+
 		t_struct_numero* paquete_quantum;
 
 		switch(((t_struct_numero *)structRecibido)->numero){
@@ -338,11 +337,11 @@ void handshake_thread(){
 			break;
 
 		case ES_CPU:
+			printf("Me llego una CPU\n");
 			// Si es una cpu
 			paquete_quantum = malloc(sizeof(t_struct_numero));
 			paquete_quantum->numero = quantum;
 			socket_enviar(socket_atendido, D_STRUCT_NUMERO, paquete_quantum);
-			printf("envie quantum\n");
 			free(paquete_quantum);
 
 			if (socket_atendido>cpus_fdmax){
@@ -351,6 +350,8 @@ void handshake_thread(){
 			pthread_mutex_lock(&mutex_master_cpus);
 			FD_SET(socket_atendido, &master_cpus);
 			pthread_mutex_unlock(&mutex_master_cpus);
+
+			handler_cpu(socket_atendido);
 
 			break;
 
