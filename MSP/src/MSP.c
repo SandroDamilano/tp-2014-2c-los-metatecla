@@ -37,18 +37,18 @@ int main(int argc, char *argv[]) {
 	//3. Generar estructuras administrativas
 	tabla_marcos = crearTablaDeMarcos();
 	printf("pase division de marcos\n");	//DEBUG
-	memoriaPpalActual = tamanio_mem_ppal; //*1024; TODO Agregar los 1024
-	memoriaSwapActual = cant_mem_swap;//*1024*1024 ;
+	memoriaPpalActual = tamanio_mem_ppal; //*1024; //TODO Agregar los 1024
+	memoriaSwapActual = cant_mem_swap;// *1024*1024 ; //Idem
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	crearSegmento(0, 98);
-
 	FILE* beso = fopen("/home/utnso/out.bc", "r");
 
 				fseek(beso, 0L, SEEK_END); //Averiguo tamaño del archivo
 				long tamanio_archivo = ftell(beso);
 				fseek(beso, 0L, SEEK_SET);
+
+	crearSegmento(0, tamanio_archivo);
 
 				char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
 
@@ -57,9 +57,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
-	printf("tamanio archivo cargado %d\n", tamanio_archivo);
-
-	escribirMemoria(0,0,buffer, 98);
+	escribirMemoria(0,0,buffer, tamanio_archivo);
 
 	/*********************************************************/
 
@@ -134,8 +132,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 		}
 
 	//1.Verifica si hay memoria disponible
-	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual*256; //AGREGUE *256 PORQUE ME PARECIA MEJOR QUE SOLO DEJAR LA CANTIDAD DE ARCH SWAP
-
+	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;//FIXME VA *256?? NO, NO?
 	if (tamanio_segmento > 1048576){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
@@ -214,25 +211,24 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 	}
     //6. Carga paginas en memoria principal si es necesario
 	 if(segmentoEnMP>0){
-		printf("Tengo que cargar paginas\n");
+		printf("Tengo que cargar paginas.\n");
 		 uint32_t cantPagCargar=segmentoEnMP/256;
 		 if ((segmentoEnMP%256) > 0){ cantPagCargar++;}
 		 while(cantPagCargar>0){
-			/* bool mismaPagina(t_lista_paginas *pagina){
-			 			return pagina->numeroPagina==cantPagCargar;
+			 bool mismaPagina(t_lista_paginas *pagina){
+			 			return pagina->numeroPagina==cantPagCargar-1;//AGREGUE ESTE -1
 			 }
 
 			uint32_t marcoLibre = buscarMarcoLibre(tabla_marcos);
 			tabla_marcos[marcoLibre].marco_libre=0;
-			t_lista_paginas *paginaACargar=malloc(sizeof(t_lista_paginas));
+			t_lista_paginas *paginaACargar;//=malloc(sizeof(t_lista_paginas));
 			paginaACargar=list_find((*nuevoSegmento).lista_Paginas,(void*) (*mismaPagina));
 			(*paginaACargar).marcoEnMemPpal= marcoLibre;
-			(*paginaACargar).swap=0;*/
+			(*paginaACargar).swap=0;
 			cantPagCargar=cantPagCargar-1;
 		 }
 		 }
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
-  	// free(proceso);
 	return direccionBaseDelSegmento ;
 }
 

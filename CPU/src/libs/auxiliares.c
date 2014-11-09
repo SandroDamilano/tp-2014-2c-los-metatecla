@@ -71,22 +71,26 @@ int elegirRegistro(char registro){
 	switch(registro){
 	case 'A':
 		posicion_registros = 0;
+		return posicion_registros;
 		break;
 	case 'B':
 		posicion_registros = 1;
+		return posicion_registros;
 		break;
 	case 'C':
 		posicion_registros = 2;
+		return posicion_registros;
 		break;
 	case 'D':
 		posicion_registros = 3;
+		return posicion_registros;
 		break;
 	case 'E':
 		posicion_registros = 4;
+		return posicion_registros;
 		break;
 	}
-	return posicion_registros;
-}
+	}
 
 void esperar_retardo(){
 	int retardo = config_struct_cpu.retardo * 1000;

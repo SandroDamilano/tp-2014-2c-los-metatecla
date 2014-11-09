@@ -20,6 +20,7 @@ void ejecutarLinea(int* bytecode){
 	char reg1;
 	char reg2;
 	int32_t numero;
+	int32_t numero_enviar;
 	uint32_t direccion;
 	uint32_t direccionMSP;
 	int resultado;
@@ -31,7 +32,7 @@ void ejecutarLinea(int* bytecode){
 	void* datos_recibidos;
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
-	uint32_t senial = ES_CPU;
+	//uint32_t senial = ES_CPU;
 
 
 	switch(bytecodeLetras){
@@ -84,12 +85,26 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_registro(datos_recibidos,0,&reg1);
 		obtener_registro(datos_recibidos,1,&reg2);
+		free(datos_recibidos);
 		list_add(parametros,&reg1);
 		list_add(parametros, &reg2);
 
 		ejecucion_instruccion("GETM",parametros);
 
-		registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
+		datos_solicitados->base = registros_cpu.registros_programacion[elegirRegistro(reg1)];//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
+		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->tamanio = 4;
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
+		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+
+		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
+
+		obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
 
@@ -122,7 +137,20 @@ void ejecutarLinea(int* bytecode){
 
 		ejecucion_instruccion("SETM",parametros);
 
-		memcpy(&registros_cpu.registros_programacion[elegirRegistro(reg1)],&registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+		//HORRIBLEEEE
+		if(reg2 != 'S'){
+			memcpy(&numero_enviar,&registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+		} else {
+			memcpy(&numero_enviar,&registros_cpu.S,numero);
+		}
+
+		datos_solicitados->base = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+		datos_solicitados->PID = tcb->pid;
+		datos_enviados->buffer = &numero_enviar;
+		datos_enviados->tamanio = sizeof(int32_t);
+
+		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
+		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
 
 		incrementar_pc(sizeof(int32_t) + 2*sizeof(char));
 
@@ -184,7 +212,18 @@ void ejecutarLinea(int* bytecode){
 
 		ejecucion_instruccion("ADDR",parametros);
 
-		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
+		//HORRIBLE ESTO
+		if(reg1 == 'M'){
+			registros_cpu.registros_programacion[0] = registros_cpu.M + registros_cpu.registros_programacion[elegirRegistro(reg2)];
+		} else {
+			if(reg2 == 'M'){
+				registros_cpu.registros_programacion[0] = registros_cpu.M + registros_cpu.registros_programacion[elegirRegistro(reg1)];
+			} else {
+				registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
+			}
+		}
+
+		//registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 		incrementar_pc(sizeof(char)*2);
 
