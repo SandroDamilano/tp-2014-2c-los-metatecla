@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	/*crearSegmento(0, 98);
+	crearSegmento(0, 98);
 
 	FILE* beso = fopen("/home/utnso/out.bc", "r");
 
@@ -57,8 +57,9 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
+	printf("tamanio archivo cargado %d\n", tamanio_archivo);
 
-	escribirMemoria(0,0,buffer, 98);*/
+	escribirMemoria(0,0,buffer, 98);
 
 	/*********************************************************/
 
@@ -70,7 +71,7 @@ int main(int argc, char *argv[]) {
 
 		//Se crea socket servidor de la MSP
 
-	/*	socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -98,7 +99,7 @@ int main(int argc, char *argv[]) {
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}*/
+	}
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -177,7 +178,8 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 		proceso = malloc(sizeof(t_lista_procesos));
 		proceso->pid=PID;
 		(*proceso).lista_Segmentos=list_create();
-		list_add(listaProcesos,proceso);}
+		list_add(listaProcesos,proceso);
+		}
 
 	int tamanioListaSeg=list_size((*proceso).lista_Segmentos);
 	t_lista_segmentos *nuevoSegmento = malloc(sizeof(t_lista_segmentos));
@@ -230,7 +232,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 		 }
 		 }
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
-  	 free(proceso);
+  	// free(proceso);
 	return direccionBaseDelSegmento ;
 }
 
@@ -301,6 +303,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
 		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
+					printf("pid encontrado %d\n", PIDEncontrado->pid);
 					return PIDEncontrado->pid==PID;
 				}
 	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
@@ -310,8 +313,9 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 							return numeroPagina->numeroPagina==direccion.pagina;
 				}
 
-	t_lista_procesos* proceso = malloc(sizeof(t_lista_procesos));
+	t_lista_procesos* proceso;// = malloc(sizeof(t_lista_procesos));
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
+
 
 	if(proceso != NULL){
 		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));

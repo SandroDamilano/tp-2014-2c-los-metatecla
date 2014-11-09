@@ -350,12 +350,11 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 
 void handler_conexiones(t_conexion_entrante* conexion){
 	int sock = *conexion->socket;
-	t_tipoEstructura tipoRecibido;
-	void* structRecibido;
+	uint32_t senial;
 
-	socket_recibir(sock, &tipoRecibido,&structRecibido);
+	socket_recibirSignal(sock, &senial);
 
-	switch (tipoRecibido) {
+	switch (senial) {
 	case ES_CPU:
 		handler_cpu(conexion);
 		break;
@@ -463,12 +462,10 @@ void handler_kernel(t_conexion_entrante* conexion){
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
-	 				printf("pido PID %d, base %d y tamanio %d\n", solicitud->PID, solicitud->base, solicitud->tamanio);
 	 				//buffer->buffer = malloc(solicitud->tamanio);
 	 				//memcpy(buffer->buffer,solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio), solicitud->tamanio);
 	 				buffer->buffer = solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
 	 				buffer->tamano_buffer = solicitud->tamanio;
-	 				printf("a enviar buffer %s, de tamanio %d\n",(char*) buffer->buffer, buffer->tamano_buffer);
 	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, buffer);
 
 	 				free(buffer->buffer);

@@ -31,6 +31,7 @@ void ejecutarLinea(int* bytecode){
 	void* datos_recibidos;
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
+	uint32_t senial = ES_CPU;
 
 
 	switch(bytecodeLetras){
