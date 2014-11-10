@@ -440,8 +440,6 @@ void boot(char* systcalls_path){
 	t_tipoEstructura tipoStruct;
 
 	// Usar el mismo socket para la msp del main.c
-	uint32_t dir_codigo;
-	uint32_t dir_stack;
 	int tamanio_codigo;
 
 	//Levanta archivo de syst calls
@@ -469,6 +467,7 @@ void boot(char* systcalls_path){
 	socket_recibir(sockfd_cte, &tipoStruct, structRecibido);
 
 	//Manda codigo de syscalls a la MSP y recibe las direcciones de segmento de codigo y stack
+	//FIXME EN EL CREAR SEGMENTO NOS DABA LA DIRECC DEL CODIGO. QUE ONDA LA DEL STACK?
 	t_struct_env_bytes* paquete_syscalls = malloc(sizeof(t_struct_env_bytes));
 	paquete_syscalls->buffer = syscalls_code;
 	paquete_syscalls->tamanio = tamanio_codigo;
@@ -487,14 +486,14 @@ void boot(char* systcalls_path){
 	void *datos_recibidos = malloc(2*sizeof(int32_t)); //direccion_codigo + direccion_stack
 	datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-	memcpy(&dir_codigo,datos_recibidos,sizeof(uint32_t));
-	memcpy(&dir_stack,datos_recibidos + sizeof(uint32_t),sizeof(uint32_t));
+	memcpy(&direccion_codigo_syscalls,datos_recibidos,sizeof(uint32_t));
+	memcpy(&direccion_stack_syscalls,datos_recibidos + sizeof(uint32_t),sizeof(uint32_t));
 
 	free(datos_recibidos);
 	free(structRecibido);
 
 	//Crea hilo en modo kernel y lo encola en bloqueados
-	t_hilo *tcb_kernel = crear_TCB(0, dir_codigo, dir_stack, tamanio_codigo);
+	t_hilo *tcb_kernel = crear_TCB(0, direccion_codigo_syscalls, direccion_stack_syscalls, tamanio_codigo);
 	tcb_kernel->kernel_mode = true;
 	bloquear_tcbKernel(tcb_kernel);
 }
@@ -518,6 +517,9 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	if (tcb_kernel != NULL){
 		copiar_tcb(tcb, tcb_kernel);
 		tcb_kernel->puntero_instruccion = dir_systcall;
+		tcb_kernel->segmento_codigo = direccion_codigo_syscalls; //FIXME: FIJARSE QUE ESTO ESTE BIEN
+		tcb_kernel->base_stack = direccion_stack_syscalls;
+		tcb_kernel->pid = 0; //Pid de kernel
 		encolar_en_ready(tcb_kernel);
 	}
 	//Avisarle a la cpu que pida otro proceso para ejecutar
@@ -597,7 +599,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	case D_STRUCT_PEDIR_TCB:
 		printf("me pidieron TCB\n");
 		//darle otro tcb a cpu, si tiene
-		tcb = obtener_tcb_a_ejecutar();
+		/*tcb = obtener_tcb_a_ejecutar();
 
 		if (tcb!=NULL){
 			//Había un tcb en ready, entonces se lo mando
@@ -605,9 +607,9 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
-		}
+		}*/
 		// PARA TESTEAR
-		/*tcb = malloc(sizeof(t_hilo));
+		tcb = malloc(sizeof(t_hilo));
 		tcb->segmento_codigo = 0;
 		tcb->puntero_instruccion = 0;
 		tcb->pid = 0;
@@ -617,7 +619,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		tcb->registros[1] = 0;
 		tcb->registros[2] = 0;
 		tcb->registros[3] = 0;
-		tcb->registros[4] = 0;*/
+		tcb->registros[4] = 0;
 
 		t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
 		copiar_tcb_a_structTcb(tcb, paquete_tcb);

@@ -16,6 +16,9 @@
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
 
+	extern uint32_t direccion_codigo_syscalls;
+	extern uint32_t direccion_stack_syscalls;
+
 	t_queue* cola_new;
 	sem_t sem_new;
 	pthread_mutex_t mutex_new;

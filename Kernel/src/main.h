@@ -32,6 +32,9 @@
 	int cantidad_de_TIDs;
 	int cantidad_de_PIDs;
 
+	uint32_t direccion_codigo_syscalls;
+	uint32_t direccion_stack_syscalls;
+
 	// Vars de config
 	uint32_t quantum = 0;
 	uint32_t tamanio_stack;
