@@ -160,6 +160,7 @@ void leer_config()
 	if(config_has_property(config_file, "TAMANIO_STACK"))
 	{
 		tamanio_stack = config_get_int_value(config_file, "TAMANIO_STACK");
+		printf("TAMANIO DE STACK DE ARCH CONFIG %d\n", tamanio_stack);
 
 		sprintf(bufferLog, "TAMANIO_STACK = [%d]", tamanio_stack);
 		log_debug(logger, bufferLog);

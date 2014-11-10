@@ -16,6 +16,8 @@
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
 
+	uint32_t tamanio_stack;
+
 	extern uint32_t direccion_codigo_syscalls;
 	extern uint32_t direccion_stack_syscalls;
 

@@ -37,7 +37,7 @@
 
 	// Vars de config
 	uint32_t quantum = 0;
-	uint32_t tamanio_stack;
+	extern uint32_t tamanio_stack = 0;
 	char *ip_msp, *syscalls_path;
 	uint32_t puerto_kernel, puerto_msp;
 

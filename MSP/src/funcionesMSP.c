@@ -131,6 +131,7 @@ uint32_t buscarMarcoLibre(t_marco *unaTabla){//Devuelve -1 en caso no encontrar 
 		if(tabla_marcos[i].marco_libre==1){
 			marcoEncontrado=tabla_marcos[i].numeroMarco;
 		}
+		i++;
 	}
 	return marcoEncontrado;
 }
@@ -352,6 +353,7 @@ void handler_conexiones(t_conexion_entrante* conexion){
 	int sock = *conexion->socket;
 	uint32_t senial;
 
+	while(1){
 	socket_recibirSignal(sock, &senial);
 
 	switch (senial) {
@@ -362,10 +364,12 @@ void handler_conexiones(t_conexion_entrante* conexion){
 		handler_kernel(conexion);
 		break;
 	}
+	}
 
 }
 
 void handler_kernel(t_conexion_entrante* conexion){
+	printf("entro al handler kernel\n");
 	int sock = *conexion->socket;
 	t_tipoEstructura tipoRecibido;
 	void* structRecibido;
@@ -382,11 +386,12 @@ void handler_kernel(t_conexion_entrante* conexion){
 		pthread_mutex_unlock(&mutex_log);
 
 		resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
+		printf("Cree segmento de direcc %d y pid %d\n", resultado, ((t_struct_malloc* )structRecibido)->PID);
 
-		//Le comunico a la CPU si se pudo realizar operacion
+		//Le comunico al Kernel si se pudo realizar operacion
 		respuesta = malloc(sizeof(t_struct_numero));
 		respuesta->numero = resultado;
-		socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
+		socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
 
 		pthread_mutex_lock(&mutex_log);
 		//TODO LOG diciendo si se pudo crear correctamente (si es -1, poner error)
@@ -394,6 +399,7 @@ void handler_kernel(t_conexion_entrante* conexion){
 
 		free(respuesta);
 		free(structRecibido);
+		printf("Voy a salir del hanlder kernel (malloc)\n");
 		break;
 
 	case D_STRUCT_FREE:
@@ -416,13 +422,16 @@ void handler_kernel(t_conexion_entrante* conexion){
 		break;
 
 	case D_STRUCT_ENV_BYTES:
-		escritura = (t_struct_env_bytes*) structRecibido;
+		//printf("Me llego pid %d, base %d, tamanio %d\n", ((t_struct_env_bytes*) structRecibido)->PID, ((t_struct_env_bytes*) structRecibido)->base, ((t_struct_env_bytes*) structRecibido)->tamanio);
+		printf("Entro a env bytes\n");
+		//escritura = (t_struct_env_bytes*) structRecibido;
 
 		pthread_mutex_lock(&mutex_log);
 		//TODO LOG diciendo lo que se envio
 		pthread_mutex_unlock(&mutex_log);
 
-		resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
+		//resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
+		resultado = escribirMemoria(((t_struct_env_bytes*) structRecibido)->PID, ((t_struct_env_bytes*) structRecibido)->base, ((t_struct_env_bytes*) structRecibido)->buffer, ((t_struct_env_bytes*) structRecibido)->tamanio);
 		respuesta = malloc(sizeof(t_struct_numero));
 		respuesta->numero = resultado;
 		socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
@@ -504,7 +513,7 @@ void handler_kernel(t_conexion_entrante* conexion){
 	 				//Le comunico a la CPU si se pudo realizar operacion
 	 				respuesta = malloc(sizeof(t_struct_numero));
 	 				respuesta->numero = resultado;
-	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
+	 				socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
 
 	 				pthread_mutex_lock(&mutex_log);
 	 				//TODO LOG diciendo si se pudo crear correctamente (si es -1, poner error)

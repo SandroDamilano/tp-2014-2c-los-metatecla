@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 				long tamanio_archivo = ftell(beso);
 				fseek(beso, 0L, SEEK_SET);
 
-	crearSegmento(0, tamanio_archivo);
+	crearSegmento(1, tamanio_archivo);
 
 				char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
 
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
-	escribirMemoria(0,0,buffer, tamanio_archivo);
+	escribirMemoria(1,0,buffer, tamanio_archivo);
 
 	/*********************************************************/
 
@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
 		(*nuevaConexion).socket=nuevoSocket;
 
 		*nuevoSocket=socket_aceptarCliente(socketServidorMSP);
+		printf("Se recibio nueva conexion\n");
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
@@ -143,7 +144,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 
 	if(tamanio_segmento > cant_mem_actual){
 		pthread_mutex_lock(&mutex_log);
-		printf("Error Memoria llena");
+		printf("Error Memoria llena\n");
 		//log_error(logger,"Error Memoria Llena");
 		pthread_mutex_unlock(&mutex_log);
 		return -1;
@@ -223,11 +224,17 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 			tabla_marcos[marcoLibre].marco_libre=0;
 			t_lista_paginas *paginaACargar;//=malloc(sizeof(t_lista_paginas));
 			paginaACargar=list_find((*nuevoSegmento).lista_Paginas,(void*) (*mismaPagina));
+			if(paginaACargar == NULL){
+				printf("Cagamo'\n");
+			} else {
+				printf("se encontro pag a cargar\n");
+			}
 			(*paginaACargar).marcoEnMemPpal= marcoLibre;
 			(*paginaACargar).swap=0;
 			cantPagCargar=cantPagCargar-1;
 		 }
 		 }
+	printf("Creo la direccion... \n");
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
 	return direccionBaseDelSegmento ;
 }
