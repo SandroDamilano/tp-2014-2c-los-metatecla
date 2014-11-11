@@ -283,7 +283,7 @@ void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina){
 
 	destruir_archivo(file_name);
 
-	free(file_name);
+	//free(file_name); Si esta el free rompe
 }
 
 DIR* abrir_directorio_swap(){
@@ -328,7 +328,39 @@ t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 }
 
 /********************************* MANEJO DE INFORMACION ******************************************/
+void cargarYGuardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
+	//1. Cuantas paginas vamos a escrbir
+		uint32_t paginasAEscribir = tamanio/256;
+		uint32_t sumarPagina =0;
+		if((tamanio%256)>0){paginasAEscribir++;};
+		//2. Traemos una pagina la escribimos hasta donde se pueda
+		while(paginasAEscribir>0){
+		uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
+		if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
+			t_pagina *paginaACargar = malloc(sizeof(t_pagina));
+			printf("extraigo info de archivo\n");
+			*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina + sumarPagina);
+			printf("extraida info de archivo\n"); //DEBUG
+			t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
+			direccion_base.segmento = segmento->numeroSegmento;
+			direccion_base.pagina = pagina->numeroPagina;
+			direccion_base.desplazamiento = 0;
+			guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+			if((direccion.desplazamiento+tamanio)<=256){
+				guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanio);
+			}
+			else { uint32_t tamanioAEscribir = 256-direccion.desplazamiento
+				guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanioAEscribir);
+				tamanio = tamanio-tamanioAEscribir;
+				bytes_escribir = bytes_escribir[tamanioAEscribir]; //FIXME queremos dividir los bytes a escribir y no sabemos como
+			}
+		}
+		sumarPagina++;
+		paginasAEscribir--;}
+}
+
 void guardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
+
 
 	//printf("baseMarco + direccion.desplazamiento + tamanio = %d\n",direccion.desplazamiento + tamanio);
 	//printf("baseMarco+256 = %d\n",256);

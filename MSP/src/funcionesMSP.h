@@ -90,6 +90,7 @@ extern char* alg_sustitucion;
 extern t_list *listaProcesos;
 extern t_marco *tabla_marcos;
 extern uint32_t cant_marcos;
+extern bool escuchandoConexiones;
 
 //Semaforos
 extern pthread_mutex_t mutex_consola;

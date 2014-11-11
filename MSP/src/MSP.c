@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 	//1. Crear archivo de log, Leer archivo de configuracion e Iniciar semaforos
 	crear_logger();
 	leer_config(path_config);
+	printf("Memoria: %u, Swap: %u",tamanio_mem_ppal, cant_mem_swap);
 	inicializar_semaforos();
 
 	//2. Reservar bloque de memoria principal
@@ -37,12 +38,12 @@ int main(int argc, char *argv[]) {
 	//3. Generar estructuras administrativas
 	tabla_marcos = crearTablaDeMarcos();
 	printf("pase division de marcos\n");	//DEBUG
-	memoriaPpalActual = tamanio_mem_ppal; //*1024; //TODO Agregar los 1024
-	memoriaSwapActual = cant_mem_swap;// *1024*1024 ; //Idem
+	paginasMemoriaPpalActual = tamanio_mem_ppal*1024/256;
+	paginasMemoriaSwapActual = cant_mem_swap*1024*1024/256 ;
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	FILE* beso = fopen("/home/utnso/out.bc", "r");
+	/*FILE* beso = fopen("/home/utnso/out.bc", "r");
 
 				fseek(beso, 0L, SEEK_END); //Averiguo tamaño del archivo
 				long tamanio_archivo = ftell(beso);
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
-	escribirMemoria(1,0,buffer, tamanio_archivo);
+	escribirMemoria(1,0,buffer, tamanio_archivo);*/
 
 	/*********************************************************/
 
@@ -75,7 +76,7 @@ int main(int argc, char *argv[]) {
 
 		//Msp a la escucha de nuevas conexiones
 
-	while(escuchandoConexiones){ //TODO log esperando nuevas conexiones
+	/*while(escuchandoConexiones){ //TODO log esperando nuevas conexiones
 
 		pthread_t *hiloDeConexion = malloc (sizeof(pthread_t)); // Hilo que va a tratar la nueva conexion
 		int *nuevoSocket = malloc(sizeof(int)); //Puntero al socket que va a atender la nueva conexion
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]) {
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}
+	}*/
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -132,7 +133,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 		}
 
 	//1.Verifica si hay memoria disponible
-	int cant_mem_actual=memoriaPpalActual+memoriaSwapActual;//FIXME VA *256?? NO, NO?
+	int cant_mem_actual=paginasMemoriaPpalActual+paginasMemoriaSwapActual;//FIXME VA *256?? NO, NO?
 	if (tamanio_segmento > 1048576){
 		pthread_mutex_lock(&mutex_log);
 		printf("Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
@@ -154,20 +155,22 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	//3. Se fija donde crear el segmento
-	int segmentoEnSwap = 0;
-	int segmentoEnMP = 0;
-
-	if(tamanio_segmento<=memoriaSwapActual){
-		segmentoEnSwap=tamanio_segmento;
-		memoriaSwapActual -= tamanio_segmento;
-	} else { if(memoriaSwapActual>0){
-				segmentoEnSwap = memoriaSwapActual;
-				tamanio_segmento -= memoriaSwapActual;
-				memoriaSwapActual = 0;
-				segmentoEnMP=tamanio_segmento;
-				memoriaPpalActual -= tamanio_segmento;
-	} else { segmentoEnMP=tamanio_segmento;
-			 memoriaPpalActual -= tamanio_segmento;}
+	int paginasSegmentoEnSwap = 0;
+	int paginasSegmentoEnMP = 0;
+	uint32_t cantPaginasNuevoSeg=0;
+	cantPaginasNuevoSeg=tamanio_segmento/256;
+	if((tamanio_segmento%256)>0){cantPaginasNuevoSeg++;};
+	if(cantPaginasNuevoSeg<=paginasMemoriaSwapActual){
+		paginasSegmentoEnSwap=cantPaginasNuevoSeg;
+		paginasMemoriaSwapActual -= cantPaginasNuevoSeg;
+	} else { if(paginasMemoriaSwapActual>0){
+				paginasSegmentoEnSwap = paginasMemoriaSwapActual;
+				cantPaginasNuevoSeg -= paginasMemoriaSwapActual;
+				paginasMemoriaSwapActual = 0;
+				paginasSegmentoEnMP=cantPaginasNuevoSeg;
+				paginasMemoriaPpalActual -= cantPaginasNuevoSeg;
+	} else { paginasSegmentoEnMP=cantPaginasNuevoSeg;
+			 paginasMemoriaPpalActual -= cantPaginasNuevoSeg;}
 	}
 
 	//4.Crea lista de segmentos o agrega nuevo segmento
@@ -183,11 +186,11 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 	if(tamanioListaSeg<4096){
 		(*nuevoSegmento).lista_Paginas=list_create();
 		(*nuevoSegmento).numeroSegmento=asignarNumeroSegmento(tamanioListaSeg,(*proceso).lista_Segmentos);
-		(*nuevoSegmento).tamanio=segmentoEnSwap+segmentoEnMP;
+		(*nuevoSegmento).tamanio=tamanio_segmento;
 		pthread_mutex_lock(&mutex_log);
 		list_add((*proceso).lista_Segmentos, nuevoSegmento);
-		//log_info(logger,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,segmentoEnSwap+segmentoEnMP);
-		printf("Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d\n", PID, segmentoEnSwap+segmentoEnMP);
+		//log_info(logger,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,paginasSegmentoEnSwap+segmentoEnMP);
+		printf("Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d\n", PID, tamanio_segmento);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		pthread_mutex_lock(&mutex_log);
@@ -197,8 +200,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 		return -1;
 	}
 	//5.Crea tabla de paginas
-	int cantPaginas= (segmentoEnSwap+segmentoEnMP)/256; //no hace falta usar div, porque cantPaginas se queda con la parte entera por ser int
-	if (((segmentoEnSwap+segmentoEnMP)%256) > 0){ cantPaginas++;}
+	int cantPaginas= (paginasSegmentoEnSwap+paginasSegmentoEnMP);
 	int numeroPag=0;
 	while(cantPaginas>0){
 		t_lista_paginas *pagina= malloc(sizeof(t_lista_paginas));
@@ -210,10 +212,9 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 		cantPaginas=cantPaginas-1;
 	}
     //6. Carga paginas en memoria principal si es necesario
-	 if(segmentoEnMP>0){
+	 if(paginasSegmentoEnMP>0){
 		printf("Tengo que cargar paginas.\n");
-		 uint32_t cantPagCargar=segmentoEnMP/256;
-		 if ((segmentoEnMP%256) > 0){ cantPagCargar++;}
+		 uint32_t cantPagCargar=paginasSegmentoEnMP;
 		 while(cantPagCargar>0){
 			 bool mismaPagina(t_lista_paginas *pagina){
 			 			return pagina->numeroPagina==cantPagCargar-1;//AGREGUE ESTE -1
@@ -236,7 +237,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 void destruirSegmento(uint32_t PID, uint32_t direccBase){
 	//1. Traduce direccion base
 	t_direccion direccionTraducida = traducirDireccion(direccBase);
-	printf("Me llga de direcc traducida segmento %d, pagina %d y desplazamiento %d\n", direccionTraducida.segmento, direccionTraducida.pagina, direccionTraducida.desplazamiento);
+	printf("Me llega de direcc traducida segmento %d, pagina %d y desplazamiento %d\n", direccionTraducida.segmento, direccionTraducida.pagina, direccionTraducida.desplazamiento);
 	//2. Se fija si la dirrecion base es correcta
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 				return PIDEncontrado->pid==PID;
@@ -255,10 +256,10 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		//1. Destruir el archivo
 		destruir_archivo_swap(PID, (direccionTraducida).segmento, (*unaPagina).numeroPagina);
 	}
-	free(unaPagina);
 	}
 
 	void liberarSegmento(t_lista_segmentos *segmento){
+		list_iterate((*segmento).lista_Paginas, (void*) (*liberarMemoria));
 		free(segmento);
 	}
 
@@ -270,9 +271,9 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		segmento=list_find((*proceso).lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
 			//4. Libera la memoria y elimina la entrada en la tabla de segmentos y su respectiva tabla de paginas
-			list_destroy_and_destroy_elements((*segmento).lista_Paginas, (void*) (*liberarMemoria));
+			//list_destroy_and_destroy_elements((*segmento).lista_Paginas, (void*) (*liberarMemoria));
 			list_remove_and_destroy_by_condition((*proceso).lista_Segmentos,(void*) (*mismoSegmento), (void*) (*liberarSegmento));
-			free(segmento);
+
 			//TODO Faltan logs de eleminar segmento
 		} else {
 			pthread_mutex_lock(&mutex_log);
@@ -287,7 +288,7 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		pthread_mutex_unlock(&mutex_log);
 	}
 
-free(proceso);
+
 }
 
 //PUSE QUE DEVUELVA -1 SI NO SE PUDO ESCRIBIR, Y 0 SI PUDO. ES PARA VALIDACIONES.
@@ -323,25 +324,45 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 					guardarInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,bytes_escribir,tamanio);
 					printf("Guardo info en memoria\n");
 					return 0;
-				} else {//Traemos pagina a memoria ppal
+				} else {//Traemos de a una pagina a memoria ppal y escribimos
 					printf("Cargando el archivo en memoria\n");
-					uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
-					if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
-						t_pagina *paginaACargar = malloc(sizeof(t_pagina));
-						printf("extraigo info de archivo\n");
-						*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
-						printf("extraida info de archivo\n"); //DEBUG
-						t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
-						direccion_base.segmento = segmento->numeroSegmento;
-						direccion_base.pagina = pagina->numeroPagina;
-						direccion_base.desplazamiento = 0;
-						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
-						guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanio); //Una vez que tengo toda la pagina reestablecida en MP, escribo lo que me llega por parametro en la direccion correspondiente
-						pagina->marcoEnMemPpal=numeroDeMarcoLibre;
-						pagina->swap=0;
-						printf("guarde el archivo en memoria"); //DEBUG
-						tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
-						return 0;
+					//1. Cuantas paginas vamos a escrbir
+						if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
+							uint32_t paginasAEscribir = tamanio/256;
+							uint32_t sumarPagina =0;
+							if((tamanio%256)>0){paginasAEscribir++;};
+							//2. Traemos una pagina la escribimos hasta donde se pueda
+							while(paginasAEscribir>0){
+							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
+							if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
+								t_pagina *paginaACargar = malloc(sizeof(t_pagina));
+								printf("extraigo info de archivo\n");
+								*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina + sumarPagina);
+								printf("extraida info de archivo\n"); //DEBUG
+								t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
+								direccion_base.segmento = segmento->numeroSegmento;
+								direccion_base.pagina = pagina->numeroPagina;
+								direccion_base.desplazamiento = 0;
+								guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+								pagina->marcoEnMemPpal=numeroDeMarcoLibre;
+								pagina->swap=0;
+								printf("guarde el archivo en memoria"); //DEBUG
+								tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
+								if((direccion.desplazamiento+tamanio)<=256){
+									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanio);
+								}
+								else { uint32_t tamanioAEscribir = 256-direccion.desplazamiento;
+									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanioAEscribir);
+									tamanio = tamanio-tamanioAEscribir;
+									bytes_escribir = bytes_escribir[tamanioAEscribir]; //FIXME queremos dividir los bytes a escribir y no sabemos como
+								}
+							}
+							sumarPagina++;
+							paginasAEscribir--;}
+					}else{
+					segmentation_fault();}
+				}
+					return 0;
 					} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
 						printf("tendria que hacer algoritmo\n");
 						return 0;
