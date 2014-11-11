@@ -45,7 +45,7 @@
 	t_struct_char * deserializeStruct_char(char * dataPaquete, uint16_t length);
 	t_struct_string * deserializeStruct_string(char * dataPaquete, uint16_t length);
 	t_struct_sol_bytes * deserializeStruct_sol_bytes(char * dataPaquete, uint16_t length);
-	t_struct_env_bytes * despaquetizarStruct_env_bytes(char * dataPaquete,uint16_t length);
+	t_struct_env_bytes * deserializeStruct_env_bytes(char * dataPaquete,uint16_t length);
 	t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint16_t length);
 	t_struct_tcb* deserializeStruct_tcb(char* dataPaquete, uint16_t lenght);
 	t_struct_join * deserializeStruct_join(char * dataPaquete, uint16_t length);

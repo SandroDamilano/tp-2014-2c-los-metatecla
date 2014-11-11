@@ -330,7 +330,11 @@ t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 /********************************* MANEJO DE INFORMACION ******************************************/
 void guardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
 
-	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+256)){ // Se fija que no se quiera escribir fuera de los limites del marco
+	//printf("baseMarco + direccion.desplazamiento + tamanio = %d\n",direccion.desplazamiento + tamanio);
+	//printf("baseMarco+256 = %d\n",256);
+
+	//FIXME: CAMBIAR EL 289 POR EL 256. LO QUE PASA ES QUE LAS SYSCALLS ENSAMBLADAS OCUPAN 256, O SEA QUE NO ENTRAN EN UNA PAGINA
+	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+289)){ // Se fija que no se quiera escribir fuera de los limites del marco
 			memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);
 	}
 	else {
@@ -369,7 +373,6 @@ void handler_conexiones(t_conexion_entrante* conexion){
 }
 
 void handler_kernel(t_conexion_entrante* conexion){
-	printf("entro al handler kernel\n");
 	int sock = *conexion->socket;
 	t_tipoEstructura tipoRecibido;
 	void* structRecibido;
@@ -377,7 +380,10 @@ void handler_kernel(t_conexion_entrante* conexion){
 	int resultado;
 	t_struct_env_bytes* escritura;
 
-	socket_recibir(sock, &tipoRecibido,&structRecibido);
+	resultado = socket_recibir(sock, &tipoRecibido,&structRecibido);
+	if(resultado != 1){
+		printf("No llego bien el paquete al handler kernel\n");
+	}
 
 	switch(tipoRecibido){
 	case D_STRUCT_MALC:
@@ -386,7 +392,6 @@ void handler_kernel(t_conexion_entrante* conexion){
 		pthread_mutex_unlock(&mutex_log);
 
 		resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
-		printf("Cree segmento de direcc %d y pid %d\n", resultado, ((t_struct_malloc* )structRecibido)->PID);
 
 		//Le comunico al Kernel si se pudo realizar operacion
 		respuesta = malloc(sizeof(t_struct_numero));
@@ -399,7 +404,6 @@ void handler_kernel(t_conexion_entrante* conexion){
 
 		free(respuesta);
 		free(structRecibido);
-		printf("Voy a salir del hanlder kernel (malloc)\n");
 		break;
 
 	case D_STRUCT_FREE:
@@ -422,16 +426,13 @@ void handler_kernel(t_conexion_entrante* conexion){
 		break;
 
 	case D_STRUCT_ENV_BYTES:
-		//printf("Me llego pid %d, base %d, tamanio %d\n", ((t_struct_env_bytes*) structRecibido)->PID, ((t_struct_env_bytes*) structRecibido)->base, ((t_struct_env_bytes*) structRecibido)->tamanio);
-		printf("Entro a env bytes\n");
-		//escritura = (t_struct_env_bytes*) structRecibido;
+		escritura = (t_struct_env_bytes*) structRecibido;
 
 		pthread_mutex_lock(&mutex_log);
 		//TODO LOG diciendo lo que se envio
 		pthread_mutex_unlock(&mutex_log);
 
-		//resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
-		resultado = escribirMemoria(((t_struct_env_bytes*) structRecibido)->PID, ((t_struct_env_bytes*) structRecibido)->base, ((t_struct_env_bytes*) structRecibido)->buffer, ((t_struct_env_bytes*) structRecibido)->tamanio);
+		resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
 		respuesta = malloc(sizeof(t_struct_numero));
 		respuesta->numero = resultado;
 		socket_enviar(sock, D_STRUCT_NUMERO, respuesta);

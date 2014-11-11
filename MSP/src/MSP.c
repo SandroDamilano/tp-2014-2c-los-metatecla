@@ -94,7 +94,6 @@ int main(int argc, char *argv[]) {
 		(*nuevaConexion).socket=nuevoSocket;
 
 		*nuevoSocket=socket_aceptarCliente(socketServidorMSP);
-		printf("Se recibio nueva conexion\n");
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
@@ -224,17 +223,11 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 			tabla_marcos[marcoLibre].marco_libre=0;
 			t_lista_paginas *paginaACargar;//=malloc(sizeof(t_lista_paginas));
 			paginaACargar=list_find((*nuevoSegmento).lista_Paginas,(void*) (*mismaPagina));
-			if(paginaACargar == NULL){
-				printf("Cagamo'\n");
-			} else {
-				printf("se encontro pag a cargar\n");
-			}
 			(*paginaACargar).marcoEnMemPpal= marcoLibre;
 			(*paginaACargar).swap=0;
 			cantPagCargar=cantPagCargar-1;
 		 }
 		 }
-	printf("Creo la direccion... \n");
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
 	return direccionBaseDelSegmento ;
 }
@@ -306,7 +299,6 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
 		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
-					printf("pid encontrado %d\n", PIDEncontrado->pid);
 					return PIDEncontrado->pid==PID;
 				}
 	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
@@ -329,6 +321,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 			if(pagina != NULL){
 				if(pagina->swap == 0){ //Esta en memoria principal
 					guardarInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,bytes_escribir,tamanio);
+					printf("Guardo info en memoria\n");
 					return 0;
 				} else {//Traemos pagina a memoria ppal
 					printf("Cargando el archivo en memoria\n");

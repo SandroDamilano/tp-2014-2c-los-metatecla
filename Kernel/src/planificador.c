@@ -17,7 +17,6 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 	pthread_create(&thr_consumidor_new, NULL, (void*)&poner_new_a_ready, NULL);
 	pthread_create(&thr_parca, NULL, (void*)&terminar_TCBs, NULL);
 
-	printf("voy a entrar al boot\n");
 	boot(parametros->syscalls_path);
 
 	while(1){
@@ -444,19 +443,15 @@ void boot(char* systcalls_path){
 	int tamanio_codigo;
 
 	//Levanta archivo de syst calls
-	printf("Levanto arch de syscalls\n");
 	FILE* syscalls_file = abrir_archivo(systcalls_path, logger, &mutex_log);
 	tamanio_codigo = calcular_tamanio_archivo(syscalls_file);
 	char* syscalls_code = leer_archivo(syscalls_file, tamanio_codigo);
-	printf("Tamaño de arch %d\n", tamanio_codigo);
 
 	//Mando identificacion kernel
-	printf("Digo que soy kernel\n");
 	uint32_t senial = ES_KERNEL;
 	socket_enviarSignal(sockfd_cte, senial);
 
 	//Creo segmento para las syscalls
-	printf("Creo seg de codigo de syscalls\n");
 	t_struct_malloc* crear_seg = malloc(sizeof(t_struct_malloc));
 	crear_seg->PID = 0; //Pid del tcb kernel
 	crear_seg->tamano_segmento = tamanio_codigo;
@@ -467,24 +462,20 @@ void boot(char* systcalls_path){
 	free(crear_seg);
 
 	//Recibo direccion del nuevo segmento de codigo
-	printf("Recibo direccion del seg de codigo\n");
 	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
 		direccion_codigo_syscalls = ((t_struct_numero *) structRecibido)->numero;
-		printf("Recibi direccion %d\n", direccion_codigo_syscalls);
+		//printf("Recibi direccion %d\n", direccion_codigo_syscalls);
 	} else {
 		printf("No se recibio la direccion del segmento de codigo de las syscalls\n");
 	}
 
 	//Mando identificacion kernel
-	printf("Digo que soy kernel\n");
 	socket_enviarSignal(sockfd_cte, senial);
 
 	//Creo segmento de stack para las syscalls
-	printf("Creo stack de syscalls\n");
 	crear_seg = malloc(sizeof(t_struct_malloc));
 	crear_seg->PID = 0; //Pid del tcb kernel
-	printf("tamanio De stack %d\n", tamanio_stack);
 	crear_seg->tamano_segmento = tamanio_stack;
 	resultado = socket_enviar(sockfd_cte, D_STRUCT_MALC, crear_seg);
 	if(resultado != 1){
@@ -496,45 +487,41 @@ void boot(char* systcalls_path){
 	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
 		direccion_stack_syscalls = ((t_struct_numero *) structRecibido)->numero;
-		printf("Se recibio la direcc del stack %d\n", direccion_stack_syscalls);
+		//printf("Se recibio la direcc del stack %d\n", direccion_stack_syscalls);
 	} else {
 		printf("No se recibio la direccion del segmento de stack de las syscalls\n");
 	}
 
 	//Mando identificacion kernel
-	printf("Digo que soy kernel\n");
 	socket_enviarSignal(sockfd_cte, senial);
 
 	//Manda codigo de syscalls a la MSP
-	printf("Mando codigo a MSP\n");
 	t_struct_env_bytes* paquete_syscalls = malloc(sizeof(t_struct_env_bytes));
-	paquete_syscalls->buffer = syscalls_code;
+	paquete_syscalls->buffer = malloc(tamanio_codigo);
+	memcpy(paquete_syscalls->buffer, syscalls_code, tamanio_codigo);
 	paquete_syscalls->tamanio = tamanio_codigo;
 	paquete_syscalls->base = direccion_codigo_syscalls;
 	paquete_syscalls->PID = 0; //Pid del tcb kernel
 
-	printf("voy a enviar pid %d, base %d, tamanio %d y un buffer\n", paquete_syscalls->PID, paquete_syscalls->base, paquete_syscalls->tamanio);
-
 	socket_enviar(sockfd_cte, D_STRUCT_ENV_BYTES, paquete_syscalls);//sockMSP
+	free(paquete_syscalls->buffer);
 	free(paquete_syscalls);
 	free(structRecibido);
 
 	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);//sockMSP
-	if (tipoStruct != D_STRUCT_RESPUESTA_MSP) {
-		printf("No se ha recibido correctamente direccion del codigo y direccion de stack\n");
+	if (tipoStruct != D_STRUCT_NUMERO) {
+		if(((t_struct_numero*) structRecibido)->numero == 0){
+			printf("Se escribio correctamente en memoria\n");
+		}
 	}
 
 	void *datos_recibidos = malloc(2*sizeof(int32_t)); //direccion_codigo + direccion_stack
 	datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-	memcpy(&direccion_codigo_syscalls,datos_recibidos,sizeof(uint32_t));
-	memcpy(&direccion_stack_syscalls,datos_recibidos + sizeof(uint32_t),sizeof(uint32_t));
-
 	free(datos_recibidos);
 	free(structRecibido);
 
 	//Crea hilo en modo kernel y lo encola en bloqueados
-	printf("Encolo al tcb kernel\n");
 	t_hilo *tcb_kernel = crear_TCB(0, direccion_codigo_syscalls, direccion_stack_syscalls, tamanio_codigo);
 	tcb_kernel->kernel_mode = true;
 	bloquear_tcbKernel(tcb_kernel);
