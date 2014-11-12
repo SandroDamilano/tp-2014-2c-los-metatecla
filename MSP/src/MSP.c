@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	/*FILE* beso = fopen("/home/utnso/out.bc", "r");
+	FILE* beso = fopen("/home/utnso/out.bc", "r");
 
 				fseek(beso, 0L, SEEK_END); //Averiguo tamaño del archivo
 				long tamanio_archivo = ftell(beso);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
-	escribirMemoria(1,0,buffer, tamanio_archivo);*/
+	escribirMemoria(1,0,buffer, tamanio_archivo);
 
 	/*********************************************************/
 
@@ -76,29 +76,20 @@ int main(int argc, char *argv[]) {
 
 		//Msp a la escucha de nuevas conexiones
 
-	/*while(escuchandoConexiones){ //TODO log esperando nuevas conexiones
+	while(escuchandoConexiones){ //TODO log esperando nuevas conexiones
 
 		pthread_t *hiloDeConexion = malloc (sizeof(pthread_t)); // Hilo que va a tratar la nueva conexion
 		int *nuevoSocket = malloc(sizeof(int)); //Puntero al socket que va a atender la nueva conexion
 
-		t_info_mem *informacion_memoria= malloc(sizeof(t_info_mem)); //Informacion de memoria que va a utilizar el hilo
-		(*informacion_memoria).algoritmo_sust=alg_sustitucion;
-		(*informacion_memoria).lista_marcos=tabla_marcos;
-		(*informacion_memoria).tamanio_mem_ppal=tamanio_mem_ppal;
-		(*informacion_memoria).tamanio_swap=cant_mem_swap;
-		(*informacion_memoria).memoriaPpalActual=memoriaPpalActual;
-		(*informacion_memoria).memoriaSwapActual=memoriaSwapActual;
-
 		t_conexion_entrante *nuevaConexion = malloc(sizeof(t_conexion_entrante)); //Informacion para el hilo de conexion
 		(*nuevaConexion).hiloDeConexion=hiloDeConexion;
-		(*nuevaConexion).informacion_memoria=informacion_memoria;
 		(*nuevaConexion).socket=nuevoSocket;
 
 		*nuevoSocket=socket_aceptarCliente(socketServidorMSP);
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}*/
+	}
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -296,7 +287,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 	//1. traducir direccion y validarla
 
 	t_direccion direccion = traducirDireccion(direcc_log);
-
+	printf("direccion: %i, %i, %i", direccion.desplazamiento,direccion.pagina,direccion.segmento);
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
 		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
@@ -317,75 +308,57 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
 		segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
-			t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
-			pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
-			if(pagina != NULL){
-				if(pagina->swap == 0){ //Esta en memoria principal
-					guardarInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,bytes_escribir,tamanio);
-					printf("Guardo info en memoria\n");
-					return 0;
-				} else {//Traemos de a una pagina a memoria ppal y escribimos
-					printf("Cargando el archivo en memoria\n");
-					//1. Cuantas paginas vamos a escrbir
-						if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
-							uint32_t paginasAEscribir = tamanio/256;
-							uint32_t sumarPagina =0;
-							if((tamanio%256)>0){paginasAEscribir++;};
-							//2. Traemos una pagina la escribimos hasta donde se pueda
-							while(paginasAEscribir>0){
+			if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
+				while(tamanio>0){
+					t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
+					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
+					if(pagina != NULL){
+						if(pagina->swap==1){
 							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
-							if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
-								t_pagina *paginaACargar = malloc(sizeof(t_pagina));
-								printf("extraigo info de archivo\n");
-								*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina + sumarPagina);
-								printf("extraida info de archivo\n"); //DEBUG
-								t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
-								direccion_base.segmento = segmento->numeroSegmento;
-								direccion_base.pagina = pagina->numeroPagina;
-								direccion_base.desplazamiento = 0;
-								guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
-								pagina->marcoEnMemPpal=numeroDeMarcoLibre;
-								pagina->swap=0;
-								printf("guarde el archivo en memoria"); //DEBUG
-								tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
-								if((direccion.desplazamiento+tamanio)<=256){
-									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanio);
+								if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
+									t_pagina *paginaACargar = malloc(sizeof(t_pagina));
+									printf("extraigo info de archivo\n");
+									*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
+									printf("extraida info de archivo\n");
+									t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
+									direccion_base.segmento = segmento->numeroSegmento;
+									direccion_base.pagina = pagina->numeroPagina;
+									direccion_base.desplazamiento = 0;
+									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+									pagina->marcoEnMemPpal=numeroDeMarcoLibre;
+									pagina->swap=0;
+									printf("guarde el archivo en memoria"); //DEBUG
+									tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
+								}else{/*ALGORITMO DE REEMPLAZO*/}
+						}
+						if((256-direccion.desplazamiento)>=tamanio){
+							printf("Bytes a escribir: %s tamanio: %i \n", bytes_escribir, tamanio);
+							guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,tamanio);
+							tamanio=0;
+						} else {
+						 printf("LLEGUE ACA");
+							uint32_t espacioLibre = 256-direccion.desplazamiento;
+						 guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,espacioLibre);
+						 bytes_escribir=string_substring(bytes_escribir,espacioLibre, tamanio-espacioLibre);
+						 direccion.pagina=direccion.pagina+1;
+						 direccion.desplazamiento=0;
+						 tamanio=tamanio-espacioLibre;
+						}
+					} else {
+						page_not_found_exception(direccion.pagina);
+						return -1;}
 								}
-								else { uint32_t tamanioAEscribir = 256-direccion.desplazamiento;
-									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanioAEscribir);
-									tamanio = tamanio-tamanioAEscribir;
-									bytes_escribir = bytes_escribir[tamanioAEscribir]; //FIXME queremos dividir los bytes a escribir y no sabemos como
-								}
-							}
-							sumarPagina++;
-							paginasAEscribir--;}
-					}else{
-					segmentation_fault();}
-				}
-					return 0;
-					} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
-						printf("tendria que hacer algoritmo\n");
-						return 0;
-					}
-				}
-			free(pagina);
-			} else {
-				page_not_found_exception(direccion.pagina);
-				return -1;
-			}
+			} else {segmentation_fault();}
+		} else {segment_not_found_exception(direccion.segmento);
+				return -1;}
 		} else {
-			segment_not_found_exception(direccion.segmento);
-			return -1;
-		}
-	free(segmento);} else {
 	PID_not_found_exception(PID);
-	return -1;
-	}
-	free(proceso);
+	return -1;}
+
 }
 
 char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
-	char* bytes_solicitados;
+	char* respuesta = string_new();
 
 	t_direccion direccion = traducirDireccion(direcc_log);
 
@@ -406,38 +379,45 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 			t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
 			segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
 			if(segmento != NULL){
-				t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
-				pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
-				if(pagina != NULL){
-					if(pagina->swap == 0){ //Esta en memoria principal
-						bytes_solicitados= devolverInformacion(memoria_ppal+(pagina->marcoEnMemPpal)*256,direccion,tamanio);
-						return bytes_solicitados;
-						//TODO: cuando se terminen de usar los bytes solicitados, AFUERA de esta funcion, liberar memoria. LIBERAR RECURSOS
-
-					} else {//Traemos pagina a memoria ppal
-						printf("Buscando archivo \n");
-						uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
-						if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
-							t_pagina *paginaACargar = malloc(sizeof(t_pagina));
-							*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
-							printf("abri el archivo pedido"); //DEBUG
-							guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,paginaACargar->codigo,paginaACargar->tamanio_buffer);
-							tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
-							pagina->marcoEnMemPpal=numeroDeMarcoLibre;
-							pagina->swap=0;
-							printf("guarde la info en memoria"); //DEBUG
-							bytes_solicitados = devolverInformacion(memoria_ppal+(numeroDeMarcoLibre*256), direccion, tamanio);
-							printf("copie la info de memoria"); //DEBUG
-							return bytes_solicitados;
-						} else { //TODO Fijarse que algoritmo de reemplazo tiene el arch de config y hacer swap
-							return NULL; //cambiar
-						}
-					}
-					free(pagina);
-				} else {
-					page_not_found_exception(direccion.pagina);
-					return NULL;
-				}
+				if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
+					while(tamanio>0){
+						t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
+						pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
+							if(pagina != NULL){
+							if(pagina->swap==1){
+							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
+									if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
+										t_pagina *paginaACargar = malloc(sizeof(t_pagina));
+										printf("extraigo info de archivo\n");
+										*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
+										printf("extraida info de archivo\n");
+										t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
+										direccion_base.segmento = segmento->numeroSegmento;
+										direccion_base.pagina = pagina->numeroPagina;
+										direccion_base.desplazamiento = 0;
+										guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
+										pagina->marcoEnMemPpal=numeroDeMarcoLibre;
+										pagina->swap=0;
+										printf("guarde el archivo en memoria"); //DEBUG
+										tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
+										}else{/*ALGORITMO DE REEMPLAZO*/}
+										}
+										if((256-direccion.desplazamiento)<=tamanio){
+											string_append(&respuesta,devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,tamanio));
+											tamanio=0;
+										} else {
+										 uint32_t espacioLibre = 256-direccion.desplazamiento;
+										 string_append(&respuesta,devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,espacioLibre));
+										 direccion.pagina=direccion.pagina+1;
+										 direccion.desplazamiento=0;
+										 tamanio=tamanio-espacioLibre;
+										}
+										free(pagina);
+									} else {
+										page_not_found_exception(direccion.pagina);
+										return -1;}
+										return respuesta;}
+							} else {segmentation_fault();}
 			} else {
 				segment_not_found_exception(direccion.segmento);
 				return NULL;

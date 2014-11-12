@@ -66,18 +66,8 @@ typedef struct marco{
 	uint32_t bitAlgoritmo;
 } t_marco;
 
-typedef struct info_memoria{
-	uint32_t tamanio_mem_ppal;
-	uint32_t tamanio_swap;
-	t_marco *lista_marcos;
-	char *algoritmo_sust;
-	uint32_t memoriaSwapActual;
-	uint32_t memoriaPpalActual;
-} t_info_mem;
-
 typedef struct conexion_entrante{
 	int32_t *socket;
-	t_info_mem *informacion_memoria;
 	pthread_t *hiloDeConexion;
 	//TODO Archivo de logeo
 } t_conexion_entrante;
@@ -128,7 +118,7 @@ void segmentation_fault();
 //Manejo de informacion
 char* devolverInformacion(void *baseMarco, t_direccion direccion, uint32_t tamanio);
 void guardarInformacion(void *baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
-
+char* cortarString(char* unString, uint32_t limite, uint32_t tamanio);
 
 ////////////INICIO////////////
 void leer_config(char *path); 	//levanta archivo de configuracion y asigna a las variables correspodientes

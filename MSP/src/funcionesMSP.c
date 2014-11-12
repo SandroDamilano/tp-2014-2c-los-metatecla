@@ -238,17 +238,6 @@ t_pagina extraerInfoDeArchSwap(uint32_t pid, uint32_t seg, uint32_t pagina){ //A
 	return pag;
 }
 
-/*FIXME Juli necesitamos que extraerinfodearchswap haga lo siguiente:
-1- Abra el directorio
-2- Abre el archivo ( NO LO TIENE QUE BUSCAR por que SIEMPRE va a existir y si no existe la funcion fopen en w+ lo crea)
-3- Saca la informacion del archivo (si lo acaba de crear va a estar vacio)
-4- Carga la info en el t_pagina y la retorna
-
-Ponemos por que vos agregaste el swap_out en escribir y esto no tendria ser necesario ya que si esta funcion hace lo que pusimos no es necesario que se cree el archivo antes de abrirse
-Nosotros tratamos de arreglar pero cuando lo corremos la consola se queda haciendo "nada" no tira error ni nada, no sabemos que puede ser, capaz vos te das cuenta.
-Fijate que agregamos un par de prints y el error esta en abrir_archivo_en_direcctorio no sale de ahi
-*/
-
 
 /**************** AUXILIARES DE SWAPPING *****************/
 
@@ -328,58 +317,14 @@ t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 }
 
 /********************************* MANEJO DE INFORMACION ******************************************/
-void cargarYGuardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
-	//1. Cuantas paginas vamos a escrbir
-		uint32_t paginasAEscribir = tamanio/256;
-		uint32_t sumarPagina =0;
-		if((tamanio%256)>0){paginasAEscribir++;};
-		//2. Traemos una pagina la escribimos hasta donde se pueda
-		while(paginasAEscribir>0){
-		uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
-		if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
-			t_pagina *paginaACargar = malloc(sizeof(t_pagina));
-			printf("extraigo info de archivo\n");
-			*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina + sumarPagina);
-			printf("extraida info de archivo\n"); //DEBUG
-			t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
-			direccion_base.segmento = segmento->numeroSegmento;
-			direccion_base.pagina = pagina->numeroPagina;
-			direccion_base.desplazamiento = 0;
-			guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
-			if((direccion.desplazamiento+tamanio)<=256){
-				guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanio);
-			}
-			else { uint32_t tamanioAEscribir = 256-direccion.desplazamiento
-				guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion,bytes_escribir,tamanioAEscribir);
-				tamanio = tamanio-tamanioAEscribir;
-				bytes_escribir = bytes_escribir[tamanioAEscribir]; //FIXME queremos dividir los bytes a escribir y no sabemos como
-			}
-		}
-		sumarPagina++;
-		paginasAEscribir--;}
-}
 
 void guardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
-
-
-	//printf("baseMarco + direccion.desplazamiento + tamanio = %d\n",direccion.desplazamiento + tamanio);
-	//printf("baseMarco+256 = %d\n",256);
-
-	//FIXME: CAMBIAR EL 289 POR EL 256. LO QUE PASA ES QUE LAS SYSCALLS ENSAMBLADAS OCUPAN 256, O SEA QUE NO ENTRAN EN UNA PAGINA
-	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+289)){ // Se fija que no se quiera escribir fuera de los limites del marco
-			memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);
-	}
-	else {
-			segmentation_fault();
-	}
+memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);
 }
 
 char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t tamanio){
 	void* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
-	if((baseMarco + direccion.desplazamiento + tamanio) < (baseMarco+256)){
 	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio+1);
-	} else {
-		segmentation_fault();}
 	return buffer;
 }
 
@@ -660,8 +605,7 @@ void handler_kernel(t_conexion_entrante* conexion){
 	case '8': terminarConsola=0; break;
 	}
 	}
-pthread_exit((void*) "Termino el hilo Consola");	/* No se si esta bien implementado el pthread_exit */
-// Falta ajustar cada case a lo que el comando pida: definir que funcion se llama de la MSP, definir tipos y liberar memoria
+pthread_exit(NULL);	/* No se si esta bien implementado el pthread_exit */
 return NULL;
 }
 
