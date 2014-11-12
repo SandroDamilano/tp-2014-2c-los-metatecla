@@ -209,8 +209,11 @@ uint32_t crearDireccion(uint32_t segmento, uint32_t pagina, uint32_t desplazamie
 
 uint32_t sumar_desplazamiento(uint32_t direccion, uint32_t desplazamiento){
 	t_direccion direccion_traducida= traducirDireccion(direccion);
-
 	direccion_traducida.desplazamiento += desplazamiento;
+	while(direccion_traducida.desplazamiento>=256){
+		direccion_traducida.pagina=direccion_traducida.pagina+1;
+		direccion_traducida.desplazamiento=direccion_traducida.desplazamiento-256;
+	}
 
 	return crearDireccion(direccion_traducida.segmento, direccion_traducida.pagina, direccion_traducida.desplazamiento);
 }
