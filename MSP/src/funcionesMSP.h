@@ -64,6 +64,9 @@ typedef struct marco{
 	uint32_t marco_libre;
 	uint32_t numeroMarco;
 	uint32_t bitAlgoritmo;
+	uint32_t pid;
+	uint32_t segmento;
+	uint32_t pagina;
 } t_marco;
 
 typedef struct conexion_entrante{
@@ -81,7 +84,7 @@ extern t_list *listaProcesos;
 extern t_marco *tabla_marcos;
 extern uint32_t cant_marcos;
 extern bool escuchandoConexiones;
-
+extern void* memoria_ppal;
 //Semaforos
 extern pthread_mutex_t mutex_consola;
 extern pthread_mutex_t mutex_log;
@@ -118,7 +121,7 @@ void segmentation_fault();
 //Manejo de informacion
 char* devolverInformacion(void *baseMarco, t_direccion direccion, uint32_t tamanio);
 void guardarInformacion(void *baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
-char* cortarString(char* unString, uint32_t limite, uint32_t tamanio);
+void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento);
 
 ////////////INICIO////////////
 void leer_config(char *path); 	//levanta archivo de configuracion y asigna a las variables correspodientes
@@ -138,5 +141,5 @@ DIR* abrir_directorio_swap();
 t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG);
 void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina);
 void destruir_archivo(char* nombre_archivo);
-
+void modificarBitAlgoritmo();
 #endif /* FUNCIONESMSP_H_ */

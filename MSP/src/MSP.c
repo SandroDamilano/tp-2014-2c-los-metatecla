@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	FILE* beso = fopen("/home/utnso/out.bc", "r");
+	/*FILE* beso = fopen("/home/utnso/out.bc", "r");
 
 				fseek(beso, 0L, SEEK_END); //Averiguo tamaño del archivo
 				long tamanio_archivo = ftell(beso);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
-	escribirMemoria(1,0,buffer, tamanio_archivo);
+	escribirMemoria(1,0,buffer, tamanio_archivo);*/
 
 	/*********************************************************/
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
 		//Se crea socket servidor de la MSP
 
-		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+	/*	socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}
+	}*/
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -213,6 +213,9 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 
 			uint32_t marcoLibre = buscarMarcoLibre(tabla_marcos);
 			tabla_marcos[marcoLibre].marco_libre=0;
+			tabla_marcos[marcoLibre].pid=PID;
+			tabla_marcos[marcoLibre].segmento=(*nuevoSegmento).numeroSegmento;
+			tabla_marcos[marcoLibre].pagina=cantPagCargar-1;
 			t_lista_paginas *paginaACargar;//=malloc(sizeof(t_lista_paginas));
 			paginaACargar=list_find((*nuevoSegmento).lista_Paginas,(void*) (*mismaPagina));
 			(*paginaACargar).marcoEnMemPpal= marcoLibre;
@@ -329,7 +332,11 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 									pagina->swap=0;
 									printf("guarde el archivo en memoria"); //DEBUG
 									tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
-								}else{/*ALGORITMO DE REEMPLAZO*/}
+									tabla_marcos[numeroDeMarcoLibre].pagina=pagina->numeroPagina;
+									tabla_marcos[numeroDeMarcoLibre].segmento=segmento->numeroSegmento;
+									tabla_marcos[numeroDeMarcoLibre].pid=PID;
+									tabla_marcos[numeroDeMarcoLibre].bitAlgoritmo=0;
+								}else{hacerSwap(PID,direccion,pagina,segmento);}
 						}
 						if((256-direccion.desplazamiento)>=tamanio){
 							printf("Bytes a escribir: %s tamanio: %i \n", bytes_escribir, tamanio);
@@ -381,6 +388,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 			if(segmento != NULL){
 				if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
 					while(tamanio>0){
+						modificarBitAlgoritmo();
 						t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
 						pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 							if(pagina != NULL){
@@ -400,7 +408,11 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 										pagina->swap=0;
 										printf("guarde el archivo en memoria"); //DEBUG
 										tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
-										}else{/*ALGORITMO DE REEMPLAZO*/}
+										tabla_marcos[numeroDeMarcoLibre].pagina=pagina->numeroPagina;
+										tabla_marcos[numeroDeMarcoLibre].segmento=segmento->numeroSegmento;
+										tabla_marcos[numeroDeMarcoLibre].pid=PID;
+										tabla_marcos[numeroDeMarcoLibre].bitAlgoritmo=0;
+										}else{hacerSwap(PID,direccion,pagina,segmento);}
 										}
 										if((256-direccion.desplazamiento)<=tamanio){
 											string_append(&respuesta,devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,tamanio));
@@ -426,6 +438,7 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 		PID_not_found_exception(PID);
 		return NULL;}
 free(proceso);
+free(respuesta);
 }
 
 

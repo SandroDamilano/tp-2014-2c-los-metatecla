@@ -120,6 +120,9 @@ t_marco *crearTablaDeMarcos(){
 		nuevaTabla[i].marco_libre=1;
 		nuevaTabla[i].numeroMarco=i;
 		nuevaTabla[i].bitAlgoritmo=0;
+		nuevaTabla[i].pagina=-1;
+		nuevaTabla[i].pid=-1;
+		nuevaTabla[i].segmento=-1;
 	}
 return nuevaTabla;
 }
@@ -238,6 +241,18 @@ t_pagina extraerInfoDeArchSwap(uint32_t pid, uint32_t seg, uint32_t pagina){ //A
 	return pag;
 }
 
+uint32_t buscarPaginaMenosUsada(){
+	uint32_t i, maximo, numeroMarco;
+	maximo=tabla_marcos[0].bitAlgoritmo;
+	numeroMarco=0;
+	for(i=0;i==cant_marcos-1;i++){
+		if(tabla_marcos[i].bitAlgoritmo>maximo){
+			maximo=tabla_marcos[i].bitAlgoritmo;
+			numeroMarco=i;
+		}
+	}
+	return numeroMarco;
+}
 
 /**************** AUXILIARES DE SWAPPING *****************/
 
@@ -328,7 +343,65 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 	return buffer;
 }
 
- /*********************************************** CONEXIONES ********************************************************/
+void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento){
+
+
+	uint32_t numeroMarco;
+	//1. pregunta algoritmo
+	if(string_equals_ignore_case(alg_sustitucion,"LRU")){
+		numeroMarco = buscarPaginaMenosUsada();
+	} else { /*numeroMarco = algoritmo_clock(); TODO CLOCK*/}
+	//3. crea archivo de swap en disco con la pagina anterior
+	bool mismaPagina(t_lista_paginas *numeroPagina){
+					return numeroPagina->numeroPagina==tabla_marcos[numeroMarco].pagina;
+				}
+	t_lista_paginas *paginaSacada = malloc(sizeof(t_lista_paginas));
+	paginaSacada = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
+	printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
+	printf("Pagina en swap: %i\n", paginaSacada->swap);
+	paginaSacada->swap=1;
+	printf("Pagina en swap: %i\n", paginaSacada->swap);
+	paginaSacada->marcoEnMemPpal=-1;
+	t_pagina paginaASacar;
+	paginaASacar.PID=tabla_marcos[numeroMarco].pid;
+	paginaASacar.num_pag=tabla_marcos[numeroMarco].pagina;
+	paginaASacar.num_segmento=tabla_marcos[numeroMarco].segmento;
+	t_direccion direccionCreada;
+	direccionCreada.desplazamiento=0;
+	direccionCreada.pagina=tabla_marcos[numeroMarco].pagina;
+	direccionCreada.segmento=tabla_marcos[numeroMarco].segmento;
+	paginaASacar.codigo=devolverInformacion(memoria_ppal+((numeroMarco)*256),direccionCreada,256);
+	paginaASacar.tamanio_buffer=256;
+	crearArchivoSwapEnDisco(paginaASacar);
+	memset(memoria_ppal+((numeroMarco)*256),0,256);
+	//4. usa extraerinfoarchswap con la pagina que llega de parametro
+	t_pagina paginaACargar = extraerInfoDeArchSwap(PID,direccion.segmento,direccion.pagina);
+	t_direccion direccionACargar;
+	direccionACargar.segmento = direccion.segmento;
+	direccionACargar.pagina = direccion.pagina;
+	direccionACargar.desplazamiento = 0;
+	guardarInformacion(memoria_ppal+(numeroMarco*256),direccionACargar,paginaACargar.codigo,paginaACargar.tamanio_buffer);
+	pagina->marcoEnMemPpal=numeroMarco;
+	pagina->swap=0;
+	printf("guarde el archivo en memoria\n"); //DEBUG
+	tabla_marcos[numeroMarco].marco_libre = 0;
+	tabla_marcos[numeroMarco].pagina=direccion.pagina;
+	tabla_marcos[numeroMarco].segmento=direccion.segmento;
+	tabla_marcos[numeroMarco].pid=PID;
+	tabla_marcos[numeroMarco].bitAlgoritmo=0;
+	printf("HICE SWAP \n");
+}
+
+void modificarBitAlgoritmo(){
+	uint32_t i;
+	if(string_equals_ignore_case(alg_sustitucion,"LRU")){
+		for(i=0;i==cant_marcos-1;i++){
+			tabla_marcos[i].bitAlgoritmo+=1;
+		}
+		} else {  /*TODO CLOCK*/}
+}
+
+/*********************************************** CONEXIONES ********************************************************/
 
 void handler_conexiones(t_conexion_entrante* conexion){
 	int sock = *conexion->socket;
