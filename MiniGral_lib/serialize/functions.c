@@ -326,7 +326,49 @@ t_stream* serializeStruct_tcb(t_struct_tcb* estructuraOrigen){
 
 	char* data = crearDataConHeader(D_STRUCT_TCB, paquete->length);
 
-	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+	int tamDato = 0;
+	int tamTot = sizeof(t_header);
+	memcpy(data + tamTot , &estructuraOrigen->base_stack, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->cola, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->cursor_stack, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->pid, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->puntero_instruccion, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->segmento_codigo, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->segmento_codigo_size, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->tid, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->kernel_mode, tamDato = sizeof(bool));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[0], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[1], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[2], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[3], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[4], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
 
 	paquete->data = data;
 
@@ -341,7 +383,49 @@ t_stream* serializeStruct_tcbQuantum(t_struct_tcb* estructuraOrigen){
 
 	char* data = crearDataConHeader(D_STRUCT_TCB_QUANTUM, paquete->length);
 
-	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+	int tamDato = 0;
+	int tamTot = sizeof(t_header);
+	memcpy(data + tamTot , &estructuraOrigen->base_stack, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->cola, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->cursor_stack, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->pid, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->puntero_instruccion, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->segmento_codigo, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->segmento_codigo_size, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->tid, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->kernel_mode, tamDato = sizeof(bool));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[0], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[1], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[2], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[3], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(data + tamTot , &estructuraOrigen->registros[4], tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
 
 	paquete->data = data;
 
@@ -625,7 +709,49 @@ t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint1
 t_struct_tcb* deserializeStruct_tcb(char* dataPaquete, uint16_t lenght){
 	t_struct_tcb* estructuraDestino = malloc(sizeof(t_struct_tcb));
 
-	memcpy(estructuraDestino, dataPaquete, sizeof(t_struct_tcb));
+	int tamDato = 0;
+	int tamTot = 0;
+	memcpy(&estructuraDestino->base_stack, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->cola, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->cursor_stack, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->pid, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->puntero_instruccion, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->segmento_codigo, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->segmento_codigo_size, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->tid, dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->kernel_mode, dataPaquete + tamTot, tamDato = sizeof(bool));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->registros[0], dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->registros[1], dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->registros[2], dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->registros[3], dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
+
+	memcpy(&estructuraDestino->registros[4], dataPaquete + tamTot, tamDato = sizeof(uint32_t));
+	tamTot += tamDato;
 
 	return estructuraDestino;
 }

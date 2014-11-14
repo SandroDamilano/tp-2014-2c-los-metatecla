@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	if(sockKernel == -1){
 		printf("no se pudo conectar a Kernel\n");
 	} else {
-		printf("Me conecte al Kernel\n");
+		printf("Me conecte al Kernel. Socket %d\n", sockKernel);
 		t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
 		es_cpu->numero = ES_CPU;
 		socket_enviar(sockKernel, D_STRUCT_NUMERO, es_cpu);
@@ -71,14 +71,17 @@ int main(int argc, char** argv) {
 	}
 
 	//socket de Kernel con tcb
-	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+	int j =socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 	copiar_structRecibido_a_tcb(tcb, structRecibido);
 
+	if(j!= -1){
+		printf("Se recibio tcb\n");
+	}
 
 	//////////////////////
-	/*quantum = 3;
+	quantum = 30;
 
-	tcb->pid = 0;
+	/*tcb->pid = 0;
 	tcb->tid = 0;
 	tcb->kernel_mode = true;
 	tcb->segmento_codigo = 0;
@@ -101,14 +104,14 @@ int main(int argc, char** argv) {
 
 	while(1){
 	if(registros_cpu.K == false){ //SI NO ES MODO KERNEL
-
+		printf("km mode en false\n");
 		if(terminoEjecucion == true){
-
+			printf("termine ejecucion (why man?)\n");
 			terminar_y_pedir_tcb(tcb);
 
 		} else {
 			if(cantidad_lineas_ejecutadas == quantum){
-
+				printf("cant lineas = quantum\n");
 				//socket a kernel con tcb
 				copiar_registros_a_tcb();
 				t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
@@ -121,16 +124,20 @@ int main(int argc, char** argv) {
 				terminar_y_pedir_tcb(tcb);
 
 			} else{
-
+				printf("estoy aca\n");
 				cantidad_lineas_ejecutadas++;
+				ejecutar_otra_linea(sockMSP, tcb, bytecode);
 			}
 		}
 	}
 
 	if(registros_cpu.K == true){ //SI ES MODO KERNEL
+		printf("km mode en true\n");
 		if(terminoEjecucion == true){
+			printf("termine ejecucion (why man?)\n");
 			terminar_y_pedir_tcb(tcb);
 		} else{
+			printf("estoy aca\n");
 			ejecutar_otra_linea(sockMSP,tcb,bytecode);
 			}
 		}
