@@ -338,7 +338,7 @@ memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);
 }
 
 char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t tamanio){
-	void* buffer = malloc(tamanio); //FIXME: NO SE SI ES VOID* O CHAR*
+	void* buffer = malloc(tamanio+1); //FIXME: NO SE SI ES VOID* O CHAR*
 	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio+1);
 	return buffer;
 }
@@ -407,8 +407,9 @@ void handler_conexiones(t_conexion_entrante* conexion){
 	int sock = *conexion->socket;
 	uint32_t senial;
 
-	while(1){
 	socket_recibirSignal(sock, &senial);
+
+	//while(1){
 
 	switch (senial) {
 	case ES_CPU:
@@ -418,7 +419,7 @@ void handler_conexiones(t_conexion_entrante* conexion){
 		handler_kernel(conexion);
 		break;
 	}
-	}
+	//}
 
 }
 
@@ -521,16 +522,16 @@ void handler_kernel(t_conexion_entrante* conexion){
 	 				//TODO LOG diciendo lo que se solicita
 	 				pthread_mutex_unlock(&mutex_log);
 
-	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
-	 				//buffer->buffer = malloc(solicitud->tamanio);
-	 				//memcpy(buffer->buffer,solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio), solicitud->tamanio);
-	 				buffer->buffer = solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
-	 				buffer->tamano_buffer = solicitud->tamanio;
-	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, buffer);
+	 				t_struct_respuesta_msp buffer;// = malloc(sizeof(t_struct_respuesta_msp));
+	 				void* buff= malloc(solicitud->tamanio);
+	 				memcpy(buff,solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio), solicitud->tamanio);
+	 				buffer.buffer = buff;
+	 				//buffer->buffer = solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
+	 				buffer.tamano_buffer = solicitud->tamanio;
+	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, &buffer);
 
-	 				free(buffer->buffer);
-	 				free(buffer);
-	 				free(structRecibido);
+	 				free(buffer.buffer);
+	 				//free(structRecibido); libero abajo
 	 				break;
 
 	 			case D_STRUCT_ENV_BYTES:
@@ -550,7 +551,7 @@ void handler_kernel(t_conexion_entrante* conexion){
 	 				//TODO LOG diciendo si se pudo enviar correctamente
 	 				pthread_mutex_unlock(&mutex_log);
 
-	 				free(structRecibido);
+	 				//free(structRecibido);
 	 				free(respuesta);
 	 				break;
 
@@ -571,7 +572,7 @@ void handler_kernel(t_conexion_entrante* conexion){
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				free(respuesta);
-	 				free(structRecibido);
+	 				//free(structRecibido);
 	 				break;
 
 	 			case D_STRUCT_FREE:
@@ -591,12 +592,13 @@ void handler_kernel(t_conexion_entrante* conexion){
 	 				//TODO LOG diciendo si se pudo borrar correctamente (si es -1, poner error)
 	 				pthread_mutex_unlock(mutex_log);*/
 
-	 				free(structRecibido);
+	 				//free(structRecibido);
 
 	 				break;
 	 		}
 	 	}
 
+	 	free(structRecibido);
 	 	return;
  }
 

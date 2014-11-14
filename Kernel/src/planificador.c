@@ -470,8 +470,6 @@ void boot(char* systcalls_path){
 		printf("No se recibio la direccion del segmento de codigo de las syscalls\n");
 	}
 
-	//Mando identificacion kernel
-	socket_enviarSignal(sockfd_cte, senial);
 
 	//Creo segmento de stack para las syscalls
 	crear_seg = malloc(sizeof(t_struct_malloc));
@@ -492,8 +490,6 @@ void boot(char* systcalls_path){
 		printf("No se recibio la direccion del segmento de stack de las syscalls\n");
 	}
 
-	//Mando identificacion kernel
-	socket_enviarSignal(sockfd_cte, senial);
 
 	//Manda codigo de syscalls a la MSP
 	t_struct_env_bytes* paquete_syscalls = malloc(sizeof(t_struct_env_bytes));
@@ -515,10 +511,6 @@ void boot(char* systcalls_path){
 		}
 	}
 
-	void *datos_recibidos = malloc(2*sizeof(int32_t)); //direccion_codigo + direccion_stack
-	datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
-
-	free(datos_recibidos);
 	free(structRecibido);
 
 	//Crea hilo en modo kernel y lo encola en bloqueados
@@ -628,7 +620,19 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	case D_STRUCT_PEDIR_TCB:
 		printf("me pidieron TCB\n");
 		//darle otro tcb a cpu, si tiene
-		/*tcb = obtener_tcb_a_ejecutar();
+		//tcb = obtener_tcb_a_ejecutar();
+		// PARA TESTEAR
+		tcb = malloc(sizeof(t_hilo));
+		tcb->segmento_codigo = 0;
+		tcb->puntero_instruccion = 0;
+		tcb->pid = 1;
+		tcb->tid = 1;
+		tcb->kernel_mode = false;
+		tcb->registros[0] = 0;
+		tcb->registros[1] = 0;
+		tcb->registros[2] = 0;
+		tcb->registros[3] = 0;
+		tcb->registros[4] = 0;
 
 		if (tcb!=NULL){
 			//Había un tcb en ready, entonces se lo mando
@@ -636,19 +640,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
-		}*/
-		// PARA TESTEAR
-		tcb = malloc(sizeof(t_hilo));
-		tcb->segmento_codigo = 0;
-		tcb->puntero_instruccion = 0;
-		tcb->pid = 0;
-		tcb->tid = 0;
-		tcb->kernel_mode = true;
-		tcb->registros[0] = 0;
-		tcb->registros[1] = 0;
-		tcb->registros[2] = 0;
-		tcb->registros[3] = 0;
-		tcb->registros[4] = 0;
+		}
 
 		t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
 		copiar_tcb_a_structTcb(tcb, paquete_tcb);
@@ -695,7 +687,7 @@ void handler_cpu(int sockCPU){
 		//otro socket para el tcb
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 
-		if(tipoRecibido == D_STRUCT_TCB){
+		if(tipoRecibido2 == D_STRUCT_TCB){
 			copiar_structRecibido_a_tcb(tcb, structRecibido);//Chupala toga
 		} else {
 			printf("No llegó el TCB para la operacion INTE\n");

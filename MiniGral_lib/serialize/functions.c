@@ -305,9 +305,9 @@ t_stream * serializeStruct_respuestaMSP(t_struct_respuesta_msp * estructuraOrige
 
 	int tamanoTotal = sizeof(t_header);
 
-	memcpy(data + tamanoTotal, estructuraOrigen,sizeof(t_struct_respuesta_msp));
+	memcpy(data + tamanoTotal, &estructuraOrigen->tamano_buffer, sizeof(uint32_t));
 
-	tamanoTotal += sizeof(t_struct_respuesta_msp);
+	tamanoTotal += sizeof(uint32_t);
 
 	memcpy(data + tamanoTotal, estructuraOrigen->buffer, estructuraOrigen->tamano_buffer);		//copio a data el nombre.
 
@@ -698,8 +698,8 @@ t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint1
 	void * buffer = malloc(length - sizeof(t_struct_respuesta_msp));
 	t_struct_respuesta_msp * estructuraDestino = malloc(sizeof(t_struct_respuesta_msp));
 
-	memcpy(estructuraDestino, dataPaquete, sizeof(t_struct_respuesta_msp)); //copio el data del paquete a la estructura.
-	memcpy(buffer, dataPaquete + sizeof(t_struct_respuesta_msp), length - sizeof(t_struct_respuesta_msp)); // copiamos los bytes que queriamos enviar
+	memcpy(&estructuraDestino->tamano_buffer, dataPaquete, sizeof(uint32_t));
+	memcpy(buffer, dataPaquete + sizeof(uint32_t), length - sizeof(uint32_t)); // copiamos los bytes que queriamos enviar
 
 	estructuraDestino->buffer = buffer;
 

@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	/*FILE* beso = fopen("/home/utnso/out.bc", "r");
+	FILE* beso = fopen("/home/utnso/out.bc", "r");
 
 				fseek(beso, 0L, SEEK_END); //Averiguo tamaño del archivo
 				long tamanio_archivo = ftell(beso);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
-	escribirMemoria(1,0,buffer, tamanio_archivo);*/
+	escribirMemoria(1,0,buffer, tamanio_archivo);
 
 	/*********************************************************/
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
 		//Se crea socket servidor de la MSP
 
-	/*	socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
+		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
 
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
 		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
 		pthread_detach(*hiloDeConexion);
-	}*/
+	}
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
@@ -383,62 +383,72 @@ char* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	if(proceso != NULL){
-			t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
-			segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
-			if(segmento != NULL){
-				if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
-					while(tamanio>0){
-						modificarBitAlgoritmo();
-						t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
-						pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
-							if(pagina != NULL){
-							if(pagina->swap==1){
+		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+		segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
+		if(segmento != NULL){
+			if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
+				while(tamanio>0){
+					modificarBitAlgoritmo();
+					t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
+					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
+					if(pagina != NULL){
+						if(pagina->swap==1){
 							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
-									if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
-										t_pagina *paginaACargar = malloc(sizeof(t_pagina));
-										printf("extraigo info de archivo\n");
-										*paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
-										printf("extraida info de archivo\n");
-										t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
-										direccion_base.segmento = segmento->numeroSegmento;
-										direccion_base.pagina = pagina->numeroPagina;
-										direccion_base.desplazamiento = 0;
-										guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
-										pagina->marcoEnMemPpal=numeroDeMarcoLibre;
-										pagina->swap=0;
-										printf("guarde el archivo en memoria"); //DEBUG
-										tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
-										tabla_marcos[numeroDeMarcoLibre].pagina=pagina->numeroPagina;
-										tabla_marcos[numeroDeMarcoLibre].segmento=segmento->numeroSegmento;
-										tabla_marcos[numeroDeMarcoLibre].pid=PID;
-										tabla_marcos[numeroDeMarcoLibre].bitAlgoritmo=0;
-										}else{hacerSwap(PID,direccion,pagina,segmento);}
-										}
-										if((256-direccion.desplazamiento)<=tamanio){
-											string_append(&respuesta,devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,tamanio));
-											tamanio=0;
-										} else {
-										 uint32_t espacioLibre = 256-direccion.desplazamiento;
-										 string_append(&respuesta,devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,espacioLibre));
-										 direccion.pagina=direccion.pagina+1;
-										 direccion.desplazamiento=0;
-										 tamanio=tamanio-espacioLibre;
-										}
-										free(pagina);
+
+							if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
+								t_pagina paginaACargar;// = malloc(sizeof(t_pagina));
+								printf("extraigo info de archivo\n");
+								paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
+								printf("extraida info de archivo\n");
+								t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
+								memcpy(&direccion_base.segmento, &segmento->numeroSegmento, sizeof(uint32_t));
+								memcpy(&direccion_base.pagina, &pagina->numeroPagina, sizeof(uint32_t));
+								direccion_base.desplazamiento = 0;
+								guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar.codigo,paginaACargar.tamanio_buffer);
+								pagina->marcoEnMemPpal=numeroDeMarcoLibre;
+								pagina->swap=0;
+								printf("guarde el archivo en memoria"); //DEBUG
+								tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
+								memcpy(&tabla_marcos[numeroDeMarcoLibre].pagina, &pagina->numeroPagina, sizeof(uint32_t));
+								memcpy(&tabla_marcos[numeroDeMarcoLibre].segmento, &segmento->numeroSegmento, sizeof(uint32_t));
+								tabla_marcos[numeroDeMarcoLibre].pid=PID;
+								tabla_marcos[numeroDeMarcoLibre].bitAlgoritmo=0;
+
+								}else{
+									hacerSwap(PID,direccion,pagina,segmento);
+									}
+
+								}
+
+								if((256-direccion.desplazamiento)<=tamanio){
+									char* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);
+									string_append(&respuesta,buff);
+									tamanio=0;
 									} else {
-										page_not_found_exception(direccion.pagina);
-										return -1;}
-										return respuesta;}
-							} else {segmentation_fault();}
-			} else {
-				segment_not_found_exception(direccion.segmento);
-				return NULL;
-			}
-			free(segmento);} else {
-		PID_not_found_exception(PID);
-		return NULL;}
+									 uint32_t espacioLibre = 256-direccion.desplazamiento;
+									 char* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
+									 string_append(&respuesta,buff);
+									 direccion.pagina=direccion.pagina+1;
+									 direccion.desplazamiento=0;
+									 tamanio=tamanio-espacioLibre;
+									}
+						} else {
+							page_not_found_exception(direccion.pagina);
+							return NULL;
+						}
+					return respuesta;
+				}
+			} else {segmentation_fault();}
+		} else {
+			segment_not_found_exception(direccion.segmento);
+			return NULL;
+		}
+	free(segmento);} else {
+	PID_not_found_exception(PID);
+	return NULL;}
 free(proceso);
 free(respuesta);
+return NULL;
 }
 
 

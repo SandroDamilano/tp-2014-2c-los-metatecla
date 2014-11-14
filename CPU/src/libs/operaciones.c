@@ -33,9 +33,13 @@ void ejecutarLinea(int* bytecode){
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
 
+	//uint32_t senial = ES_CPU;
+	//socket_enviarSignal(sockMSP, senial);
 
 	switch(bytecodeLetras){
 	case LOAD:
+
+		printf("Estoy en LOAD\n");
 
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 

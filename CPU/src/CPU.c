@@ -104,9 +104,7 @@ int main(int argc, char** argv) {
 
 	while(1){
 	if(registros_cpu.K == false){ //SI NO ES MODO KERNEL
-		printf("km mode en false\n");
 		if(terminoEjecucion == true){
-			printf("termine ejecucion (why man?)\n");
 			terminar_y_pedir_tcb(tcb);
 
 		} else {
@@ -124,7 +122,6 @@ int main(int argc, char** argv) {
 				terminar_y_pedir_tcb(tcb);
 
 			} else{
-				printf("estoy aca\n");
 				cantidad_lineas_ejecutadas++;
 				ejecutar_otra_linea(sockMSP, tcb, bytecode);
 			}
@@ -132,12 +129,9 @@ int main(int argc, char** argv) {
 	}
 
 	if(registros_cpu.K == true){ //SI ES MODO KERNEL
-		printf("km mode en true\n");
 		if(terminoEjecucion == true){
-			printf("termine ejecucion (why man?)\n");
 			terminar_y_pedir_tcb(tcb);
 		} else{
-			printf("estoy aca\n");
 			ejecutar_otra_linea(sockMSP,tcb,bytecode);
 			}
 		}
