@@ -722,24 +722,23 @@ void handler_cpu(int sockCPU){
 		bloquear_tcbJoin(tcb, tid_a_esperar);
 
 		break;
-	case D_STRUCT_BLOCK:
+	case D_STRUCT_BLOCK: //TODO: ARREGLAR (recibir un TID)
+
 		//Recibo id semaforo
 		id_semaforo = ((t_struct_numero*) structRecibido)->numero;
 
-		//otro socket para el tcb
+		//otro socket para el TID
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 
-		if(tipoRecibido2 == D_STRUCT_TCB){
-			copiar_structRecibido_a_tcb(tcb, structRecibido);
+		if(tipoRecibido2 == D_STRUCT_NUMERO){
+			//copiar_structRecibido_a_tcb(tcb, structRecibido);
+			int tid_a_bloquear = ((t_struct_numero *) structRecibido2)->numero;
+			tcb = desbloquear_tcbSystcall(tid_a_bloquear);
+			bloquear_tcbSemaforo(tcb, id_semaforo);
+			obtener_tcb_de_cpu(sockCPU);
 		} else {
-			printf("No se recibio el TCB para la operacion BLOCK\n");
+			printf("No se recibio el TID para la operacion BLOCK\n");
 		}
-
-		obtener_tcb_de_cpu(sockCPU);
-
-		// Revisar si está bien (idem WAKE)
-		// bloquear_tcbSemaforo espera un uint32_t en vez de un int32_t
-		bloquear_tcbSemaforo(tcb, id_semaforo);
 
 		break;
 	case D_STRUCT_WAKE:

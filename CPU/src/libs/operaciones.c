@@ -27,6 +27,7 @@ void ejecutarLinea(int* bytecode){
 
 	t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
 	t_struct_numero* id_semaforo = malloc(sizeof(t_struct_numero));
+	t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
 	t_struct_env_bytes* datos_enviados = malloc(sizeof(t_struct_env_bytes));
 	void* datos_recibidos;
@@ -947,11 +948,12 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_BLOCK);
 
 
-		copiar_registros_a_tcb();
-		copiar_tcb_a_structTcb(tcb, tcb_enviar);
+		//copiar_registros_a_tcb();
+		//copiar_tcb_a_structTcb(tcb, tcb_enviar);
+		tid_enviar->numero = tcb->tid;
 
-		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
-		controlar_envio(resultado, D_STRUCT_TCB);
+		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, tid_enviar);
+		controlar_envio(resultado, D_STRUCT_NUMERO);
 
 		list_clean(parametros);
 		break;
