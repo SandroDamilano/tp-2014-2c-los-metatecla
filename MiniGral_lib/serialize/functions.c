@@ -299,7 +299,7 @@ t_stream* serializeStruct_env_bytes(t_struct_env_bytes* estructuraOrigen){
 t_stream * serializeStruct_respuestaMSP(t_struct_respuesta_msp * estructuraOrigen){
 	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
 
-	paquete->length = sizeof(t_header) + (estructuraOrigen->tamano_buffer) + sizeof(t_struct_respuesta_msp);
+	paquete->length = sizeof(t_header) + (estructuraOrigen->tamano_buffer) + sizeof(uint32_t);//sizeof(t_struct_respuesta_msp);
 
 	void * data = crearDataConHeader(D_STRUCT_RESPUESTA_MSP, paquete->length); //creo el data
 
@@ -695,7 +695,7 @@ t_struct_env_bytes* deserializeStruct_env_bytes(char* dataPaquete, uint16_t leng
 }
 
 t_struct_respuesta_msp * deserializeStruct_respuestaMSP(char * dataPaquete,uint16_t length){
-	void * buffer = malloc(length - sizeof(t_struct_respuesta_msp));
+	void * buffer = malloc(length - sizeof(uint32_t));
 	t_struct_respuesta_msp * estructuraDestino = malloc(sizeof(t_struct_respuesta_msp));
 
 	memcpy(&estructuraDestino->tamano_buffer, dataPaquete, sizeof(uint32_t));

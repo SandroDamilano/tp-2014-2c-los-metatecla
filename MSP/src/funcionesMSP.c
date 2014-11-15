@@ -403,105 +403,25 @@ void modificarBitAlgoritmo(){
 
 /*********************************************** CONEXIONES ********************************************************/
 
-void handler_conexiones(t_conexion_entrante* conexion){
-	int sock = *conexion->socket;
-	uint32_t senial;
+void handler_conexiones(void){
+	int socket_servidor = socket_crearServidor("127.0.0.1", puertoMSP);
+	pthread_t nueva_solicitud;
 
-	socket_recibirSignal(sock, &senial);
-
-	//while(1){
-
-	switch (senial) {
-	case ES_CPU:
-		handler_cpu(conexion);
-		break;
-	case ES_KERNEL:
-		handler_kernel(conexion);
-		break;
+	while(1){
+		t_conexion_entrante* conexion = malloc(sizeof(t_conexion_entrante));
+		conexion->socket = socket_aceptarCliente(socket_servidor);
+		pthread_create(&nueva_solicitud, NULL, (void*) &handler_solicitudes, conexion);
 	}
-	//}
+
+	//TODO cerrar conexion
 
 }
 
-void handler_kernel(t_conexion_entrante* conexion){
-	int sock = *conexion->socket;
-	t_tipoEstructura tipoRecibido;
-	void* structRecibido;
-	t_struct_numero* respuesta;
-	int resultado;
-	t_struct_env_bytes* escritura;
 
-	resultado = socket_recibir(sock, &tipoRecibido,&structRecibido);
-	if(resultado != 1){
-		printf("No llego bien el paquete al handler kernel\n");
-	}
+ void handler_solicitudes(t_conexion_entrante* conexion){
+	 	pthread_detach(pthread_self());
 
-	switch(tipoRecibido){
-	case D_STRUCT_MALC:
-		pthread_mutex_lock(&mutex_log);
-		//TODO LOG diciendo que se va a crear un segmento con el tamaño recibido
-		pthread_mutex_unlock(&mutex_log);
-
-		resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
-
-		//Le comunico al Kernel si se pudo realizar operacion
-		respuesta = malloc(sizeof(t_struct_numero));
-		respuesta->numero = resultado;
-		socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
-
-		pthread_mutex_lock(&mutex_log);
-		//TODO LOG diciendo si se pudo crear correctamente (si es -1, poner error)
-		pthread_mutex_unlock(&mutex_log);
-
-		free(respuesta);
-		free(structRecibido);
-		break;
-
-	case D_STRUCT_FREE:
-		pthread_mutex_lock(&mutex_log);
-		//TODO LOG diciendo que se va a liberar un segmento de direccion tal
-		pthread_mutex_unlock(&mutex_log);
-
-		destruirSegmento(((t_struct_free *) structRecibido)->PID, ((t_struct_free *) structRecibido)->direccion_base);
-
-		/*Le comunico a CPU si se pudo destruir segmento?
-		t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
-		respuesta->numero = resultado;
-		socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
-
-		pthread_mutex_lock(mutex_log);
-		//TODO LOG diciendo si se pudo borrar correctamente (si es -1, poner error)
-		pthread_mutex_unlock(mutex_log);*/
-
-		free(structRecibido);
-		break;
-
-	case D_STRUCT_ENV_BYTES:
-		escritura = (t_struct_env_bytes*) structRecibido;
-
-		pthread_mutex_lock(&mutex_log);
-		//TODO LOG diciendo lo que se envio
-		pthread_mutex_unlock(&mutex_log);
-
-		resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
-		respuesta = malloc(sizeof(t_struct_numero));
-		respuesta->numero = resultado;
-		socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
-
-		pthread_mutex_lock(&mutex_log);
-		//TODO LOG diciendo si se pudo enviar correctamente
-		pthread_mutex_unlock(&mutex_log);
-
-		free(structRecibido);
-		free(respuesta);
-		break;
-	}
-}
-
- void handler_cpu(t_conexion_entrante* conexion){
-	 	//pthread_detach(pthread_self());
-
-	 	int sock = *conexion->socket;
+	 	int sock = conexion->socket;
 
 	 	t_tipoEstructura tipoRecibido;
 	 	void* structRecibido;
@@ -522,15 +442,16 @@ void handler_kernel(t_conexion_entrante* conexion){
 	 				//TODO LOG diciendo lo que se solicita
 	 				pthread_mutex_unlock(&mutex_log);
 
-	 				t_struct_respuesta_msp buffer;// = malloc(sizeof(t_struct_respuesta_msp));
-	 				void* buff= malloc(solicitud->tamanio);
-	 				memcpy(buff,solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio), solicitud->tamanio);
-	 				buffer.buffer = buff;
-	 				//buffer->buffer = solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
-	 				buffer.tamano_buffer = solicitud->tamanio;
-	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, &buffer);
+	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
 
-	 				free(buffer.buffer);
+	 				//buffer->buffer = malloc(solicitud->tamanio);
+	 				buffer->buffer = solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
+	 				//memcpy(buffer->buffer, solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio), solicitud->tamanio);
+
+	 				buffer->tamano_buffer = solicitud->tamanio;
+	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, buffer);
+
+	 				free(buffer->buffer);
 	 				//free(structRecibido); libero abajo
 	 				break;
 

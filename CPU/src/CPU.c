@@ -144,8 +144,8 @@ int main(int argc, char** argv) {
 }
 
 void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]) {
-	uint32_t senial = ES_CPU;
-	socket_enviarSignal(sockMSP, senial);
+	/*uint32_t senial = ES_CPU;
+	socket_enviarSignal(sockMSP, senial);*/
 
 	//socket a MSP con PC
 	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
