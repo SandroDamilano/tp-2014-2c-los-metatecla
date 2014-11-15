@@ -22,7 +22,7 @@
 #include "main.h"
 
 // Variables para socket Cliente MSP
-int sockfd_cte, numbytes_clt;
+int socket_MSP, numbytes_clt;
 struct addrinfo hints_clt, *servinfo_clt, *p_clt;
 int rv_clt;
 char s_clt[INET6_ADDRSTRLEN];
@@ -204,8 +204,8 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 
 int crear_cliente_MSP(char* ip, uint32_t puerto){
 	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%d]\n", ip, puerto);
-	sockfd_cte = socket_crearYConectarCliente(ip, puerto);
-	return sockfd_cte;
+	socket_MSP = socket_crearYConectarCliente(ip, puerto);
+	return socket_MSP;
 }
 /*
 int crear_cliente_MSP(const char *ip, const char* puerto)

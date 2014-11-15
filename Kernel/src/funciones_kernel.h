@@ -31,7 +31,7 @@
 	extern int cantidad_de_TIDs;
 
 	//Socket de la MSP
-	extern int sockfd_cte;
+	extern int socket_MSP;
 
 	// Variables de uso para los multiplexores del loader y el planificador
 	extern fd_set master_consolas;

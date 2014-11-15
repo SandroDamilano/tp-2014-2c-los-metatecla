@@ -12,7 +12,7 @@
 	#include <commons/log.h>
 	#include "funciones_kernel.h"
 
-	int sockfd_cte;//sockMSP;
+	int socket_MSP;//sockMSP;
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
 

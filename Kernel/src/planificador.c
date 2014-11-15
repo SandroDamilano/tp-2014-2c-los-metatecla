@@ -162,11 +162,11 @@ void liberar_memoria(t_hilo* tcb){
 	free_segmento->PID = tcb->pid;
 	free_segmento->direccion_base = tcb->segmento_codigo;
 
-	socket_enviar(sockfd_cte, D_STRUCT_FREE, free_segmento);
+	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
 
 	//Libero segmento de stack
 	free_segmento->direccion_base = tcb->base_stack;
-	socket_enviar(sockfd_cte, D_STRUCT_FREE, free_segmento);
+	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
 
 	free(free_segmento);
 	free(tcb);
@@ -449,20 +449,20 @@ void boot(char* systcalls_path){
 
 	//Mando identificacion kernel
 	uint32_t senial = ES_KERNEL;
-	socket_enviarSignal(sockfd_cte, senial);
+	socket_enviarSignal(socket_MSP, senial);
 
 	//Creo segmento para las syscalls
 	t_struct_malloc* crear_seg = malloc(sizeof(t_struct_malloc));
 	crear_seg->PID = 0; //Pid del tcb kernel
 	crear_seg->tamano_segmento = tamanio_codigo;
-	int resultado = socket_enviar(sockfd_cte, D_STRUCT_MALC, crear_seg);
+	int resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
 	if(resultado != 1){
 		printf("No se pudo crear segmento de codigo para las syscalls\n");
 	}
 	free(crear_seg);
 
 	//Recibo direccion del nuevo segmento de codigo
-	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
 		direccion_codigo_syscalls = ((t_struct_numero *) structRecibido)->numero;
 		//printf("Recibi direccion %d\n", direccion_codigo_syscalls);
@@ -475,14 +475,14 @@ void boot(char* systcalls_path){
 	crear_seg = malloc(sizeof(t_struct_malloc));
 	crear_seg->PID = 0; //Pid del tcb kernel
 	crear_seg->tamano_segmento = tamanio_stack;
-	resultado = socket_enviar(sockfd_cte, D_STRUCT_MALC, crear_seg);
+	resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
 	if(resultado != 1){
 		printf("No se pudo crear segmento de stack para las syscalls\n");
 	}
 	free(crear_seg);
 
 	//Recibo direccion del nuevo segmento de stack
-	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
 		direccion_stack_syscalls = ((t_struct_numero *) structRecibido)->numero;
 		//printf("Se recibio la direcc del stack %d\n", direccion_stack_syscalls);
@@ -499,12 +499,12 @@ void boot(char* systcalls_path){
 	paquete_syscalls->base = direccion_codigo_syscalls;
 	paquete_syscalls->PID = 0; //Pid del tcb kernel
 
-	socket_enviar(sockfd_cte, D_STRUCT_ENV_BYTES, paquete_syscalls);//sockMSP
+	socket_enviar(socket_MSP, D_STRUCT_ENV_BYTES, paquete_syscalls);//sockMSP
 	free(paquete_syscalls->buffer);
 	free(paquete_syscalls);
 	free(structRecibido);
 
-	socket_recibir(sockfd_cte, &tipoStruct, &structRecibido);//sockMSP
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);//sockMSP
 	if (tipoStruct != D_STRUCT_NUMERO) {
 		if(((t_struct_numero*) structRecibido)->numero == 0){
 			printf("Se escribio correctamente en memoria\n");
