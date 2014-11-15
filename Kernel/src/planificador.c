@@ -136,11 +136,9 @@ void escribir_consola(uint32_t pid, char* mensaje){
 	pthread_mutex_lock(&mutex_consolas);
 	t_data_nodo_consolas* data = list_find(consolas, (void*)es_el_pid_consola);
 	pthread_mutex_unlock(&mutex_consolas);
-	int socket = data->socket;
-	t_struct_string* impresion = malloc(sizeof(t_struct_string));
-	impresion->string = mensaje;
-	socket_enviar(socket, ENVIAR_IMPRIMIR_TEXTO, impresion);
-	free(impresion);
+	if (data!=NULL){
+		imprimir_texto(data->socket, mensaje);
+	}
 }
 
 void terminar_proceso(t_hilo* tcb){

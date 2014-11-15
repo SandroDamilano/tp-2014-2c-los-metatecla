@@ -38,6 +38,7 @@
 		t_log* logger;
 	} arg_LOADER;
 
+	/*
 	// Vars globales LOADER
 	t_struct_string msg;
 
@@ -45,8 +46,33 @@
 	extern int encolar(t_cola cola, t_hilo* tcb);
 	extern void check_new_ready();
 	extern void check_exit();
+	*/
+
+	t_queue* cola_new;
+	t_list* consolas;
+	pthread_mutex_t mutex_consolas;
+	pthread_mutex_t mutex_new;
+	pthread_mutex_t mutex_TIDs;
+	pthread_mutex_t mutex_PIDs;
+	pthread_mutex_t mutex_log;
+	int cantidad_de_PIDs;
+	int cantidad_de_TIDs;
+
+	fd_set master_consolas;
+	int consolas_fdmax;
+	pthread_mutex_t mutex_master_consolas;
+
+	int socket_MSP;
+
+	int sock_a_eliminar;
 
 	void* main_LOADER(void* parametros);
-	void *get_in_addr(struct sockaddr *sa);
+	void handler_consola(int sock_consola);
+	int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola);
+	void destruir_seg_codigo(uint32_t pid, uint32_t dir_codigo);
+	void agregar_consola(uint32_t pid, uint32_t tid, int sock);
+	void eliminar_consola(int sock);
+	bool es_la_consola(t_data_nodo_consolas* data);
+	//void *get_in_addr(struct sockaddr *sa);
 
 #endif /* LOADER_H_ */

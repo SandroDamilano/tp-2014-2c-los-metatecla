@@ -65,5 +65,6 @@
 	void consumir_tcb(void (*funcion)(t_hilo*), sem_t* sem, pthread_mutex_t* mutex, t_hilo* tcb);
 	int obtener_pid();
 	int obtener_tid();
+	void imprimir_texto(int socket_consola, char* mensaje);
 
 #endif /* FUNCIONES_KERNEL_H_ */

@@ -87,6 +87,14 @@ void poner_en_new(t_hilo* tcb){
 	producir_tcb(push_new, &sem_new, &mutex_new, tcb);
 }
 
+void imprimir_texto(int socket_consola, char* mensaje){
+	t_struct_string* impresion = malloc(sizeof(t_struct_string));
+	int tamanio_mensaje = strlen(mensaje);
+	impresion->string = malloc(tamanio_mensaje);
+	memcpy(impresion->string, mensaje, tamanio_mensaje);
+	socket_enviar(socket_consola, ENVIAR_IMPRIMIR_TEXTO, impresion);
+	free(impresion);
+}
 
 t_hilo *crear_TCB(uint32_t pid, uint32_t dir_codigo, uint32_t dir_stack, uint32_t tamanio_codigo)
 {

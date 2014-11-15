@@ -6,7 +6,7 @@
  */
 
 #include "loader.h"
-
+/*
 // Variables para sockets Servidor
 fd_set master;		// master file descriptor list
 fd_set read_fds;	// temp file descriptor list for select()
@@ -234,12 +234,12 @@ uint32_t solicitarMemoria(u_int32_t pid, u_int32_t size, char* datos)
 	solicitud.size = size;
 	solicitud.datos = datos;
 
-	if((preparar_paquete(sockfd_cte, SOLICITAR_MEMORIA_MSP, &solicitud)) != 0) {	// Envia los datos para solicitar memoria
+	if((preparar_paquete(socket_MSP, SOLICITAR_MEMORIA_MSP, &solicitud)) != 0) {	// Envia los datos para solicitar memoria
 		perror("[Kernel-LDR]: Error al enviar solicitud de memoria a la MSP.");
 		return 1;
 	}
 
-	res = analizar_paquete_loader(sockfd_cte, NULL, &resultado);
+	res = analizar_paquete_loader(socket_MSP, NULL, &resultado);
 
 	if(resultado == MEMORIA_MSP_FAIL) {
 		perror("[Kernel-LDR]: la MSP nego espacio en memoria.");
@@ -251,14 +251,14 @@ uint32_t solicitarMemoria(u_int32_t pid, u_int32_t size, char* datos)
 
 int atender_Proceso(uint32_t socket,uint32_t tamanio_stack)
 {
-	/*	PASOS
+	*//*	PASOS
 	* 1- Recibir BESO file
 	* 2- Asignar nuevo PID
 	* 3- Asignar nuevo TID
 	* 3- Solicitar memoria a la MSP
 	* 4- Crear TCB e Init del PC (IP)
 	* 5- Encolar proceso (segun BBNP)
-	*/
+	*//*
 
 	u_int32_t pid, dir_code_segment, dir_stack_segment, long_beso_file;
 	char* beso_file = "";
@@ -340,7 +340,7 @@ void check_exit()
 }
 
 void* main_LOADER(void* parametros) {
-/* El LOADER siempre acepta procesos, JAMAS los rechaza. Otra historia es si despues no se pueden alojar en la MSP.
+*//* El LOADER siempre acepta procesos, JAMAS los rechaza. Otra historia es si despues no se pueden alojar en la MSP.
  * CICLO
  *
  * 1- PONER SOCKETS A LA ESCUCHA DE PROGRAMAS
@@ -350,7 +350,7 @@ void* main_LOADER(void* parametros) {
  * 	2.4- Solicitar memoria a la MSP
  * 	2.5- Crear TCB e Init del PC (IP)
  * 	2.6- Encolar proceso (segun BBNP)
-*/
+*//*
 
 	// parametros recibidos del Kernel
 	logger = ((arg_LOADER *)parametros)->logger;
@@ -434,6 +434,211 @@ void* main_LOADER(void* parametros) {
 
 	log_trace(logger,"FIN de registro de actividades del Hilo LOADER.");
 	return 0;
+}*/
+
+void* main_LOADER(void* parametros) {
+
+	//Se atienden una a una cada solicitud de las consolas
+	while(1){
+		int i;
+		fd_set read_consolas;
+		FD_ZERO(&read_consolas);
+
+		pthread_mutex_lock(&mutex_master_consolas);
+		read_consolas = master_consolas;
+		pthread_mutex_unlock(&mutex_master_consolas);
+
+		if (select(consolas_fdmax+1, &read_consolas, NULL, NULL, NULL) == -1) {
+			perror("select");
+			exit(1);
+		}
+		for(i=0; i<=consolas_fdmax; i++){
+			if(FD_ISSET(i, &read_consolas)){
+				handler_consola(i);
+			}
+		}
+	}
+
+	return 0;
 }
 
+void handler_consola(int sock_consola){
+
+	char* codigo;
+	char* texto;
+	int tamanio;
+	int numero;
+
+	t_tipoEstructura tipoRecibido;
+	void* structRecibido;
+
+	if(socket_recibir(sock_consola, &tipoRecibido, &structRecibido)==-1){
+		//La Consola cerró la conexión
+		printf("Se perdió la comunicación con la Consola: %d\n", sock_consola);
+
+		//TODO: Averiguar qué hacer con el proceso que se estaba ejecutando
+		//Saco el nodo correspondiente de la estructura que relaciona el socket de la consola con el proceso
+		eliminar_consola(sock_consola);
+
+		//Cierro el socket y lo saco del FD maestro
+		close(sock_consola);
+		pthread_mutex_lock(&mutex_master_consolas);
+		FD_CLR(sock_consola, &master_consolas);
+		pthread_mutex_unlock(&mutex_master_consolas);
+	}
+
+	switch(tipoRecibido){
+	case FILE_RECV_SUCCESS:
+		//Recibo un script a ejecutar
+
+		tamanio = strlen(((t_struct_string*)structRecibido)->string);
+		codigo = malloc(tamanio);
+		memcpy(codigo, ((t_struct_string*)structRecibido)->string, tamanio);
+
+		//Creo el TCB, reservo y escribo sus segmentos, y lo encolo en NEW.
+		//En caso de fallo, informo a la consola.
+		if (crear_nuevo_tcb(codigo, tamanio, sock_consola) == 0){
+			imprimir_texto(sock_consola, "Falló al crear los segmentos.");
+		}
+
+		break;
+
+	case D_STRUCT_INNC:
+		//Recibo un imput de una cadena de texto
+
+		tamanio = strlen(((t_struct_string*)structRecibido)->string);
+		texto = malloc(tamanio);
+		memcpy(texto, ((t_struct_string*)structRecibido)->string, tamanio);
+		//TODO
+
+		break;
+
+	case D_STRUCT_INNN:
+		//Recibo un imput de un número
+
+		numero = ((t_struct_numero*)structRecibido)->numero;
+		//TODO
+
+		break;
+	}
+
+	free(structRecibido);
+
+}
+
+int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
+	void * structRecibido;
+	t_tipoEstructura tipoStruct;
+
+	uint32_t dir_codigo;
+	uint32_t dir_stack;
+
+	//Mando identificación kernel
+	uint32_t senial = ES_KERNEL;
+	socket_enviarSignal(socket_MSP, senial);
+
+	int pid = obtener_pid();
+
+	// Pido a la MSP un segmento para el código
+	t_struct_malloc* crear_seg = malloc(sizeof(t_struct_malloc));
+	crear_seg->PID = pid;
+	crear_seg->tamano_segmento = tamanio;
+	int resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
+	if(resultado != 1){
+		printf("No se pudo crear segmento de codigo\n");
+		return 0;
+	}
+	free(crear_seg);
+
+	//Recibo direccion del nuevo segmento de código
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
+	if(tipoStruct == D_STRUCT_NUMERO ){
+		dir_codigo = ((t_struct_numero *) structRecibido)->numero;
+	} else {
+		printf("No se recibio la direccion del segmento de codigo de las syscalls\n");
+		return 0;
+	}
+
+	//Pido a la MSP un segmento de stack
+	crear_seg = malloc(sizeof(t_struct_malloc));
+	crear_seg->PID = pid;
+	crear_seg->tamano_segmento = tamanio_stack;
+	resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
+	if(resultado != 1){
+		printf("No se pudo crear segmento de stack\n");
+		//Si no logré crear el segmento de stack, destruyo el de código que creé antes
+		destruir_seg_codigo(pid, dir_codigo);
+		return 0;
+	}
+	free(crear_seg);
+
+	//Recibo direccion del nuevo segmento de stack
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
+	if(tipoStruct == D_STRUCT_NUMERO ){
+		dir_stack = ((t_struct_numero *) structRecibido)->numero;
+	} else {
+		printf("No se recibio la direccion del segmento de stack\n");
+		//Si no logré crear el segmento de stack, destruyo el de código que creé antes
+		destruir_seg_codigo(pid, dir_codigo);
+		return 0;
+	}
+
+	//Escribo el código en la MSP
+	t_struct_env_bytes* paquete_codigo = malloc(sizeof(t_struct_env_bytes));
+	paquete_codigo->buffer = malloc(tamanio);
+	memcpy(paquete_codigo->buffer, codigo, tamanio);
+	paquete_codigo->tamanio = tamanio;
+	paquete_codigo->base = dir_codigo;
+	paquete_codigo->PID = pid;
+
+	socket_enviar(socket_MSP, D_STRUCT_ENV_BYTES, paquete_codigo);
+	free(paquete_codigo->buffer);
+	free(paquete_codigo);
+	free(structRecibido);
+
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
+	if (tipoStruct != D_STRUCT_NUMERO) {
+		if(((t_struct_numero*) structRecibido)->numero == 0){
+			printf("Se escribio correctamente en memoria\n");
+		}
+	}
+
+	//Creo el TCB, agrego otra entrada a la estructura consolas y encolo el TCB en new
+	t_hilo* tcb = crear_TCB(pid, dir_codigo, dir_stack, tamanio);
+	agregar_consola(pid, tcb->tid, sock_consola);
+	poner_en_new(tcb);
+	return 1;
+}
+
+void destruir_seg_codigo(uint32_t pid, uint32_t dir_codigo){
+	t_struct_free* free_segmento = malloc(sizeof(t_struct_free));
+	free_segmento->PID = pid;
+	free_segmento->direccion_base = dir_codigo;
+
+	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
+
+	free(free_segmento);
+}
+
+void agregar_consola(uint32_t pid, uint32_t tid, int sock){
+	t_data_nodo_consolas* data = malloc(sizeof(t_data_nodo_consolas));
+	data->pid = pid;
+	data->socket = sock;
+	data->tid = tid;
+	pthread_mutex_lock(&mutex_consolas);
+	list_add(consolas, data);
+	pthread_mutex_unlock(&mutex_consolas);
+}
+
+void eliminar_consola(int sock){
+	sock_a_eliminar = sock;
+	pthread_mutex_lock(&mutex_consolas);
+	t_data_nodo_consolas* data = list_remove_by_condition(consolas, (void*)es_la_consola);
+	pthread_mutex_unlock(&mutex_consolas);
+	free(data);
+}
+
+bool es_la_consola(t_data_nodo_consolas* data){
+	return (data->socket == sock_a_eliminar);
+}
 
