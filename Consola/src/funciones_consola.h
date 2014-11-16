@@ -32,7 +32,7 @@
 
 	// config file vars
 	char* ip_kernel;
-	char* puerto_kernel;
+	int puerto_kernel;
 
 	//char *buffer;
 	void* buffer;
@@ -57,7 +57,7 @@
 	int handlePIDResult(char* datos);
 	int preparar_paquete(u_int32_t socket, t_tipoEstructura op, void* estructura);
 	int analizar_paquete(void *paquete, t_tipoEstructura *id);
-	int conectar_a_Kernel(char *, char *);
+	int conectar_a_Kernel(char *, int);
 
 	//Funciones para Sockets
 	void *get_in_addr(struct sockaddr *); 					// Devuelve estructura sockaddr.

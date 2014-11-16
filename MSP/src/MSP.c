@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	listaProcesos = list_create();
 
 	/*********************************************************/
-	FILE* beso = fopen("/home/utnso/out.bc", "r");
+	/*FILE* beso = fopen("/home/utnso/out.bc", "r");
 
 				fseek(beso, 0L, SEEK_END); //Averiguo tamaño del archivo
 				long tamanio_archivo = ftell(beso);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				buffer[tamanio_archivo]= '\0';
-	escribirMemoria(1,0,buffer, tamanio_archivo);
+	escribirMemoria(1,0,buffer, tamanio_archivo);*/
 
 	/*********************************************************/
 
@@ -68,28 +68,11 @@ int main(int argc, char *argv[]) {
 	//Se crea el hilo para la consola
 		pthread_create(&consola, NULL, inciarConsola, NULL); //TODO pasar info de la memoria a la consola (4 parametro diferente a null)
 
-		//Se crea socket servidor de la MSP
-
-		socketServidorMSP= socket_crearServidor("127.0.0.1", puertoMSP);
-
 		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
 
-		//Msp a la escucha de nuevas conexiones
-
-	while(escuchandoConexiones){ //TODO log esperando nuevas conexiones
-
-		pthread_t *hiloDeConexion = malloc (sizeof(pthread_t)); // Hilo que va a tratar la nueva conexion
-		int *nuevoSocket = malloc(sizeof(int)); //Puntero al socket que va a atender la nueva conexion
-
-		t_conexion_entrante *nuevaConexion = malloc(sizeof(t_conexion_entrante)); //Informacion para el hilo de conexion
-		(*nuevaConexion).hiloDeConexion=hiloDeConexion;
-		(*nuevaConexion).socket=nuevoSocket;
-
-		*nuevoSocket=socket_aceptarCliente(socketServidorMSP);
-
-		pthread_create(hiloDeConexion,NULL,(void*)&handler_conexiones,(void *) nuevaConexion); //TODO donde dice inciarConsola va una funcion que maneje el pedido de la conexion
-		pthread_detach(*hiloDeConexion);
-	}
+		//Se crea un hilo que va a manejar las conexiones
+		pthread_t atender_conexiones;
+		pthread_create(&atender_conexiones, NULL, (void*) &handler_conexiones, NULL);
 
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);

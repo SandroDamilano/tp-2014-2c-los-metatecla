@@ -25,7 +25,7 @@ int main(int argc, char	**argv){
 	char* beso_file = argv[1];
 
 	// Control de argumentos
-	if(argc == 1 || argc > 2)
+	/*if(argc == 1 || argc > 2)
 	{
 		printf("[Error] Usage:\n> ./Consola fileIN.bc\n");
 		exit(1);
@@ -36,7 +36,7 @@ int main(int argc, char	**argv){
 			printf("[Error]: Tu script no es un autentico archivo ejecutable ESO (.bc). Programa abortado.\n");
 			exit(1);
 		}
-	}
+	}*/
 
 	// 2- Crear/Abrir file log del programa para el registro de actividades
 	logger = log_create("consola.log", "CONSOLA", 0, LOG_LEVEL_TRACE);
@@ -46,7 +46,8 @@ int main(int argc, char	**argv){
 	leer_config();
 
 	// 4- Conectar a Proceso KERNEL
-	int sockKernel = conectar_a_Kernel(ip_kernel,puerto_kernel);
+	//int sockKernel = conectar_a_Kernel(ip_kernel,puerto_kernel);
+	int sockKernel = sockKernel=socket_crearYConectarCliente(ip_kernel, puerto_kernel);
 
 	/*
 	//4.1- Analiza el primer mensaje (handshake con Kernel) y esperar por respuesta
@@ -66,7 +67,7 @@ int main(int argc, char	**argv){
 	socket_enviar(sockKernel, D_STRUCT_NUMERO, es_consola);
 
 	//5- Abrir BESO file
-	file = fopen(beso_file,"r");
+	/*file = fopen(beso_file,"r");
 	log_trace(logger,"Abriendo BESO FILE para enviarlo al Kernel.");
 
 	if (!file || file == NULL)	{
@@ -92,8 +93,17 @@ int main(int argc, char	**argv){
 		exit(1);
 	}
 
+	*/
+
+	FILE* BESO = abrir_archivo(beso_file, logger, NULL);
+	long int tamanio = calcular_tamanio_archivo(BESO);
+	char* fileBody =leer_archivo(BESO, tamanio);
+
+	printf("sizeOfFile %d\n", tamanio);
+	printf("tam real %d\n", strlen(fileBody));
+
 	//6- Enviar BESO FILE al Kernel
-	t_stream msg;
+	/*t_stream msg;
 	msg.data = fileBody;
 	preparar_paquete(sockfd, FILE_LINE, &msg);
 	log_trace(logger,"Se envio BESO FILE al Kernel.");
@@ -128,7 +138,12 @@ int main(int argc, char	**argv){
 		liberarMemoria();
 		exit(1);
 	}
-	log_trace(logger,"BESO FILE recibido con exito por el Kernel.");
+	log_trace(logger,"BESO FILE recibido con exito por el Kernel.");*/
+
+	t_struct_string* beso_code = malloc(sizeof(t_struct_string));
+	beso_code->string = fileBody;
+
+	socket_enviar(sockKernel, FILE_RECV_SUCCESS, beso_code);
 
 	//7- Quedar a la espera de mensajes para imprimir por STDOUT
 	while(analizar_paquete(buffer, &idOperacion) == 1)
@@ -140,7 +155,7 @@ int main(int argc, char	**argv){
 		}
 	}
 
-	// Destruimos la estructura config, cerramos socket y liberamos memoria
+	// Destruimos la estructura config, cerramos socket y liberamos memoriaa
 	liberarMemoria();
 
 	return 0;
