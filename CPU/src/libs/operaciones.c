@@ -27,12 +27,15 @@ void ejecutarLinea(int* bytecode){
 
 	t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
 	t_struct_numero* id_semaforo = malloc(sizeof(t_struct_numero));
-	t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
+t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
 	t_struct_env_bytes* datos_enviados = malloc(sizeof(t_struct_env_bytes));
 	void* datos_recibidos;
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
+
+	char param_reg1[2];
+	char param_reg2[2];
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -54,8 +57,10 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_num(datos_recibidos,1,&numero);
-		list_add(parametros,&reg1);
-		list_add(parametros, &numero);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros, string_itoa(numero));
 
 		ejecucion_instruccion("LOAD",parametros);
 
@@ -85,12 +90,22 @@ void ejecutarLinea(int* bytecode){
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
 		free(datos_recibidos);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros, param_reg2);
 
 		ejecucion_instruccion("GETM",parametros);
 
-		datos_solicitados->base = registros_cpu.registros_programacion[elegirRegistro(reg1)];//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
+		if(reg1 == 'S'){ //HORRIBLE
+			numero_enviar = registros_cpu.S;
+		} else {
+			numero_enviar = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+		}
+
+		datos_solicitados->base = numero_enviar;//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
 		datos_solicitados->PID = tcb->pid;
 		datos_solicitados->tamanio = 4;
 
@@ -103,7 +118,11 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+		/*if(reg1 == 'S'){
+			obtener_num(datos_recibidos, 0,&registros_cpu.S);
+		} else {
+			obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+		}*/
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
 
@@ -130,9 +149,14 @@ void ejecutarLinea(int* bytecode){
 		obtener_num(datos_recibidos,0,&numero);
 		obtener_reg(datos_recibidos,4,&reg1);
 		obtener_reg(datos_recibidos,5,&reg2);
-		list_add(parametros,&numero);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		printf("REGISTROS: %c y %c\n", reg1, reg2);
+		list_add(parametros,string_itoa(numero));
+		list_add(parametros,param_reg1);
+		list_add(parametros, param_reg2);
 
 		ejecucion_instruccion("SETM",parametros);
 
@@ -143,7 +167,11 @@ void ejecutarLinea(int* bytecode){
 			memcpy(&numero_enviar,&registros_cpu.S,numero);
 		}
 
-		datos_solicitados->base = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+		if(reg1 == 'S'){
+			datos_solicitados->base = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+		} else {
+			datos_solicitados->base = registros_cpu.S;
+		}
 		datos_solicitados->PID = tcb->pid;
 		datos_enviados->buffer = &numero_enviar;
 		datos_enviados->tamanio = sizeof(int32_t);
@@ -175,8 +203,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros,param_reg2);
 
 		ejecucion_instruccion("MOVR",parametros);
 
@@ -206,8 +238,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros,param_reg2);
 
 		ejecucion_instruccion("ADDR",parametros);
 
@@ -248,8 +284,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros, param_reg2);
 
 		ejecucion_instruccion("SUBR",parametros);
 
@@ -279,8 +319,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros,param_reg2);
 
 		ejecucion_instruccion("MULR",parametros);
 
@@ -310,8 +354,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros,param_reg2);
 
 		ejecucion_instruccion("MODR",parametros);
 
@@ -341,8 +389,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros,param_reg2);
 
 		ejecucion_instruccion("DIVR",parametros);
 
@@ -376,7 +428,9 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
-		list_add(parametros,&reg1);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		list_add(parametros,param_reg1);
 		ejecucion_instruccion("INCR",parametros);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] += 1;
@@ -404,7 +458,9 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
-		list_add(parametros,&reg1);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		list_add(parametros,param_reg1);
 		ejecucion_instruccion("DECR",parametros);
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] -= 1;
@@ -433,8 +489,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros,param_reg2);
 		ejecucion_instruccion("COMP",parametros);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
@@ -463,8 +523,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros,param_reg2);
 		ejecucion_instruccion("CGEQ",parametros);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] >= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
@@ -493,8 +557,12 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_reg(datos_recibidos,0,&reg1);
 		obtener_reg(datos_recibidos,1,&reg2);
-		list_add(parametros,&reg1);
-		list_add(parametros, &reg2);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		param_reg2[0] = reg2;
+		param_reg2[1] = '\0';
+		list_add(parametros,param_reg1);
+		list_add(parametros, param_reg2);
 		ejecucion_instruccion("CLEQ",parametros);
 
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] <= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
@@ -522,7 +590,9 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
-		list_add(parametros,&reg1);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		list_add(parametros,param_reg1);
 		ejecucion_instruccion("GOTO",parametros);
 
 		registros_cpu.P = registros_cpu.registros_programacion[elegirRegistro(reg1)];
@@ -548,7 +618,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
-		list_add(parametros,&direccion);
+		list_add(parametros,string_itoa(direccion));
 		ejecucion_instruccion("JMPZ",parametros);
 
 		if(registros_cpu.registros_programacion[0] == 0){
@@ -576,7 +646,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
-		list_add(parametros,&direccion);
+		list_add(parametros,string_itoa(direccion));
 		ejecucion_instruccion("JPNZ",parametros);
 
 		if(registros_cpu.registros_programacion[0] != 0){
@@ -604,7 +674,7 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
-		list_add(parametros,&direccion);
+		list_add(parametros,string_itoa(direccion));
 		ejecucion_instruccion("INTE",parametros);
 
 		//Mando señal con la direccion
@@ -649,8 +719,10 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_num(datos_recibidos,0,&numero);
 		obtener_reg(datos_recibidos,4,&reg1);
-		list_add(parametros,&numero);
-		list_add(parametros, &reg1);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		list_add(parametros,string_itoa(numero));
+		list_add(parametros, param_reg1);
 		ejecucion_instruccion("SHIF",parametros);
 
 		uint32_t cantidad_bits = abs(numero);
@@ -690,8 +762,10 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_num(datos_recibidos,0,&numero);
 		obtener_reg(datos_recibidos,4,&reg1);
-		list_add(parametros,&numero);
-		list_add(parametros, &reg1);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		list_add(parametros,string_itoa(numero));
+		list_add(parametros, param_reg1);
 		ejecucion_instruccion("PUSH",parametros);
 
 		int32_t auxiliar_copiar;
@@ -738,8 +812,10 @@ void ejecutarLinea(int* bytecode){
 
 		obtener_num(datos_recibidos,0,&numero);
 		obtener_reg(datos_recibidos,4,&reg1);
-		list_add(parametros,&numero);
-		list_add(parametros, &reg1);
+		param_reg1[0] = reg1;
+		param_reg1[1] = '\0';
+		list_add(parametros,string_itoa(numero));
+		list_add(parametros, param_reg1);
 		ejecucion_instruccion("TAKE",parametros);
 
 
@@ -771,8 +847,6 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case XXXX://PIDO OTRO Y LO RECIBO EN EL WHILE
 		ejecucion_instruccion("XXXX",parametros);
-
-		printf("A TERMINO CON %d\n", registros_cpu.registros_programacion[0]);
 
 		copiar_registros_a_tcb();
 		copiar_tcb_a_structTcb(tcb, tcb_enviar);
@@ -964,8 +1038,8 @@ void ejecutarLinea(int* bytecode){
 		break;
 	}
 
-	printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
-	printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
+	//printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
+	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
 	free(id_semaforo);
