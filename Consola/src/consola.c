@@ -170,13 +170,12 @@ int main(int argc, char	**argv){
 	// Destruimos la estructura config, cerramos socket y liberamos memoriaa
 	liberarMemoria();*/
 
+
+	////////////////////////////
 	/*while(socket_recibir(sockKernel, &tipoRecibido, &structRecibido) == 1){
 		handler_kernel(tipoRecibido);
 	}*/
 
-	while(1){
-
-	}
 
 	return 0;
 }

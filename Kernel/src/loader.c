@@ -506,10 +506,6 @@ void handler_consola(int sock_consola){
 			//imprimir_texto(sock_consola, "Falló al crear los segmentos.");
 		}
 
-		while(1){
-
-		}
-
 		break;
 
 	case D_STRUCT_INNC:

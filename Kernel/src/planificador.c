@@ -46,6 +46,7 @@ bool hay_en_ready(){
 void atender_solicitudes_pendientes(){
 	while((!list_is_empty(solicitudes_tcb)) && (hay_en_ready())){
 		t_hilo* tcb = obtener_tcb_a_ejecutar();
+		printf("obtuve para ejecutar a tcb pid %d\n", tcb->pid);
 		int* sockCPU = list_remove(solicitudes_tcb, 0);
 		mandar_a_ejecutar(tcb, *sockCPU);
 	}
@@ -81,7 +82,7 @@ void atender_cpus(){
 //Este hilo se queda haciendo loop hasta que termine la ejecución
 void poner_new_a_ready(){
 	while(1){
-		t_hilo* tcb;// = malloc(sizeof(t_hilo));
+		t_hilo* tcb = malloc(sizeof(t_hilo));
 		sacar_de_new(tcb);
 		encolar_en_ready(tcb);
 	}
@@ -224,7 +225,6 @@ void sacar_de_consolas(uint32_t pid){
 
 void encolar_en_ready(t_hilo* tcb){
 	pthread_mutex_lock(&mutex_ready);
-	printf("tcb kernel mode %d\n", tcb->kernel_mode);
 	if (tcb->kernel_mode == true){
 		list_add_in_index(cola_ready, 0, (void*)tcb);
 	}else{
@@ -237,7 +237,7 @@ void encolar_en_ready(t_hilo* tcb){
 
 void pop_new(t_hilo* tcb){
 	void *nuevo = queue_pop(cola_new);
-	tcb = (t_hilo*)nuevo;
+	*tcb = *(t_hilo*)nuevo;
 };
 
 void sacar_de_new(t_hilo* tcb){
@@ -619,9 +619,9 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	case D_STRUCT_PEDIR_TCB:
 		printf("me pidieron TCB\n");
 		//darle otro tcb a cpu, si tiene
-		//tcb = obtener_tcb_a_ejecutar();
+		tcb = obtener_tcb_a_ejecutar();
 		// PARA TESTEAR
-		tcb = malloc(sizeof(t_hilo));
+		/*tcb = malloc(sizeof(t_hilo));
 		tcb->segmento_codigo = 0;
 		tcb->puntero_instruccion = 0;
 		tcb->pid = 1;
@@ -631,7 +631,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		tcb->registros[1] = 0;
 		tcb->registros[2] = 0;
 		tcb->registros[3] = 0;
-		tcb->registros[4] = 0;
+		tcb->registros[4] = 0;*/
 
 		if (tcb!=NULL){
 			//Había un tcb en ready, entonces se lo mando
@@ -640,12 +640,6 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			list_add(solicitudes_tcb, (void*)&sockCPU);
 		}
-
-		t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
-		copiar_tcb_a_structTcb(tcb, paquete_tcb);
-		socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
-		printf("envie tcb\n");
-		free(paquete_tcb);
 
 		break;
 	}

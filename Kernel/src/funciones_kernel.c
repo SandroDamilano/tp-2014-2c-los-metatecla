@@ -104,7 +104,7 @@ t_hilo *crear_TCB(uint32_t pid, uint32_t dir_codigo, uint32_t dir_stack, uint32_
 	 *
 	 * NOTA: A la MSP JAMAS le paso el TCB
 	 */
-	t_hilo *tcb = (t_hilo*)malloc(sizeof(t_hilo));
+	t_hilo *tcb = malloc(sizeof(t_hilo));
 
 	tcb->pid = pid;
 	tcb->tid = obtener_tid();

@@ -337,6 +337,7 @@ void handshake_thread(){
 
 			handler_consola(socket_atendido);
 
+			printf("salgo de atencion consola\n");
 			break;
 
 		case ES_CPU:

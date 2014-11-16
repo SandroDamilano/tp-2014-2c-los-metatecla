@@ -38,19 +38,19 @@ int main(int argc, char** argv) {
 	int sockMSP = socket_crearYConectarCliente(config_struct_cpu.ip_msp, config_struct_cpu.puerto_msp);
 
 	if(sockMSP == -1){
-		printf("no se pudo conectar a MSP\n");
+		printf("No se pudo conectar a MSP\n");
 	} else {
-		printf("numero de socket de MSP es %d\n", sockMSP);
+		printf("Numero de socket de MSP es %d\n", sockMSP);
 	}
 
 	if(sockKernel == -1){
-		printf("no se pudo conectar a Kernel\n");
+		printf("No se pudo conectar a Kernel\n");
 	} else {
 		printf("Me conecte al Kernel. Socket %d\n", sockKernel);
 		t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
 		es_cpu->numero = ES_CPU;
 		socket_enviar(sockKernel, D_STRUCT_NUMERO, es_cpu);
-		printf("Envie el aviso\n");
+		printf("Envie el aviso a Kenel\n");
 		free(es_cpu);
 	}
 
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 	if(tipo_struct == D_STRUCT_NUMERO){
 		quantum = ((t_struct_numero *) structRecibido)->numero;
-		printf("recibi quantum de %d\n", quantum);
+		printf("Recibi quantum de %d\n", quantum);
 	}
 
 	//socket a Kernel pidiendo tcb
@@ -68,14 +68,14 @@ int main(int argc, char** argv) {
 	resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
 	if(resultado != 1){
 		printf("No se pudo pedir TCB\n");
-	}
+	} else {
+		//socket de Kernel con tcb
+		int j =socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+		copiar_structRecibido_a_tcb(tcb, structRecibido);
 
-	//socket de Kernel con tcb
-	int j =socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-	copiar_structRecibido_a_tcb(tcb, structRecibido);
-
-	if(j!= -1){
+		if(j!= -1){
 		printf("Se recibio tcb\n");
+		}
 	}
 
 	//////////////////////
