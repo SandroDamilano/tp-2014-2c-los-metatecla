@@ -16,7 +16,7 @@
 	pthread_mutex_t mutex_PIDs;
 	pthread_mutex_t mutex_log;
 	pthread_mutex_t mutex_consolas;
-	int cantidad_de_PIDs;
+	int cantidad_de_PIDs = 1;
 	int cantidad_de_TIDs;
 
 void inicializar_semaforos(){

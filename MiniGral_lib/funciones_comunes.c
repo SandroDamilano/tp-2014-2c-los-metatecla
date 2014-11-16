@@ -18,9 +18,12 @@ char* leer_archivo(FILE* archivo, long int tamanio_archivo){
 
 	char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
 
-	while(!feof(archivo)){
+	/*while(!feof(archivo)){
 		fread(buffer, 1, tamanio_archivo, archivo);
-	}
+	}*/
+
+	fread(buffer, 1, tamanio_archivo, archivo);
+
 	buffer[tamanio_archivo]= '\0';
 
 	memcpy(codigo, buffer, tamanio_archivo);

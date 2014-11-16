@@ -47,7 +47,11 @@ int main(int argc, char	**argv){
 
 	// 4- Conectar a Proceso KERNEL
 	//int sockKernel = conectar_a_Kernel(ip_kernel,puerto_kernel);
-	int sockKernel = sockKernel=socket_crearYConectarCliente(ip_kernel, puerto_kernel);
+	int sockKernel = socket_crearYConectarCliente(ip_kernel, puerto_kernel);
+
+	if(sockKernel == -1){
+		printf("no se pudo conectar al kernel\n");
+	}
 
 	/*
 	//4.1- Analiza el primer mensaje (handshake con Kernel) y esperar por respuesta
@@ -91,16 +95,11 @@ int main(int argc, char	**argv){
 	    log_error(logger,"Error al leer el archivo. Programa abortado.");
 		liberarMemoria();
 		exit(1);
-	}
-
-	*/
+	}*/
 
 	FILE* BESO = abrir_archivo(beso_file, logger, NULL);
 	long int tamanio = calcular_tamanio_archivo(BESO);
 	char* fileBody =leer_archivo(BESO, tamanio);
-
-	printf("sizeOfFile %d\n", tamanio);
-	printf("tam real %d\n", strlen(fileBody));
 
 	//6- Enviar BESO FILE al Kernel
 	/*t_stream msg;
@@ -140,11 +139,24 @@ int main(int argc, char	**argv){
 	}
 	log_trace(logger,"BESO FILE recibido con exito por el Kernel.");*/
 
-	t_struct_string* beso_code = malloc(sizeof(t_struct_string));
-	beso_code->string = fileBody;
+	t_struct_env_bytes* beso_code = malloc(sizeof(t_struct_env_bytes));
+	beso_code->buffer = malloc(tamanio);
+	memcpy(beso_code->buffer, fileBody, tamanio);
+	beso_code->tamanio = tamanio;
+	beso_code->base = 0; //No importa
+	beso_code->PID = 0; //No importa
 
-	socket_enviar(sockKernel, FILE_RECV_SUCCESS, beso_code);
+	free(beso_code->buffer);
+	//free(fileBody);
+	free(beso_code);
 
+	int j = socket_enviar(sockKernel, D_STRUCT_ENV_BYTES, beso_code);
+
+	if(j == -1){
+		printf("No se envio bien el codigo\n");
+	}
+
+	/*
 	//7- Quedar a la espera de mensajes para imprimir por STDOUT
 	while(analizar_paquete(buffer, &idOperacion) == 1)
 	{
@@ -156,7 +168,15 @@ int main(int argc, char	**argv){
 	}
 
 	// Destruimos la estructura config, cerramos socket y liberamos memoriaa
-	liberarMemoria();
+	liberarMemoria();*/
+
+	/*while(socket_recibir(sockKernel, &tipoRecibido, &structRecibido) == 1){
+		handler_kernel(tipoRecibido);
+	}*/
+
+	while(1){
+
+	}
 
 	return 0;
 }

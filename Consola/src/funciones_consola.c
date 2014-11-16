@@ -182,32 +182,32 @@ void leer_config()
 	}*/
 
     //PUERTO_KERNEL
-    // if(config_has_property(config_file, "PUERTO_KERNEL"))
-    // {
+     if(config_has_property(config_file, "PUERTO_KERNEL"))
+     {
       	puerto_kernel = config_get_int_value(config_file,"PUERTO_KERNEL");
       	printf("Se leyo puerto_kernel %d\n", puerto_kernel);
       	sprintf(bufferLog,"PUERTO_KERNEL = [%d]",puerto_kernel);
       	log_debug(logger,bufferLog);
-    /*  } else {
+      } else {
     fprintf(stderr, "Falta key 'PUERTO_KERNEL' en archivo de configuracion. Chequear.\n");
     fprintf(stderr, "Programa abortado.\n");
     log_error(logger,"Falta key 'PUERTO_KERNEL' en archivo de configuracion. Programa abortado.");
     exit(1);
-    }*/
+    }
 
     //IP_KERNEL
-   // if(config_has_property(config_file, "IP_KERNEL"))
-    //{
+    if(config_has_property(config_file, "IP_KERNEL"))
+    {
     	ip_kernel = config_get_string_value(config_file, "IP_KERNEL");
     	printf("Se leyo ip_kernel %s\n", ip_kernel);
     	sprintf(bufferLog,"IP_KERNEL = [%s]",ip_kernel);
     	log_debug(logger,bufferLog);
-	/*} else {
+	} else {
 		fprintf(stderr, "Falta key 'IP_KERNEL' en archivo de configuracion. Chequear.\n");
 		fprintf(stderr, "Programa abortado.\n");
 		log_error(logger,"Falta key 'IP_KERNEL' en archivo de configuracion. Programa abortado.");
 		exit(1);
-	}*/
+	}
 
 
 }

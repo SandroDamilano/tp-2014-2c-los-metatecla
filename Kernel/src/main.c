@@ -326,6 +326,7 @@ void handshake_thread(){
 		switch(((t_struct_numero *)structRecibido)->numero){
 
 		case ES_CONSOLA:
+			printf("Me llego una consola\n");
 			// Si es una consola
 			if (socket_atendido>consolas_fdmax){
 				consolas_fdmax = socket_atendido;
@@ -333,6 +334,8 @@ void handshake_thread(){
 			pthread_mutex_lock(&mutex_master_consolas);
 			FD_SET(socket_atendido, &master_consolas);
 			pthread_mutex_unlock(&mutex_master_consolas);
+
+			handler_consola(socket_atendido);
 
 			break;
 

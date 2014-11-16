@@ -6,6 +6,9 @@
  */
 
 #include "loader.h"
+
+uint32_t tamanio_stack;
+
 /*
 // Variables para sockets Servidor
 fd_set master;		// master file descriptor list
@@ -488,17 +491,23 @@ void handler_consola(int sock_consola){
 	}
 
 	switch(tipoRecibido){
-	case FILE_RECV_SUCCESS:
+	case FILE_RECV_SUCCESS: //Habria que serializar como el struct de abajo. Por ahora queda asi porque me da paja
+	case D_STRUCT_ENV_BYTES:
 		//Recibo un script a ejecutar
 
-		tamanio = strlen(((t_struct_string*)structRecibido)->string);
+		tamanio = ((t_struct_env_bytes*) structRecibido)->tamanio;
 		codigo = malloc(tamanio);
-		memcpy(codigo, ((t_struct_string*)structRecibido)->string, tamanio);
+		memcpy(codigo, ((t_struct_env_bytes*) structRecibido)->buffer, tamanio);
+
 
 		//Creo el TCB, reservo y escribo sus segmentos, y lo encolo en NEW.
 		//En caso de fallo, informo a la consola.
 		if (crear_nuevo_tcb(codigo, tamanio, sock_consola) == 0){
-			imprimir_texto(sock_consola, "Falló al crear los segmentos.");
+			//imprimir_texto(sock_consola, "Falló al crear los segmentos.");
+		}
+
+		while(1){
+
 		}
 
 		break;
@@ -534,8 +543,8 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	uint32_t dir_stack;
 
 	//Mando identificación kernel
-	uint32_t senial = ES_KERNEL;
-	socket_enviarSignal(socket_MSP, senial);
+	/*uint32_t senial = ES_KERNEL;
+	socket_enviarSignal(socket_MSP, senial);*/
 
 	int pid = obtener_pid();
 
@@ -555,7 +564,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	if(tipoStruct == D_STRUCT_NUMERO ){
 		dir_codigo = ((t_struct_numero *) structRecibido)->numero;
 	} else {
-		printf("No se recibio la direccion del segmento de codigo de las syscalls\n");
+		printf("No se recibio la direccion del segmento de codigo del proceso\n");
 		return 0;
 	}
 
@@ -607,6 +616,11 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	t_hilo* tcb = crear_TCB(pid, dir_codigo, dir_stack, tamanio);
 	agregar_consola(pid, tcb->tid, sock_consola);
 	poner_en_new(tcb);
+
+	while(1){
+
+	}
+
 	return 1;
 }
 

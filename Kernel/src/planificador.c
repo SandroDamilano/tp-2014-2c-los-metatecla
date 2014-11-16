@@ -224,7 +224,8 @@ void sacar_de_consolas(uint32_t pid){
 
 void encolar_en_ready(t_hilo* tcb){
 	pthread_mutex_lock(&mutex_ready);
-	if (tcb->kernel_mode == 1){
+	printf("tcb kernel mode %d\n", tcb->kernel_mode);
+	if (tcb->kernel_mode == true){
 		list_add_in_index(cola_ready, 0, (void*)tcb);
 	}else{
 		list_add(cola_ready, (void*)tcb);
@@ -236,7 +237,7 @@ void encolar_en_ready(t_hilo* tcb){
 
 void pop_new(t_hilo* tcb){
 	void *nuevo = queue_pop(cola_new);
-	*tcb = *(t_hilo*)nuevo;
+	tcb = (t_hilo*)nuevo;
 };
 
 void sacar_de_new(t_hilo* tcb){
@@ -446,8 +447,8 @@ void boot(char* systcalls_path){
 	char* syscalls_code = leer_archivo(syscalls_file, tamanio_codigo);
 
 	//Mando identificacion kernel
-	uint32_t senial = ES_KERNEL;
-	socket_enviarSignal(socket_MSP, senial);
+	//uint32_t senial = ES_KERNEL;
+	//socket_enviarSignal(socket_MSP, senial);
 
 	//Creo segmento para las syscalls
 	t_struct_malloc* crear_seg = malloc(sizeof(t_struct_malloc));
