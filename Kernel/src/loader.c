@@ -471,6 +471,7 @@ void handler_consola(int sock_consola){
 	char* texto;
 	int tamanio;
 	int numero;
+	int sockCPU;
 
 	t_tipoEstructura tipoRecibido;
 	void* structRecibido;
@@ -511,18 +512,24 @@ void handler_consola(int sock_consola){
 	case D_STRUCT_INNC:
 		//Recibo un imput de una cadena de texto
 
-		tamanio = strlen(((t_struct_string*)structRecibido)->string);
-		texto = malloc(tamanio);
-		memcpy(texto, ((t_struct_string*)structRecibido)->string, tamanio);
+		//Así como viene, se lo mando a la CPU
+		//tamanio = strlen(((t_struct_string*)structRecibido)->string);
+		//texto = malloc(tamanio);
+		//memcpy(texto, ((t_struct_string*)structRecibido)->string, tamanio);
 		//TODO
+		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
+		socket_enviar(sockCPU, tipoRecibido, structRecibido);
 
 		break;
 
 	case D_STRUCT_INNN:
 		//Recibo un imput de un número
 
-		numero = ((t_struct_numero*)structRecibido)->numero;
+		//Así como viene, se lo mando a la CPU
+		//numero = ((t_struct_numero*)structRecibido)->numero;
 		//TODO
+		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
+		socket_enviar(sockCPU, tipoRecibido, structRecibido);
 
 		break;
 	}
@@ -650,5 +657,17 @@ void eliminar_consola(int sock){
 
 bool es_la_consola(t_data_nodo_consolas* data){
 	return (data->socket == sock_a_eliminar);
+}
+
+//Sólo puede haber una solicitud de un imput por vez, y lo hace la consola que está ejecutando el TCB de kernel
+int obtener_cpu_ejecutando_la_consola(int sock_consola){
+	pthread_mutex_lock(&mutex_exec);
+	t_data_nodo_exec* data = list_find(cola_exec, (void*)tiene_al_tcbKernel);
+	pthread_mutex_unlock(&mutex_exec);
+	return data->sock;
+}
+
+bool tiene_al_tcbKernel(t_data_nodo_exec* data){
+	return (data->tcb->kernel_mode == 1);
 }
 

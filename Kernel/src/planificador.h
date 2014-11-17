@@ -12,7 +12,7 @@
 	#include <commons/log.h>
 	#include "funciones_kernel.h"
 
-	int socket_MSP;//sockMSP;
+	int socket_MSP;
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
 
@@ -48,11 +48,6 @@
 		t_evento evento;
 		uint32_t parametro;
 	} t_data_nodo_block;
-
-	typedef struct data_nodo_exec {
-		t_hilo * tcb;
-		int sock;
-	} t_data_nodo_exec;
 
 	//Por ahora estas van aca porque el planificador es el único que las usa
 	t_list *cola_ready, *cola_block, *cola_exec; //Colas de planificación.
@@ -113,6 +108,8 @@
 	bool es_el_pid_exec(t_data_nodo_exec* data);
 
 	bool esta_por_systcall(t_data_nodo_block* data);
+
+	int obtener_socket_consola(uint32_t pid);
 
 	void mandar_a_ejecutar(t_hilo* tcb, int sockCPU);
 	void atender_solicitudes_pendientes();

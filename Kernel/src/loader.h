@@ -73,6 +73,8 @@
 	void agregar_consola(uint32_t pid, uint32_t tid, int sock);
 	void eliminar_consola(int sock);
 	bool es_la_consola(t_data_nodo_consolas* data);
+	int obtener_cpu_ejecutando_la_consola(int sock_consola);
+	bool tiene_al_tcbKernel(t_data_nodo_exec* data);
 	//void *get_in_addr(struct sockaddr *sa);
 
 #endif /* LOADER_H_ */

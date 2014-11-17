@@ -22,8 +22,7 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 	while(1){
 	/*
 	 * 1 - Mandar a ejecutar TCBs a CPUs que lo hayan requerido
-	 * 2 - Mandarle a los CPUs imputs de la Consola
-	 * 3 - Atender nuevas solicitudes de CPUs
+	 * 2 - Atender nuevas solicitudes de CPUs
 	 */
 		atender_solicitudes_pendientes();
 		atender_cpus();
@@ -133,13 +132,21 @@ bool es_padre(t_hilo* tcb){
 }
 
 void escribir_consola(uint32_t pid, char* mensaje){
+	int socket_consola = obtener_socket_consola(pid);
+	if (socket_consola!=-1){
+		imprimir_texto(socket_consola, mensaje);
+	}
+}
+
+int obtener_socket_consola(uint32_t pid){
 	pid_de_consola = pid;
 	pthread_mutex_lock(&mutex_consolas);
 	t_data_nodo_consolas* data = list_find(consolas, (void*)es_el_pid_consola);
 	pthread_mutex_unlock(&mutex_consolas);
-	if (data!=NULL){
-		imprimir_texto(data->socket, mensaje);
+	if (data==NULL){
+		return -1;
 	}
+	return data->socket;
 }
 
 void terminar_proceso(t_hilo* tcb){
@@ -280,6 +287,21 @@ t_hilo* obtener_tcb_de_cpu(int sock_cpu){
 	};
 	free(data);
 	return tcb;
+}
+
+uint32_t obtener_pid_de_cpu(int sock_cpu){
+	sockCPU_a_buscar = sock_cpu;
+	t_data_nodo_exec* data;
+	uint32_t pid;
+	pthread_mutex_lock(&mutex_exec);
+	data = list_find(cola_exec, (void*)es_el_tcbCPU);
+	pthread_mutex_unlock(&mutex_exec);
+	if (data!=NULL){
+		pid = data->tcb->pid;
+	}else{
+		printf("ERROR: No fue encontrado el CPU\n");
+	};
+	return pid;
 }
 
 void agregar_a_exec(int sockCPU, t_hilo* tcb){
@@ -595,12 +617,18 @@ void mandar_a_ejecutar(t_hilo* tcb, int sockCPU){
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	t_hilo* tcb;
+	uint32_t pid;
 
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
-		//TODO
+
 		//pido numero por consola
-		//Mando el numero obtenido con la señal D_STRUCT_INNN a cpu
+		pid = obtener_pid_de_cpu(sockCPU);
+		int socket_consola = obtener_socket_consola(pid);
+		t_struct_numero* innn = malloc(sizeof(t_struct_numero));
+		innn->numero = D_STRUCT_INNN;
+		socket_enviar(socket_consola, D_STRUCT_NUMERO, innn);
+
 		break;
 	case D_STRUCT_ABORT:
 
@@ -652,9 +680,11 @@ void handler_cpu(int sockCPU){
 	uint32_t direccion_syscall;
 	int32_t id_semaforo;
 	int32_t numero_cpu;
-	int32_t numero_consola;
-	uint32_t maximo_caracteres;
-	char* cadena_consola;
+	//int32_t numero_consola;
+	//uint32_t maximo_caracteres;
+	//char* cadena_consola;
+	int pid;
+	int socket_consola;
 
 	t_tipoEstructura tipoRecibido;
 	t_tipoEstructura tipoRecibido2;
@@ -665,7 +695,11 @@ void handler_cpu(int sockCPU){
 		//La CPU cerró la conexión
 		printf("Se perdió la comunicación con la CPU: %d\n", sockCPU);
 		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
-		mandar_a_exit(tcb, ABORTAR);
+		if (tcb->kernel_mode == 0){
+			mandar_a_exit(tcb, ABORTAR);
+		}else{
+			retornar_de_systcall(tcb, ABORTAR);
+		}
 		close(sockCPU);
 		pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);
@@ -697,8 +731,11 @@ void handler_cpu(int sockCPU){
 		break;
 	case D_STRUCT_INNC:
 
-		maximo_caracteres = ((t_struct_numero *) structRecibido)->numero;
-		//TODO pido string por consola con el maximo de caracteres recibido
+		//Pido string por consola con el maximo de caracteres recibido
+		//maximo_caracteres = ((t_struct_numero *) structRecibido)->numero;
+		pid = obtener_pid_de_cpu(sockCPU);
+		socket_consola = obtener_socket_consola(pid);
+		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 
 		break;
 	case D_STRUCT_TCB_CREA:
@@ -765,12 +802,19 @@ void handler_cpu(int sockCPU){
 		break;
 
 	case D_STRUCT_OUTN:
-		numero_consola = ((t_struct_numero*) structRecibido)->numero;
-		//TODO Mandar ese numero a consola para ser mostrado
+		//numero_consola = ((t_struct_numero*) structRecibido)->numero;
+		//Mandar ese numero a consola para ser mostrado
+		pid = obtener_pid_de_cpu(sockCPU);
+		socket_consola = obtener_socket_consola(pid);
+		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 		break;
+
 	case D_STRUCT_OUTC:
-		cadena_consola = ((t_struct_string*) structRecibido)->string;
-		//TODO Mandar esa cadena a consola para ser mostrada
+		//cadena_consola = ((t_struct_string*) structRecibido)->string;
+		//Mandar esa cadena a consola para ser mostrada
+		pid = obtener_pid_de_cpu(sockCPU);
+		socket_consola = obtener_socket_consola(pid);
+		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 		break;
 	}
 	free(structRecibido);

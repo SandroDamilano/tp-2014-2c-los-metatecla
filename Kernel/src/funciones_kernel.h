@@ -18,11 +18,13 @@
 	extern t_queue* cola_new;
 	extern t_queue* cola_exit;
 	extern t_list* consolas; //Lista con info de las consolas activas y sus procesos
+	extern t_list* cola_exec;
 	extern sem_t sem_new;
 	extern sem_t sem_exit;
 	extern pthread_mutex_t mutex_consolas;
 	extern pthread_mutex_t mutex_new;
 	extern pthread_mutex_t mutex_exit;
+	extern pthread_mutex_t mutex_exec;
 	extern pthread_mutex_t mutex_TIDs;
 	extern pthread_mutex_t mutex_PIDs;
 	extern pthread_mutex_t mutex_log;
@@ -54,6 +56,11 @@
 		t_hilo * tcb;
 		t_fin fin;
 	} t_data_nodo_exit;
+
+	typedef struct data_nodo_exec {
+		t_hilo * tcb;
+		int sock;
+	} t_data_nodo_exec;
 
 	t_hilo *crear_TCB(uint32_t pid, uint32_t dir_codigo, uint32_t dir_stack, uint32_t tamanio_codigo);
 	void inicializar_colas_new_exit();
