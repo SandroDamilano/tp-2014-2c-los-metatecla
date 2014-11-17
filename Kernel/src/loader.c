@@ -545,6 +545,8 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	uint32_t dir_codigo;
 	uint32_t dir_stack;
 
+	int respuesta;
+
 	//Mando identificación kernel
 	/*uint32_t senial = ES_KERNEL;
 	socket_enviarSignal(socket_MSP, senial);*/
@@ -565,7 +567,13 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	//Recibo direccion del nuevo segmento de código
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
-		dir_codigo = ((t_struct_numero *) structRecibido)->numero;
+		respuesta = ((t_struct_numero *) structRecibido)->numero;
+		if (respuesta != -1){
+			dir_codigo = ((t_struct_numero *) structRecibido)->numero;
+		}else{
+			printf("No hay espacio suficiente en memoria para el código\n");
+			return 0;
+		}
 	} else {
 		printf("No se recibio la direccion del segmento de codigo del proceso\n");
 		return 0;
@@ -587,7 +595,15 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	//Recibo direccion del nuevo segmento de stack
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
-		dir_stack = ((t_struct_numero *) structRecibido)->numero;
+		respuesta = ((t_struct_numero *) structRecibido)->numero;
+		if (respuesta != -1){
+			dir_stack = ((t_struct_numero *) structRecibido)->numero;
+		}else{
+			printf("No hay espacio suficiente en memoria para el stack\n");
+			//Si no logré crear el segmento de stack, destruyo el de código que creé antes
+			destruir_seg_codigo(pid, dir_codigo);
+			return 0;
+		}
 	} else {
 		printf("No se recibio la direccion del segmento de stack\n");
 		//Si no logré crear el segmento de stack, destruyo el de código que creé antes

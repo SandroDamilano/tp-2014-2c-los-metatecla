@@ -459,6 +459,7 @@ void inicializar_semaforos_colas(){
 void boot(char* systcalls_path){
 	void * structRecibido;
 	t_tipoEstructura tipoStruct;
+	int respuesta;
 
 	// Usar el mismo socket para la msp del main.c
 	int tamanio_codigo;
@@ -485,8 +486,13 @@ void boot(char* systcalls_path){
 	//Recibo direccion del nuevo segmento de codigo
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
-		direccion_codigo_syscalls = ((t_struct_numero *) structRecibido)->numero;
-		//printf("Recibi direccion %d\n", direccion_codigo_syscalls);
+		respuesta = ((t_struct_numero *) structRecibido)->numero;
+		if (respuesta != -1){
+			direccion_codigo_syscalls = ((t_struct_numero *) structRecibido)->numero;
+			//printf("Recibi direccion %d\n", direccion_codigo_syscalls);
+		}else{
+			printf("No hay espacio suficiente en memoria para el código de las systcalls\n");
+		}
 	} else {
 		printf("No se recibio la direccion del segmento de codigo de las syscalls\n");
 	}
@@ -505,8 +511,13 @@ void boot(char* systcalls_path){
 	//Recibo direccion del nuevo segmento de stack
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if(tipoStruct == D_STRUCT_NUMERO ){
-		direccion_stack_syscalls = ((t_struct_numero *) structRecibido)->numero;
-		//printf("Se recibio la direcc del stack %d\n", direccion_stack_syscalls);
+		respuesta = ((t_struct_numero *) structRecibido)->numero;
+		if (respuesta != -1){
+			direccion_stack_syscalls = ((t_struct_numero *) structRecibido)->numero;
+			//printf("Se recibio la direcc del stack %d\n", direccion_stack_syscalls);
+		}else{
+			printf("No hay espacio suficiente en memoria para el stack del TCB Kernel\n");
+		}
 	} else {
 		printf("No se recibio la direccion del segmento de stack de las syscalls\n");
 	}
@@ -601,8 +612,91 @@ void retornar_de_systcall(t_hilo* tcb_kernel, t_fin fin){
 	atender_otra_systcall_si_hay(tcb_kernel);
 }
 
-void crear_nuevo_hilo(t_hilo* tcb_padre){
-	//TODO Averiguar qué hay que poner en el nuevo TCB hijo
+uint32_t crear_nuevo_hilo(t_hilo* tcb_padre){
+	void * structRecibido;
+	t_tipoEstructura tipoStruct;
+	uint32_t dir_stack_hijo;
+	int respuesta;
+	void* codigo_stack_padre;
+	int tamanio_stack_padre;
+
+	// Pido a la MSP un nuevo segmento de stack para el hilo hijo
+	t_struct_malloc* crear_seg = malloc(sizeof(t_struct_malloc));
+	crear_seg->PID = tcb_padre->pid;
+	crear_seg->tamano_segmento = tamanio_stack;
+	int resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
+	if(resultado != 1){
+		printf("No se pudo crear segmento de codigo\n");
+		return 0;
+	}
+	free(crear_seg);
+
+	//Recibo dirección del nuevo segmento de stack del hijo
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
+	if(tipoStruct == D_STRUCT_NUMERO ){
+		respuesta = ((t_struct_numero *) structRecibido)->numero;
+		if (respuesta != -1){
+			dir_stack_hijo = ((t_struct_numero *) structRecibido)->numero;
+		}else{
+			printf("No hay espacio suficiente en memoria para el stack del nuevo hijo\n");
+			return 0;
+		}
+	} else {
+		printf("No se recibio la direccion del segmento de codigo del proceso\n");
+		return 0;
+	}
+
+	//Pido el código de stack del proceso padre
+	t_struct_sol_bytes* solicitud = malloc(sizeof(t_struct_sol_bytes));
+	solicitud->PID = tcb_padre->pid;
+	solicitud->base = tcb_padre->base_stack;
+	solicitud->tamanio = tcb_padre->cursor_stack;
+	socket_enviar(socket_MSP, D_STRUCT_SOL_BYTES, solicitud);
+	free(solicitud);
+
+	//Recibo el código de stack del proceso padre
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
+	if(tipoStruct == D_STRUCT_RESPUESTA_MSP ){
+		tamanio_stack_padre = ((t_struct_respuesta_msp*)structRecibido)->tamano_buffer;
+		codigo_stack_padre = malloc(tamanio_stack_padre);
+		memcpy(codigo_stack_padre, ((t_struct_respuesta_msp*)structRecibido)->buffer, tamanio_stack_padre);
+	} else {
+		return 0;
+	}
+
+	//Escribo el código de stack del padre en el del hijo
+	t_struct_env_bytes* paquete_codigo = malloc(sizeof(t_struct_env_bytes));
+	paquete_codigo->buffer = malloc(tamanio_stack_padre);
+	memcpy(paquete_codigo->buffer, codigo_stack_padre, tamanio_stack_padre);
+	paquete_codigo->tamanio = tamanio_stack_padre;
+	paquete_codigo->base = dir_stack_hijo;
+	paquete_codigo->PID = tcb_padre->pid;
+
+	socket_enviar(socket_MSP, D_STRUCT_ENV_BYTES, paquete_codigo);
+	free(paquete_codigo->buffer);
+	free(paquete_codigo);
+	free(structRecibido);
+
+	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
+	if (tipoStruct != D_STRUCT_NUMERO) {
+		if(((t_struct_numero*) structRecibido)->numero == 0){
+			printf("Se escribio correctamente en memoria\n");
+		}else{
+			printf("Hubo un problema al copiar el stack del padre al hijo\n");
+			return 0;
+		}
+	}
+
+	//Creo el TCB hijo, copio los datos del padre, y lo mando a READY
+	t_hilo* tcb_hijo = crear_TCB(tcb_padre->pid, tcb_padre->segmento_codigo, dir_stack_hijo, tcb_padre->segmento_codigo_size);
+	tcb_hijo->puntero_instruccion = tcb_padre->puntero_instruccion;
+	tcb_hijo->cursor_stack = tcb_padre->cursor_stack;
+	int i;
+	for(i=0; i<=4; i++){
+		tcb_hijo->registros[i] = tcb_padre->registros[i];
+	}
+	encolar_en_ready(tcb_hijo);
+	return tcb_hijo->tid;
 }
 
 /******************************** HANDLER CPU *****************************************/
@@ -677,6 +771,8 @@ void handler_cpu(int sockCPU){
 	t_hilo* tcb;
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
+	uint32_t tid_padre;
+	uint32_t tid_hijo;
 	uint32_t direccion_syscall;
 	int32_t id_semaforo;
 	int32_t numero_cpu;
@@ -690,6 +786,8 @@ void handler_cpu(int sockCPU){
 	t_tipoEstructura tipoRecibido2;
 	void* structRecibido;
 	void* structRecibido2;
+
+	t_struct_numero* paquete_crea;
 
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//La CPU cerró la conexión
@@ -738,10 +836,22 @@ void handler_cpu(int sockCPU){
 		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 
 		break;
-	case D_STRUCT_TCB_CREA:
+	case D_STRUCT_TCB_CREA://TODO: Validar con la CPU
 
-		copiar_structRecibido_a_tcb(tcb, structRecibido);
-		// TODO invocar funcion crear_nuevo_hilo()
+		//copiar_structRecibido_a_tcb(tcb, structRecibido);
+		tid_padre = ((t_struct_numero*) structRecibido)->numero;
+		tcb = desbloquear_tcbSystcall(tid_padre);
+		tid_hijo = crear_nuevo_hilo(tcb);
+
+		if(tid_hijo != 0){
+			paquete_crea = malloc(sizeof(t_struct_numero));
+			paquete_crea->numero = tid_hijo;
+			socket_enviar(sockCPU, D_STRUCT_NUMERO, paquete_crea);
+			free(paquete_crea);
+			bloquear_tcbSystcall(tcb, 0); //VALOR HARDCODEADO, PERO DEBERÍA FUNCIONAR
+		}else{
+			mandar_a_exit(tcb, ABORTAR);
+		}
 
 		break;
 	case D_STRUCT_JOIN:
