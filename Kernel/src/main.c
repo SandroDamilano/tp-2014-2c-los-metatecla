@@ -355,7 +355,7 @@ void handshake_thread(){
 			FD_SET(socket_atendido, &master_cpus);
 			pthread_mutex_unlock(&mutex_master_cpus);
 
-			handler_cpu(socket_atendido);
+			//handler_cpu(socket_atendido);
 
 			break;
 

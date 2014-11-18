@@ -348,7 +348,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 }
 
 void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
-	void* respuesta = malloc(254); //FIXME ARREGLAR ESTO!!!!!! PUSE UN NUMERO LO SUFICIENTEMENTE GRANDE PARA QUE ANDE. ARREGLAR SEGUN LA LOGICA DE LA FUNCION (YO NO ENTENDI)
+	void* respuesta = malloc(tamanio); //FIXME ARREGLAR ESTO!!!!!! PUSE UN NUMERO LO SUFICIENTEMENTE GRANDE PARA QUE ANDE. ARREGLAR SEGUN LA LOGICA DE LA FUNCION (YO NO ENTENDI)
 	int memoriaGuardada = 0;
 
 	t_direccion direccion = traducirDireccion(direcc_log);
@@ -411,13 +411,13 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									memoriaGuardada += tamanio;
 									free(buff);
 									} else {
-									 uint32_t espacioLibre = 256-direccion.desplazamiento;
-									 void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
-									 memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
-									 direccion.pagina=direccion.pagina+1;
-									 direccion.desplazamiento=0;
-									 tamanio=tamanio-espacioLibre;
-									 memoriaGuardada += 256 + espacioLibre;
+									 //uint32_t espacioLibre = 256-direccion.desplazamiento;
+									 void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);//espacioLibre);
+									 memcpy(respuesta+memoriaGuardada, buff, tamanio);//espacioLibre);
+									 //direccion.pagina=direccion.pagina+1;
+									 //direccion.desplazamiento=0;
+									 tamanio=0;//tamanio-tamanio;//espacioLibre;
+									 memoriaGuardada += tamanio;//espacioLibre;
 									 free(buff);
 									}
 						} else {

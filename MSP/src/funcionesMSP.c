@@ -338,8 +338,8 @@ memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);
 }
 
 char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t tamanio){
-	void* buffer = malloc(tamanio+1); //FIXME: NO SE SI ES VOID* O CHAR*
-	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio+1);
+	void* buffer = malloc(tamanio);//+1);
+	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio);//+1);
 	return buffer;
 }
 

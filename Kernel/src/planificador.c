@@ -71,6 +71,7 @@ void atender_cpus(){
 	}
 	for(i=0; i<=cpus_fdmax; i++){
 		if(FD_ISSET(i, &read_cpus)){
+			printf("Procedo a atender a la CPU: %d\n", i);
 			handler_cpu(i);
 		}
 	}
@@ -705,6 +706,7 @@ void mandar_a_ejecutar(t_hilo* tcb, int sockCPU){
 	t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
 	copiar_tcb_a_structTcb(tcb, paquete_tcb);
 	socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
+	printf("Mandé a ejecutar el tcb de pid: %d a la CPU: %d\n", paquete_tcb->pid, sockCPU);
 	free(paquete_tcb);
 	agregar_a_exec(sockCPU, tcb);
 }
