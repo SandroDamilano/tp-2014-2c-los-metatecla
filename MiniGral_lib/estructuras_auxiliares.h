@@ -186,7 +186,7 @@ typedef struct direccion{
 		uint32_t tid_a_esperar;
 	} __attribute__ ((__packed__)) t_struct_join;
 
-	char* leer_archivo(FILE* archivo, long int tamanio_archivo);
+	void* leer_archivo(FILE* archivo, long int tamanio_archivo);
 	long int calcular_tamanio_archivo(FILE* archivo);
 	FILE* abrir_archivo(char* nombre_archivo, t_log* log, pthread_mutex_t *mutex);
 	void copiar_structRecibido_a_tcb(t_hilo* tcb, void* structRecibido);

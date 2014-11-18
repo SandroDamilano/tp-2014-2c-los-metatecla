@@ -71,11 +71,14 @@ int main(int argc, char** argv) {
 	} else {
 		//socket de Kernel con tcb
 		int j =socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-		copiar_structRecibido_a_tcb(tcb, structRecibido);
+		if(j != 1){
+			printf("No se recibio tcb\n");
+			printf("Me llego d_struct = %d\n", tipo_struct);
+			} else {
+				printf("Se recibio tcb\n");
+				copiar_structRecibido_a_tcb(tcb, structRecibido);
+			}
 
-		if(j!= -1){
-		printf("Se recibio tcb\n");
-		}
 	}
 
 	//////////////////////

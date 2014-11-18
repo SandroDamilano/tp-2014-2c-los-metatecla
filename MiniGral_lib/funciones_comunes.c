@@ -7,8 +7,8 @@
 
 #include "sockets/enviar_recibir_paquete.h"
 
-char* leer_archivo(FILE* archivo, long int tamanio_archivo){
-	char* codigo = malloc(tamanio_archivo);
+void* leer_archivo(FILE* archivo, long int tamanio_archivo){
+	void* codigo = malloc(tamanio_archivo);
 
 	if(archivo == NULL){
 		return codigo; //Error
@@ -16,17 +16,7 @@ char* leer_archivo(FILE* archivo, long int tamanio_archivo){
 
 	fseek(archivo, 0L, SEEK_SET);
 
-	char buffer[tamanio_archivo];//Copio el contenido del archivo al buffer
-
-	/*while(!feof(archivo)){
-		fread(buffer, 1, tamanio_archivo, archivo);
-	}*/
-
-	fread(buffer, 1, tamanio_archivo, archivo);
-
-	buffer[tamanio_archivo]= '\0';
-
-	memcpy(codigo, buffer, tamanio_archivo);
+	fread(codigo, 1, tamanio_archivo, archivo);
 
 	return codigo;
 }

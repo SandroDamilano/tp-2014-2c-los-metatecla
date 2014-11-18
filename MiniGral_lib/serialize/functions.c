@@ -688,7 +688,7 @@ t_struct_env_bytes* deserializeStruct_env_bytes(char* dataPaquete, uint16_t leng
 
 	tamanoDato=estructuraDestino->tamanio;
 
-	estructuraDestino->buffer= malloc(tamanoDato);
+	estructuraDestino->buffer= malloc(estructuraDestino->tamanio);
 	memcpy(estructuraDestino->buffer, dataPaquete + tamanoTotal, tamanoDato);
 
 	return estructuraDestino;

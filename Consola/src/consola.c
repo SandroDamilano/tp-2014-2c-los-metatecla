@@ -53,25 +53,52 @@ int main(int argc, char	**argv){
 		printf("no se pudo conectar al kernel\n");
 	}
 
-	/*
-	//4.1- Analiza el primer mensaje (handshake con Kernel) y esperar por respuesta
-	analizar_paquete(buffer, &idOperacion);
-	if(idOperacion == HANDSHAKE_FAIL) {
-		printf("[Program]: Ocurrio un problema en el proceso Handshake. Programa abortado.\n");
-		log_error(logger," Ocurrio un problema en el proceso Handshake. Programa abortado.");
-		liberarMemoria();
-		exit(1);
-	}
-	printf("[Programa]: Conexion a Kernel establecida.\n");
-	log_info(logger,"Conexion a Kernel establecida.");
-	*/
 
 	t_struct_numero* es_consola = malloc(sizeof(t_struct_numero));
 	es_consola->numero = ES_CONSOLA;
 	socket_enviar(sockKernel, D_STRUCT_NUMERO, es_consola);
 
-	//5- Abrir BESO file
-	/*file = fopen(beso_file,"r");
+	t_struct_env_bytes* beso_code = malloc(sizeof(t_struct_env_bytes));
+
+	FILE* BESO = abrir_archivo(beso_file, logger, NULL);
+	int sizeOfBody = calcular_tamanio_archivo(BESO);
+	char* fileBody =leer_archivo(BESO, sizeOfBody);
+
+	sizeOfBody = calcular_tamanio_archivo(BESO); //REPITO ESTO PORQUE ME LO PONIA EN 0... NI IDEA
+	beso_code->tamanio = sizeOfBody;
+	beso_code->buffer = malloc(sizeOfBody);
+	memcpy(beso_code->buffer, fileBody, sizeOfBody);
+	beso_code->base = 1; //No importa
+	beso_code->PID = 1; //No importa
+
+	int j = socket_enviar(sockKernel, D_STRUCT_ENV_BYTES, beso_code);
+
+	if(j == -1){
+		printf("No se envio bien el codigo\n");
+	}
+
+	free(beso_code->buffer);
+	free(fileBody);
+	free(beso_code);
+	fclose(BESO);
+
+	return 0;
+}
+
+
+/*//4.1- Analiza el primer mensaje (handshake con Kernel) y esperar por respuesta
+analizar_paquete(buffer, &idOperacion);
+if(idOperacion == HANDSHAKE_FAIL) {
+	printf("[Program]: Ocurrio un problema en el proceso Handshake. Programa abortado.\n");
+	log_error(logger," Ocurrio un problema en el proceso Handshake. Programa abortado.");
+	liberarMemoria();
+	exit(1);
+}
+printf("[Programa]: Conexion a Kernel establecida.\n");
+log_info(logger,"Conexion a Kernel establecida.");
+
+//5- Abrir BESO file
+	file = fopen(beso_file,"r");
 	log_trace(logger,"Abriendo BESO FILE para enviarlo al Kernel.");
 
 	if (!file || file == NULL)	{
@@ -95,14 +122,9 @@ int main(int argc, char	**argv){
 	    log_error(logger,"Error al leer el archivo. Programa abortado.");
 		liberarMemoria();
 		exit(1);
-	}*/
-
-	FILE* BESO = abrir_archivo(beso_file, logger, NULL);
-	long int tamanio = calcular_tamanio_archivo(BESO);
-	char* fileBody =leer_archivo(BESO, tamanio);
-
-	//6- Enviar BESO FILE al Kernel
-	/*t_stream msg;
+	}
+//6- Enviar BESO FILE al Kernel
+	t_stream msg;
 	msg.data = fileBody;
 	preparar_paquete(sockfd, FILE_LINE, &msg);
 	log_trace(logger,"Se envio BESO FILE al Kernel.");
@@ -137,26 +159,8 @@ int main(int argc, char	**argv){
 		liberarMemoria();
 		exit(1);
 	}
-	log_trace(logger,"BESO FILE recibido con exito por el Kernel.");*/
+	log_trace(logger,"BESO FILE recibido con exito por el Kernel.");
 
-	t_struct_env_bytes* beso_code = malloc(sizeof(t_struct_env_bytes));
-	beso_code->buffer = malloc(tamanio);
-	memcpy(beso_code->buffer, fileBody, tamanio);
-	beso_code->tamanio = tamanio;
-	beso_code->base = 0; //No importa
-	beso_code->PID = 0; //No importa
-
-	free(beso_code->buffer);
-	//free(fileBody);
-	free(beso_code);
-
-	int j = socket_enviar(sockKernel, D_STRUCT_ENV_BYTES, beso_code);
-
-	if(j == -1){
-		printf("No se envio bien el codigo\n");
-	}
-
-	/*
 	//7- Quedar a la espera de mensajes para imprimir por STDOUT
 	while(analizar_paquete(buffer, &idOperacion) == 1)
 	{
@@ -175,8 +179,3 @@ int main(int argc, char	**argv){
 	/*while(socket_recibir(sockKernel, &tipoRecibido, &structRecibido) == 1){
 		handler_kernel(tipoRecibido);
 	}*/
-
-
-	return 0;
-}
-
