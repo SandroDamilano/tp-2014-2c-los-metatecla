@@ -254,6 +254,21 @@ uint32_t buscarPaginaMenosUsada(){
 	return numeroMarco;
 }
 
+uint32_t algoritmo_clock(){
+		uint32_t marcoASwapear =-1;
+		while(marcoASwapear==-1){
+		if(punteroClock==cant_marcos){
+			punteroClock=0;
+		}
+			while(marcoASwapear==-1 && punteroClock < cant_marcos){
+			if(tabla_marcos[punteroClock].bitAlgoritmo==1){
+				tabla_marcos[punteroClock].bitAlgoritmo=0;
+				punteroClock++;
+			} else { marcoASwapear = punteroClock;}
+		}
+		}
+	return marcoASwapear;
+}
 /**************** AUXILIARES DE SWAPPING *****************/
 
 void destruir_archivo(char* nombre_archivo) {
@@ -343,15 +358,7 @@ char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 	return buffer;
 }
 
-void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento){
-
-
-	uint32_t numeroMarco;
-	//1. pregunta algoritmo
-	if(string_equals_ignore_case(alg_sustitucion,"LRU")){
-		numeroMarco = buscarPaginaMenosUsada();
-	} else { /*numeroMarco = algoritmo_clock(); TODO CLOCK*/}
-	//3. crea archivo de swap en disco con la pagina anterior
+void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento, uint32_t numeroMarco){
 	bool mismaPagina(t_lista_paginas *numeroPagina){
 					return numeroPagina->numeroPagina==tabla_marcos[numeroMarco].pagina;
 				}
@@ -388,17 +395,23 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 	tabla_marcos[numeroMarco].pagina=direccion.pagina;
 	tabla_marcos[numeroMarco].segmento=direccion.segmento;
 	tabla_marcos[numeroMarco].pid=PID;
-	tabla_marcos[numeroMarco].bitAlgoritmo=0;
+	modificarBitAlgoritmo(numeroMarco);
 	printf("HICE SWAP \n");
 }
 
-void modificarBitAlgoritmo(){
+void modificarBitAlgoritmo(uint32_t numeroMarco){
 	uint32_t i;
 	if(string_equals_ignore_case(alg_sustitucion,"LRU")){
 		for(i=0;i==cant_marcos-1;i++){
+			if(tabla_marcos[i].marco_libre==0){
 			tabla_marcos[i].bitAlgoritmo+=1;
 		}
-		} else {  /*TODO CLOCK*/}
+		tabla_marcos[numeroMarco].bitAlgoritmo=0;
+		}
+		} else {
+			tabla_marcos[punteroClock].bitAlgoritmo=1;
+			punteroClock++;
+		}
 }
 
 /*********************************************** CONEXIONES ********************************************************/

@@ -21,7 +21,7 @@ void *memoria_ppal = NULL;
 uint32_t paginasMemoriaSwapActual = 0;
 uint32_t paginasMemoriaPpalActual = 0;
 uint32_t cant_marcos=0;
-
+uint32_t punteroClock =0;
 
 //Variables de estructuras administrativas
 t_list *listaProcesos = NULL;

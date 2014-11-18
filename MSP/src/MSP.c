@@ -318,15 +318,20 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 									tabla_marcos[numeroDeMarcoLibre].pagina=pagina->numeroPagina;
 									tabla_marcos[numeroDeMarcoLibre].segmento=segmento->numeroSegmento;
 									tabla_marcos[numeroDeMarcoLibre].pid=PID;
-									tabla_marcos[numeroDeMarcoLibre].bitAlgoritmo=0;
-								}else{hacerSwap(PID,direccion,pagina,segmento);}
+									modificarBitAlgoritmo(numeroDeMarcoLibre);
+								}else{
+									uint32_t numeroMarcoASwapear;
+									if(string_equals_ignore_case(alg_sustitucion,"LRU")){
+									numeroMarcoASwapear = buscarPaginaMenosUsada();
+									} else { numeroMarcoASwapear = algoritmo_clock();}
+									hacerSwap(PID,direccion,pagina,segmento, numeroMarcoASwapear);}
 						}
 						if((256-direccion.desplazamiento)>=tamanio){
 							printf("Bytes a escribir: %s tamanio: %i \n", bytes_escribir, tamanio);
 							guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,tamanio);
 							tamanio=0;
 						} else {
-						 printf("LLEGUE ACA");
+						 printf("LLEGUE ACA \n");
 							uint32_t espacioLibre = 256-direccion.desplazamiento;
 						 guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,espacioLibre);
 						 bytes_escribir=string_substring(bytes_escribir,espacioLibre, tamanio-espacioLibre);
@@ -348,7 +353,11 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 }
 
 void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
+<<<<<<< HEAD
+	void* respuesta = malloc(tamanio);
+=======
 	void* respuesta = malloc(tamanio); //FIXME ARREGLAR ESTO!!!!!! PUSE UN NUMERO LO SUFICIENTEMENTE GRANDE PARA QUE ANDE. ARREGLAR SEGUN LA LOGICA DE LA FUNCION (YO NO ENTENDI)
+>>>>>>> 13211b77b47297f990d2880b3b20a8dcb7262d32
 	int memoriaGuardada = 0;
 
 	t_direccion direccion = traducirDireccion(direcc_log);
@@ -372,7 +381,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 		if(segmento != NULL){
 			if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
 				while(tamanio>0){
-					modificarBitAlgoritmo();
+
 					t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
 					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 					if(pagina != NULL){
@@ -396,15 +405,33 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].pagina, &pagina->numeroPagina, sizeof(uint32_t));
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].segmento, &segmento->numeroSegmento, sizeof(uint32_t));
 								tabla_marcos[numeroDeMarcoLibre].pid=PID;
-								tabla_marcos[numeroDeMarcoLibre].bitAlgoritmo=0;
+								modificarBitAlgoritmo(numeroDeMarcoLibre);
 
 								}else{
-									hacerSwap(PID,direccion,pagina,segmento);
+									uint32_t numeroMarcoASwapear;
+									if(string_equals_ignore_case(alg_sustitucion,"LRU")){
+											numeroMarcoASwapear = buscarPaginaMenosUsada();
+										} else { numeroMarcoASwapear = algoritmo_clock();}
+									hacerSwap(PID,direccion,pagina,segmento,numeroMarcoASwapear);
 									}
 
 								}
 
 								if((256-direccion.desplazamiento)<=tamanio){
+<<<<<<< HEAD
+									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);
+									memcpy(respuesta+memoriaGuardada, buff, tamanio);
+									tamanio=0;
+									free(buff);
+									} else {
+									 uint32_t espacioLibre = 256-direccion.desplazamiento;
+									 void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
+									 memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
+									 direccion.pagina=direccion.pagina+1;
+									 direccion.desplazamiento=0;
+									 tamanio=tamanio-espacioLibre;
+									 memoriaGuardada += espacioLibre;
+=======
 									uint32_t espacioLibre = 256-direccion.desplazamiento;
 									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
 									memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
@@ -421,6 +448,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									 //direccion.desplazamiento=0;
 									 tamanio=0;//tamanio-espacioLibre;
 									 memoriaGuardada += tamanio;//espacioLibre;
+>>>>>>> 13211b77b47297f990d2880b3b20a8dcb7262d32
 									 free(buff);
 									}
 						} else {
@@ -438,7 +466,6 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 	PID_not_found_exception(PID);
 	return NULL;}
 free(proceso);
-free(respuesta);
 return NULL;
 }
 //TODO: FALTAN FREES?
