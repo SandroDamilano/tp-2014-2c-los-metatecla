@@ -405,10 +405,13 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								}
 
 								if((256-direccion.desplazamiento)<=tamanio){
-									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);
-									memcpy(respuesta+memoriaGuardada, buff, tamanio);
-									tamanio=0;
-									memoriaGuardada += tamanio;
+									uint32_t espacioLibre = 256-direccion.desplazamiento;
+									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
+									memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
+									direccion.pagina=direccion.pagina+1;
+									direccion.desplazamiento=0;
+									tamanio -= espacioLibre;
+									memoriaGuardada += espacioLibre;
 									free(buff);
 									} else {
 									 //uint32_t espacioLibre = 256-direccion.desplazamiento;
@@ -416,7 +419,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									 memcpy(respuesta+memoriaGuardada, buff, tamanio);//espacioLibre);
 									 //direccion.pagina=direccion.pagina+1;
 									 //direccion.desplazamiento=0;
-									 tamanio=0;//tamanio-tamanio;//espacioLibre;
+									 tamanio=0;//tamanio-espacioLibre;
 									 memoriaGuardada += tamanio;//espacioLibre;
 									 free(buff);
 									}

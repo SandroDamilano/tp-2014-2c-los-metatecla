@@ -37,6 +37,8 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 	char param_reg1[2];
 	char param_reg2[2];
 
+	printf("PID: %d\n", tcb->pid);
+
 	switch(bytecodeLetras){
 	case LOAD:
 
@@ -99,10 +101,12 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 
 		ejecucion_instruccion("GETM",parametros);
 
-		if(reg1 == 'S'){ //HORRIBLE
+		if(reg2 == 'S'){ //HORRIBLE
 			numero_enviar = registros_cpu.S;
+			printf("Numero a enviar %d (llego S))\n", numero_enviar);
 		} else {
-			numero_enviar = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+			numero_enviar = registros_cpu.registros_programacion[elegirRegistro(reg2)];
+			printf("Numero a enviar %d (no es S)\n", numero_enviar);
 		}
 
 		datos_solicitados->base = numero_enviar;//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
@@ -118,11 +122,13 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		/*if(reg1 == 'S'){
+		if(reg1 == 'S'){
 			obtener_num(datos_recibidos, 0,&registros_cpu.S);
+			printf("El reg 1 (S) tiene %d\n", registros_cpu.S);
 		} else {
 			obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
-		}*/
+			printf("El reg 1 tiene %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+		}
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
 
@@ -161,23 +167,21 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		ejecucion_instruccion("SETM",parametros);
 
 		//HORRIBLEEEE
-		if(reg2 != 'S'){
-			memcpy(&numero_enviar,&registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
-		} else {
-			memcpy(&numero_enviar,&registros_cpu.S,numero);
-		}
-
 		if(reg1 == 'S'){
-			datos_solicitados->base = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+			memcpy(&numero_enviar, &registros_cpu.S, numero);
 		} else {
-			datos_solicitados->base = registros_cpu.S;
-		}
+			memcpy(&numero_enviar, &registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
+		} //TURBIO :S
+
 		datos_solicitados->PID = tcb->pid;
 		datos_enviados->buffer = &numero_enviar;
 		datos_enviados->tamanio = sizeof(int32_t);
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
+
+		resultado = socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		//TODO validar
 
 		incrementar_pc(sizeof(int32_t) + 2*sizeof(char));
 
@@ -253,8 +257,13 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		} else {
 			if(reg2 == 'M'){
 				registros_cpu.registros_programacion[0] = registros_cpu.M + registros_cpu.registros_programacion[elegirRegistro(reg1)];
+
 			} else {
-				registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
+				if(reg2 != 'S'){
+				registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];}
+				else {
+					registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.S;
+				}
 			}
 		}
 
@@ -433,7 +442,11 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		list_add(parametros,param_reg1);
 		ejecucion_instruccion("INCR",parametros);
 
-		registros_cpu.registros_programacion[elegirRegistro(reg1)] += 1;
+		if(reg1=='S'){
+			registros_cpu.S += 1;
+		}else{
+			registros_cpu.registros_programacion[elegirRegistro(reg1)] += 1;
+		}
 
 		incrementar_pc(sizeof(char));
 
