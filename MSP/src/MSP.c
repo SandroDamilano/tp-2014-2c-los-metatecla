@@ -275,7 +275,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 	printf("LLEGO PA ESCRIBIR: %s\n", bytes_escribir);
 
 	t_direccion direccion = traducirDireccion(direcc_log);
-	printf("direccion: %i, %i, %i", direccion.desplazamiento,direccion.pagina,direccion.segmento);
+	printf("direccion: %i, %i, %i\n", direccion.desplazamiento,direccion.pagina,direccion.segmento);
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
 		//2.1 en caso de necesitar swap fijarse y la lista de marcos esta llena en ese caso con LRU o CLOCK elegir la pagina a reemplazar
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
@@ -301,7 +301,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 					t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
 					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 					if(pagina != NULL){
-						if(pagina->swap==1){
+						if(pagina->swap==1){ //NO ESTÁ EN MEMORIA
 							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 								if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
 									t_pagina *paginaACargar = malloc(sizeof(t_pagina));
@@ -312,6 +312,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 									direccion_base.segmento = segmento->numeroSegmento;
 									direccion_base.pagina = pagina->numeroPagina;
 									direccion_base.desplazamiento = 0;
+									printf("Numero de marco libre %d. Voy a guardar info\n", numeroDeMarcoLibre);
 									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
 									pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 									pagina->swap=0;
@@ -336,7 +337,11 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 						 printf("LLEGUE ACA \n");
 							uint32_t espacioLibre = 256-direccion.desplazamiento;
 						 guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,espacioLibre);
-						 bytes_escribir=string_substring(bytes_escribir,espacioLibre, tamanio-espacioLibre);
+						 //bytes_escribir=string_substring(bytes_escribir,espacioLibre, tamanio-espacioLibre);
+						 void* buffer = malloc(tamanio-espacioLibre);
+						 memcpy(buffer, bytes_escribir + espacioLibre, tamanio-espacioLibre);
+						 memcpy(bytes_escribir, buffer, tamanio-espacioLibre);
+						 free(buffer);
 						 direccion.pagina=direccion.pagina+1;
 						 direccion.desplazamiento=0;
 						 tamanio=tamanio-espacioLibre;
@@ -387,7 +392,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 					if(pagina != NULL){
 						printf("LLEGO PAGINA %d\n", pagina->numeroPagina);
-						if(pagina->swap==1){
+						if(pagina->swap==1){ //NO ESTÁ EN MEMORIA
 							printf("No esta en mem ppal (?)\n");
 							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 
@@ -396,6 +401,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								printf("extraigo info de archivo\n");
 								paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
 								printf("extraida info de archivo\n");
+								printf("Codigo extraid= %s\n", paginaACargar.codigo);
 								t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
 								memcpy(&direccion_base.segmento, &segmento->numeroSegmento, sizeof(uint32_t));
 								memcpy(&direccion_base.pagina, &pagina->numeroPagina, sizeof(uint32_t));
@@ -411,6 +417,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								modificarBitAlgoritmo(numeroDeMarcoLibre);
 
 								}else{
+									printf("No hay marcol libre\n");
 									uint32_t numeroMarcoASwapear;
 									if(string_equals_ignore_case(alg_sustitucion,"LRU")){
 											numeroMarcoASwapear = buscarPaginaMenosUsada();
@@ -435,7 +442,8 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									free(buff);
 								}
 
-								}
+								} else {
+						printf("Hola\n");}
 
 						} else {
 							page_not_found_exception(direccion.pagina);

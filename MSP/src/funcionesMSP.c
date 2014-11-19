@@ -348,11 +348,11 @@ t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 
 /********************************* MANEJO DE INFORMACION ******************************************/
 
-void guardarInformacion(void* baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio){
+void guardarInformacion(void* baseMarco,t_direccion direccion,void* bytes_escribir, uint32_t tamanio){
 memcpy(baseMarco + direccion.desplazamiento, bytes_escribir, tamanio);
 }
 
-char* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t tamanio){
+void* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t tamanio){
 	void* buffer = malloc(tamanio);//+1);
 	memcpy(buffer, baseMarco + direccion.desplazamiento, tamanio);//+1);
 	return buffer;

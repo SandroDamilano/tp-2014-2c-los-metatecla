@@ -119,8 +119,8 @@ void page_not_found_exception(uint32_t pagina);
 void segmentation_fault();
 
 //Manejo de informacion
-char* devolverInformacion(void *baseMarco, t_direccion direccion, uint32_t tamanio);
-void guardarInformacion(void *baseMarco,t_direccion direccion,char* bytes_escribir, uint32_t tamanio);
+void* devolverInformacion(void *baseMarco, t_direccion direccion, uint32_t tamanio);
+void guardarInformacion(void *baseMarco,t_direccion direccion,void* bytes_escribir, uint32_t tamanio);
 void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento, uint32_t numeroMarco);
 
 ////////////INICIO////////////
