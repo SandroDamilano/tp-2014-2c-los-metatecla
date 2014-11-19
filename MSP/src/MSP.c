@@ -169,7 +169,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){ //TODO Arreglar
 	} else {
 		pthread_mutex_lock(&mutex_log);
 		//log_error(logger,"Se supera el maximo de segmentos por programa");
-		printf("Se supera el maximo de segmentos por programa");
+		printf("Se supera el maximo de segmentos por programa\n");
 		pthread_mutex_unlock(&mutex_log);
 		return -1;
 	}
@@ -255,7 +255,7 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 		} else {
 			pthread_mutex_lock(&mutex_log);
 			//log_error(logger, "El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
-			printf("El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar", PID, (direccionTraducida).segmento);
+			printf("El PID: %u, no contiene el numero de segmento: %i por lo tanto no se puede borrar\n", PID, (direccionTraducida).segmento);
 			pthread_mutex_unlock(&mutex_log);
 		}
 	} else {
@@ -271,6 +271,8 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 //PUSE QUE DEVUELVA -1 SI NO SE PUDO ESCRIBIR, Y 0 SI PUDO. ES PARA VALIDACIONES.
 int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
 	//1. traducir direccion y validarla
+
+	printf("LLEGO PA ESCRIBIR: %s\n", bytes_escribir);
 
 	t_direccion direccion = traducirDireccion(direcc_log);
 	printf("direccion: %i, %i, %i", direccion.desplazamiento,direccion.pagina,direccion.segmento);
@@ -313,7 +315,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
 									pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 									pagina->swap=0;
-									printf("guarde el archivo en memoria"); //DEBUG
+									printf("guarde el archivo en memoria\n"); //DEBUG
 									tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
 									tabla_marcos[numeroDeMarcoLibre].pagina=pagina->numeroPagina;
 									tabla_marcos[numeroDeMarcoLibre].segmento=segmento->numeroSegmento;
@@ -353,11 +355,8 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 }
 
 void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
-<<<<<<< HEAD
 	void* respuesta = malloc(tamanio);
-=======
-	void* respuesta = malloc(tamanio); //FIXME ARREGLAR ESTO!!!!!! PUSE UN NUMERO LO SUFICIENTEMENTE GRANDE PARA QUE ANDE. ARREGLAR SEGUN LA LOGICA DE LA FUNCION (YO NO ENTENDI)
->>>>>>> 13211b77b47297f990d2880b3b20a8dcb7262d32
+
 	int memoriaGuardada = 0;
 
 	t_direccion direccion = traducirDireccion(direcc_log);
@@ -376,16 +375,20 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	if(proceso != NULL){
+		printf("LLEGO PID: %d\n", proceso->pid);
 		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
 		segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
+			printf("LLEGO SEGMENTO %d\n", segmento->numeroSegmento);
 			if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
 				while(tamanio>0){
 
 					t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
 					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 					if(pagina != NULL){
+						printf("LLEGO PAGINA %d\n", pagina->numeroPagina);
 						if(pagina->swap==1){
+							printf("No esta en mem ppal (?)\n");
 							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 
 							if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
@@ -400,7 +403,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar.codigo,paginaACargar.tamanio_buffer);
 								pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 								pagina->swap=0;
-								printf("guarde el archivo en memoria"); //DEBUG
+								printf("guarde el archivo en memoria\n"); //DEBUG
 								tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].pagina, &pagina->numeroPagina, sizeof(uint32_t));
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].segmento, &segmento->numeroSegmento, sizeof(uint32_t));
@@ -415,42 +418,25 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									hacerSwap(PID,direccion,pagina,segmento,numeroMarcoASwapear);
 									}
 
-								}
-
-								if((256-direccion.desplazamiento)<=tamanio){
-<<<<<<< HEAD
-									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);
-									memcpy(respuesta+memoriaGuardada, buff, tamanio);
-									tamanio=0;
-									free(buff);
-									} else {
-									 uint32_t espacioLibre = 256-direccion.desplazamiento;
-									 void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
-									 memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
-									 direccion.pagina=direccion.pagina+1;
-									 direccion.desplazamiento=0;
-									 tamanio=tamanio-espacioLibre;
-									 memoriaGuardada += espacioLibre;
-=======
+								if((256-direccion.desplazamiento) <= tamanio){
 									uint32_t espacioLibre = 256-direccion.desplazamiento;
 									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
 									memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
-									direccion.pagina=direccion.pagina+1;
-									direccion.desplazamiento=0;
+									direccion.pagina = direccion.pagina + 1;
+									direccion.desplazamiento = 0;
 									tamanio -= espacioLibre;
 									memoriaGuardada += espacioLibre;
 									free(buff);
-									} else {
-									 //uint32_t espacioLibre = 256-direccion.desplazamiento;
-									 void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);//espacioLibre);
-									 memcpy(respuesta+memoriaGuardada, buff, tamanio);//espacioLibre);
-									 //direccion.pagina=direccion.pagina+1;
-									 //direccion.desplazamiento=0;
-									 tamanio=0;//tamanio-espacioLibre;
-									 memoriaGuardada += tamanio;//espacioLibre;
->>>>>>> 13211b77b47297f990d2880b3b20a8dcb7262d32
-									 free(buff);
-									}
+								} else {
+									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);
+									memcpy(respuesta+memoriaGuardada, buff, tamanio);
+									tamanio = 0;
+									memoriaGuardada += tamanio;
+									free(buff);
+								}
+
+								}
+
 						} else {
 							page_not_found_exception(direccion.pagina);
 							return NULL;
