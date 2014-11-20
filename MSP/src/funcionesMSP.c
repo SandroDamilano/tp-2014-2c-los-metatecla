@@ -593,6 +593,7 @@ void handler_conexiones(void){
 				printf("Ingrese un tamaño:\n");
 				scanf("%d", &tamanio_escritura);
 				char* bytesEnMemoria =solicitar_memoria(PID, direcVir, tamanio_escritura);
+				bytesEnMemoria[tamanio_escritura]= '\0';
 				printf("En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);
 				indicaciones_consola();
 

@@ -111,7 +111,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 
 		datos_solicitados->base = numero_enviar;//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
 		datos_solicitados->PID = tcb->pid;
-		datos_solicitados->tamanio = 4;
+		datos_solicitados->tamanio = 1; //FIXME MEDIO TURBIO PERO ANDA
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
@@ -121,6 +121,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
+		printf("Me llego de memoria %s\n",datos_recibidos);
 
 		if(reg1 == 'S'){
 			obtener_num(datos_recibidos, 0,&registros_cpu.S);
@@ -129,6 +130,9 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 			obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 			printf("El reg 1 tiene %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 		}
+
+		//registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
+
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
 
@@ -782,19 +786,26 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		ejecucion_instruccion("PUSH",parametros);
 
 		int32_t auxiliar_copiar;
-		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
+		printf("ME LLEGO NUM %d\n", numero);
+		printf("EN %c TENGO %d\n", reg1,registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)]+4-numero,numero);
 
 		//socket a MSP enviando auxiliar_copiar con la direccion del cursor de stack
 
 		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S);
 
-		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_enviados->base = direccionMSP;
+		datos_enviados->PID = tcb->pid;
 		datos_enviados->buffer = &auxiliar_copiar;
-		datos_enviados->tamanio = sizeof(int32_t);
+		printf("PUSHEO %d\n", auxiliar_copiar);
+		//datos_enviados->tamanio = sizeof(int32_t);
+		datos_enviados->tamanio = numero;
 
 		int resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
+
+		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		//TODO HACER VALIDACION
 
 		registros_cpu.S += numero;
 
@@ -1063,6 +1074,6 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 	free(datos_solicitados);
 	free(datos_enviados);
 	free(aux);
-	free(datos_recibidos);
+	//free(datos_recibidos);
 }
 
