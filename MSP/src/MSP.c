@@ -340,6 +340,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 						 //bytes_escribir=string_substring(bytes_escribir,espacioLibre, tamanio-espacioLibre);
 						 void* buffer = malloc(tamanio-espacioLibre);
 						 memcpy(buffer, bytes_escribir + espacioLibre, tamanio-espacioLibre);
+						 memset(bytes_escribir,0,tamanio);
 						 memcpy(bytes_escribir, buffer, tamanio-espacioLibre);
 						 free(buffer);
 						 direccion.pagina=direccion.pagina+1;
@@ -361,7 +362,9 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 
 void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 	void* respuesta = malloc(tamanio);
-
+	memset(respuesta,0,tamanio);
+	void* buff = malloc(tamanio);
+	memset(buff,0,tamanio);
 	int memoriaGuardada = 0;
 
 	t_direccion direccion = traducirDireccion(direcc_log);
@@ -427,17 +430,20 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 						}
 
 								if((256-direccion.desplazamiento) <= tamanio){
+									printf("Llego a perdir\n");
 									uint32_t espacioLibre = 256-direccion.desplazamiento;
 									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
 									memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
+									printf("Por ahora la respuesta es: %s\n", respuesta);
 									direccion.pagina = direccion.pagina + 1;
 									direccion.desplazamiento = 0;
 									tamanio -= espacioLibre;
 									memoriaGuardada += espacioLibre;
-									free(buff);
+									memset(buff,0,tamanio);
 								} else {
 									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);
 									memcpy(respuesta+memoriaGuardada, buff, tamanio);
+									printf("Ahora la respuesta es: %s\n", respuesta);
 									tamanio = 0;
 									memoriaGuardada += tamanio;
 									free(buff);
@@ -448,9 +454,8 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 							page_not_found_exception(direccion.pagina);
 							return NULL;
 						}
-					return respuesta;
 				}
-			} else {segmentation_fault();}
+				return respuesta;} else {segmentation_fault();}
 		} else {
 			segment_not_found_exception(direccion.segmento);
 			return NULL;
