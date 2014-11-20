@@ -35,7 +35,7 @@ char bufferLog[80];
 typedef struct  lista_paginas{
 	uint32_t numeroPagina;
 	uint32_t marcoEnMemPpal;
-	int swap;
+	uint32_t swap;
 	}t_lista_paginas;
 
 typedef struct  lista_segmentos{

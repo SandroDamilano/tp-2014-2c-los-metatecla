@@ -94,8 +94,7 @@ int inicializar_semaforos(){
 }
 /******************************************** MEMORIA PRINCIPAL ******************************************************/
 void *reservarBloquePpal(uint32_t tamanioMemoria){
-
-     void *bloquePrincipal = malloc(tamanioMemoria);
+     void *bloquePrincipal = malloc(tamanioMemoria*1024);
      if(NULL == bloquePrincipal){
     	 //TODO log "no se pudo crear memoria principal"
          //TODO liberar recursos
@@ -359,7 +358,7 @@ void* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 }
 
 void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento, uint32_t numeroMarco){
-	bool mismaPagina(t_lista_paginas *numeroPagina){
+	/*bool mismaPagina(t_lista_paginas *numeroPagina){
 					return numeroPagina->numeroPagina==tabla_marcos[numeroMarco].pagina;
 				}
 	t_lista_paginas *paginaSacada = malloc(sizeof(t_lista_paginas));
@@ -368,7 +367,7 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 	printf("Pagina en swap: %i\n", paginaSacada->swap);
 	paginaSacada->swap=1;
 	printf("Pagina en swap: %i\n", paginaSacada->swap);
-	paginaSacada->marcoEnMemPpal=-1;
+	paginaSacada->marcoEnMemPpal=-1;*/
 	t_pagina paginaASacar;
 	paginaASacar.PID=tabla_marcos[numeroMarco].pid;
 	paginaASacar.num_pag=tabla_marcos[numeroMarco].pagina;
@@ -410,7 +409,10 @@ void modificarBitAlgoritmo(uint32_t numeroMarco){
 		}
 		} else {
 			tabla_marcos[punteroClock].bitAlgoritmo=1;
-			punteroClock++;
+			if(punteroClock==cant_marcos){
+				punteroClock=0;
+			}else{
+			punteroClock++;}
 		}
 }
 

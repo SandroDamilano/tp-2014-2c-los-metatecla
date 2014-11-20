@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 	//1. Crear archivo de log, Leer archivo de configuracion e Iniciar semaforos
 	crear_logger();
 	leer_config(path_config);
-	printf("Memoria: %u, Swap: %u",tamanio_mem_ppal, cant_mem_swap);
+	printf("Memoria: %u, Swap: %i",tamanio_mem_ppal, cant_mem_swap);
 	inicializar_semaforos();
 
 	//2. Reservar bloque de memoria principal
@@ -293,12 +293,12 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 
 
 	if(proceso != NULL){
-		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+		t_lista_segmentos *segmento /*= malloc(sizeof(t_lista_segmentos))*/;
 		segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
 			if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
 				while(tamanio>0){
-					t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
+					t_lista_paginas* pagina /*= malloc(sizeof(t_lista_paginas))*/;
 					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 					if(pagina != NULL){
 						if(pagina->swap==1){ //NO ESTÁ EN MEMORIA
@@ -316,19 +316,31 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 									guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar->codigo,paginaACargar->tamanio_buffer);
 									pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 									pagina->swap=0;
+									printf("Cambie a swap a 0 %i\n",pagina->swap);
 									printf("guarde el archivo en memoria\n"); //DEBUG
 									tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
 									tabla_marcos[numeroDeMarcoLibre].pagina=pagina->numeroPagina;
 									tabla_marcos[numeroDeMarcoLibre].segmento=segmento->numeroSegmento;
 									tabla_marcos[numeroDeMarcoLibre].pid=PID;
-									modificarBitAlgoritmo(numeroDeMarcoLibre);
 								}else{
 									uint32_t numeroMarcoASwapear;
 									if(string_equals_ignore_case(alg_sustitucion,"LRU")){
 									numeroMarcoASwapear = buscarPaginaMenosUsada();
 									} else { numeroMarcoASwapear = algoritmo_clock();}
+									bool paginaASacar(t_lista_paginas *numeroPagina){
+										return numeroPagina->numeroPagina==tabla_marcos[numeroMarcoASwapear].pagina;
+										}
+									printf("Numero de marco a swapear: %i", numeroMarcoASwapear);
+									t_lista_paginas *paginaSacada = malloc(sizeof(t_lista_paginas));
+									paginaSacada = list_find(segmento->lista_Paginas, (void*) (*paginaASacar));
+									printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
+									printf("Pagina en swap: %i\n", paginaSacada->swap);
+									paginaSacada->swap=1;
+									printf("Pagina en swap: %i\n", paginaSacada->swap);
+									paginaSacada->marcoEnMemPpal=-1;
 									hacerSwap(PID,direccion,pagina,segmento, numeroMarcoASwapear);}
 						}
+						modificarBitAlgoritmo(pagina->marcoEnMemPpal);
 						if((256-direccion.desplazamiento)>=tamanio){
 							printf("Bytes a escribir: %s tamanio: %i \n", bytes_escribir, tamanio);
 							guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,tamanio);
@@ -417,7 +429,6 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].pagina, &pagina->numeroPagina, sizeof(uint32_t));
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].segmento, &segmento->numeroSegmento, sizeof(uint32_t));
 								tabla_marcos[numeroDeMarcoLibre].pid=PID;
-								modificarBitAlgoritmo(numeroDeMarcoLibre);
 
 								}else{
 									printf("No hay marcol libre\n");
@@ -425,10 +436,21 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									if(string_equals_ignore_case(alg_sustitucion,"LRU")){
 											numeroMarcoASwapear = buscarPaginaMenosUsada();
 										} else { numeroMarcoASwapear = algoritmo_clock();}
-									hacerSwap(PID,direccion,pagina,segmento,numeroMarcoASwapear);
+										bool paginaASacar(t_lista_paginas *numeroPagina){
+												return numeroPagina->numeroPagina==tabla_marcos[numeroMarcoASwapear].pagina;
+												}
+										t_lista_paginas *paginaSacada /* = malloc(sizeof(t_lista_paginas))*/;
+										paginaSacada = list_find(segmento->lista_Paginas, (void*) (*paginaASacar));
+										printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
+										printf("Pagina en swap: %i\n", paginaSacada->swap);
+										paginaSacada->swap=1;
+										printf("Pagina en swap: %i\n", paginaSacada->swap);
+										paginaSacada->marcoEnMemPpal=-1;
+										hacerSwap(PID,direccion,pagina,segmento,numeroMarcoASwapear);
 									}
 						}
 
+								modificarBitAlgoritmo(pagina->marcoEnMemPpal);
 								if((256-direccion.desplazamiento) <= tamanio){
 									printf("Llego a perdir\n");
 									uint32_t espacioLibre = 256-direccion.desplazamiento;
