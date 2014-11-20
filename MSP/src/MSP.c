@@ -410,7 +410,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 								pagina->swap=0;
 								printf("guarde el archivo en memoria\n"); //DEBUG
-								tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;
+								tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;//Ocupado
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].pagina, &pagina->numeroPagina, sizeof(uint32_t));
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].segmento, &segmento->numeroSegmento, sizeof(uint32_t));
 								tabla_marcos[numeroDeMarcoLibre].pid=PID;
@@ -424,6 +424,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 										} else { numeroMarcoASwapear = algoritmo_clock();}
 									hacerSwap(PID,direccion,pagina,segmento,numeroMarcoASwapear);
 									}
+						}
 
 								if((256-direccion.desplazamiento) <= tamanio){
 									uint32_t espacioLibre = 256-direccion.desplazamiento;
@@ -442,8 +443,6 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									free(buff);
 								}
 
-								} else {
-						printf("Hola\n");}
 
 						} else {
 							page_not_found_exception(direccion.pagina);
