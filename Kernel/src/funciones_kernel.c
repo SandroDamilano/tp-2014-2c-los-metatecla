@@ -22,8 +22,8 @@
 void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_new, NULL);
 	pthread_mutex_init(&mutex_exit, NULL);
-	sem_init(&sem_new, 0, 0);
-	sem_init(&sem_exit, 0, 0);
+	sem_init(&sem_new, 1, 0);
+	sem_init(&sem_exit, 1, 0);
 	pthread_mutex_init(&mutex_PIDs, NULL);
 	pthread_mutex_init(&mutex_TIDs, NULL);
 	pthread_mutex_init(&mutex_log, NULL);
@@ -67,16 +67,19 @@ int obtener_tid(){
 };
 
 void pop_exit(t_data_nodo_exit* data){
-	void *nuevo = queue_pop(cola_exit);
-	*data = *(t_data_nodo_exit*)nuevo;
+	//void *nuevo = queue_pop(cola_exit);
+	//*data = *(t_data_nodo_exit*)nuevo;
+	data = (t_data_nodo_exit*)queue_pop(cola_exit);
+	printf("en el pop, data->tcb->tid = %d\n", (data->tcb)->tid);
 };
 
-void sacar_de_exit(t_data_nodo_exit* data){
+t_data_nodo_exit* sacar_de_exit(){
 //	consumir_tcb(pop_exit, &sem_exit, &mutex_exit, tcb);
 	sem_wait(&sem_exit);
 	pthread_mutex_lock(&mutex_exit);
-	pop_exit(data);
+	t_data_nodo_exit* data = (t_data_nodo_exit*)queue_pop(cola_exit);
 	pthread_mutex_unlock(&mutex_exit);
+	return data;
 }
 
 void push_new(t_hilo* tcb){

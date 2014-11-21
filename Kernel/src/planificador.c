@@ -95,14 +95,16 @@ void poner_new_a_ready(){
  */
 void terminar_TCBs(){
 	while(1){
-		t_data_nodo_exit* data = malloc(sizeof(t_data_nodo_exit));
-		sacar_de_exit(data);
+		t_data_nodo_exit* data;
+		data = sacar_de_exit();
 
+		printf("Hay que matar a uno\n");
 		switch(data->fin){
 		case TERMINAR:
-			if(es_padre(data->tcb)==1){
+			if(es_padre(data->tcb)==true){
 				// Hay que finalizar todos los hijos
-				escribir_consola(data->tcb->pid, "El proceso ha finalizado");
+				//escribir_consola(data->tcb->pid, "El proceso ha finalizado");
+				printf("Y es padre...\n");
 				terminar_proceso(data->tcb);
 			}else{
 				// Se finaliza sólo este hilo
@@ -152,10 +154,10 @@ int obtener_socket_consola(uint32_t pid){
 
 void terminar_proceso(t_hilo* tcb){
 	uint32_t pid = tcb->pid;
-	eliminar_ready(pid);
-	eliminar_block(pid);
-	eliminar_exec(pid);
-	sacar_de_consolas(pid);
+	//eliminar_ready(pid);
+	//eliminar_block(pid);
+	//eliminar_exec(pid);
+	//sacar_de_consolas(pid);
 	terminar_hilo(tcb);
 }
 
@@ -164,6 +166,7 @@ void terminar_hilo(t_hilo* tcb){
 }
 
 void liberar_memoria(t_hilo* tcb){
+	printf("Procedo a destruir los segmentos de PID %d\n", tcb->pid);
 	//Libero segmento de codigo
 	t_struct_free* free_segmento = malloc(sizeof(t_struct_free));
 	free_segmento->PID = tcb->pid;
@@ -176,7 +179,7 @@ void liberar_memoria(t_hilo* tcb){
 	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
 
 	free(free_segmento);
-	free(tcb);
+	//free(tcb);
 }
 
 void eliminar_ready(uint32_t pid){
@@ -199,11 +202,11 @@ void eliminar_block(uint32_t pid){
 	pthread_mutex_unlock(&mutex_block);
 	while(data!=NULL){
 		mandar_a_exit(data->tcb, TERMINAR);
-		free(data);
 		pthread_mutex_lock(&mutex_block);
 		data = list_remove_by_condition(cola_block, (void*)es_el_pid_block);
 		pthread_mutex_unlock(&mutex_block);
 	};
+	free(data);
 }
 
 void eliminar_exec(uint32_t pid){
@@ -214,11 +217,11 @@ void eliminar_exec(uint32_t pid){
 	while(data!=NULL){
 		//TODO decirle a la cpu que aborte su ejecución (¿Eliminar solicitud de atención?)
 		mandar_a_exit(data->tcb, TERMINAR);
-		free(data);
 		pthread_mutex_lock(&mutex_exec);
 		data = list_remove_by_condition(cola_exec, (void*)es_el_pid_exec);
 		pthread_mutex_unlock(&mutex_exec);
 	};
+	free(data);
 }
 
 void sacar_de_consolas(uint32_t pid){
@@ -264,7 +267,8 @@ void mandar_a_exit(t_hilo* tcb, t_fin fin){
 	push_exit(data);
 	pthread_mutex_unlock(&mutex_exit);
 	sem_post(&sem_exit);
-	data->tcb->cola = EXIT;
+	(data->tcb)->cola = EXIT;
+	printf("Se mando a exit el tid %d\n", (data->tcb)->tid);
 }
 
 t_hilo* obtener_tcb_a_ejecutar(){
@@ -902,6 +906,7 @@ void handler_cpu(int sockCPU){
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		//Lo saco de EXEC
 		obtener_tcb_de_cpu(sockCPU);
+		printf("Me devolvieron el TCB de TID %d porque finalizó\n", tcb->pid);
 
 		//Verifico si es el de Kernel
 		if(tcb->kernel_mode == true){

@@ -64,7 +64,8 @@
 
 	t_hilo *crear_TCB(uint32_t pid, uint32_t dir_codigo, uint32_t dir_stack, uint32_t tamanio_codigo);
 	void inicializar_colas_new_exit();
-	void sacar_de_exit(t_data_nodo_exit* tcb);
+	//void sacar_de_exit(t_data_nodo_exit* tcb);
+	t_data_nodo_exit* sacar_de_exit();
 	void poner_en_new(t_hilo* tcb);// Se lo podría poner en el Loader directamente
 //	void push_new(t_hilo* tcb); // Esta no es la que hay que usar
 	void inicializar_semaforos();
