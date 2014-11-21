@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 	//1. Crear archivo de log, Leer archivo de configuracion e Iniciar semaforos
 	crear_logger();
 	leer_config(path_config);
-	printf("Memoria: %u Kb, Swap: %i Mb\n",tamanio_mem_ppal, cant_mem_swap);
+	printf("Memoria: %u Kb, Swap: %i Mb, Algoritmo: %s\n",tamanio_mem_ppal, cant_mem_swap, alg_sustitucion);
 	inicializar_semaforos();
 
 	//2. Reservar bloque de memoria principal

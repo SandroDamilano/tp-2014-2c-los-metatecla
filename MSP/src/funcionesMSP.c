@@ -108,6 +108,7 @@ void *reservarBloquePpal(uint32_t tamanioMemoria){
 
 uint32_t calcularMarcos(uint32_t tamanioMemoria){
 	uint32_t cantidadmarcos = (tamanioMemoria*1024)/256;
+	printf("Cantidad de marcos: %i \n", cantidadmarcos);
 	return cantidadmarcos;
 }
 
@@ -244,7 +245,7 @@ uint32_t buscarPaginaMenosUsada(){
 	uint32_t i, maximo, numeroMarco;
 	maximo=tabla_marcos[0].bitAlgoritmo;
 	numeroMarco=0;
-	for(i=0;i==cant_marcos-1;i++){
+	for(i=0;i<=cant_marcos-1;i++){
 		if(tabla_marcos[i].bitAlgoritmo>maximo){
 			maximo=tabla_marcos[i].bitAlgoritmo;
 			numeroMarco=i;
@@ -391,12 +392,15 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 void modificarBitAlgoritmo(uint32_t numeroMarco){
 	uint32_t i;
 	if(string_equals_ignore_case(alg_sustitucion,"LRU")){
-		for(i=0;i==cant_marcos-1;i++){
+		for(i=0;i<=cant_marcos-1;i++){
+			printf("marco Libre: %i \n", tabla_marcos[i].marco_libre);
 			if(tabla_marcos[i].marco_libre==0){
 			tabla_marcos[i].bitAlgoritmo+=1;
-		}
+			printf("bitAlgoritmo: %i, numeroMarco: %i \n", tabla_marcos[i].bitAlgoritmo, i);
+			}}
 		tabla_marcos[numeroMarco].bitAlgoritmo=0;
-		}
+		printf("bitAlgoritmo: %i, numeroMarco: %i \n", tabla_marcos[numeroMarco].bitAlgoritmo, numeroMarco);
+
 		} else {
 			tabla_marcos[numeroMarco].bitAlgoritmo=1;
 			if(punteroClock==cant_marcos){
