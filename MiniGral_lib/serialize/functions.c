@@ -195,7 +195,9 @@ t_stream * serializeStruct_free(t_struct_free * estructuraOrigen){
 
 	char * data = crearDataConHeader(D_STRUCT_FREE, paquete->length); //creo el data
 
-	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));		//copio a data el numero.
+	memcpy(data + sizeof(t_header), &estructuraOrigen->PID, sizeof(uint32_t));		//copio a data el numero.
+
+	memcpy(data+sizeof(t_header)+sizeof(uint32_t), &estructuraOrigen->direccion_base, sizeof(uint32_t));
 
 	paquete->data = data;
 
@@ -775,7 +777,9 @@ t_struct_malloc * deserializeStruct_malloc(char * dataPaquete, uint16_t length){
 t_struct_free * deserializeStruct_free(char * dataPaquete, uint16_t length){
 	t_struct_free * estructuraDestino = malloc(sizeof(t_struct_free));
 
-	memcpy(estructuraDestino, dataPaquete, 2*sizeof(uint32_t)); //copio el data del paquete a la estructura.
+	memcpy(&estructuraDestino->PID, dataPaquete, sizeof(uint32_t)); //copio el data del paquete a la estructura.
+
+	memcpy(&estructuraDestino->direccion_base, dataPaquete + sizeof(uint32_t), sizeof(uint32_t));
 
 	return estructuraDestino;
 }
