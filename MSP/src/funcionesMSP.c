@@ -287,8 +287,8 @@ void destruir_archivo(char* nombre_archivo) {
 	if (remove(nombre_archivo) != 0) {
 		paginas_en_disco--;
 		pthread_mutex_lock(&mutex_log);
-		printf("No se pudo eliminar el archivo %s\n", nombre_archivo);
-		log_error(logger, "No se pudo eliminar el archivo %s\n",nombre_archivo);
+		printf("No se pudo eliminar el archivo %s o nunca se creo\n", nombre_archivo);
+		log_error(logger, "No se pudo eliminar el archivo o nunca se creo %s\n",nombre_archivo);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		/*pthread_mutex_lock(&mutex_log);
