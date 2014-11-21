@@ -89,6 +89,18 @@ int inicializar_semaforos(){
 		printf("mutex_log failed");
 		return EXIT_FAILURE;
 	}
+	if(pthread_mutex_init(&mutex_reservarMemoria,NULL) != 0){
+			printf("mutex_reservarMemoria failed");
+			return EXIT_FAILURE;
+		}
+	if(pthread_mutex_init(&mutex_crearSegmento,NULL) != 0){
+			printf("mutex_crearSegmento failed");
+			return EXIT_FAILURE;
+		}
+	if(pthread_mutex_init(&mutex_tablaMarcos,NULL) != 0){
+			printf("mutex_tablaMarcos failed");
+			return EXIT_FAILURE;
+		}
 
 	return EXIT_SUCCESS;
 }
@@ -108,6 +120,7 @@ void *reservarBloquePpal(uint32_t tamanioMemoria){
 
 uint32_t calcularMarcos(uint32_t tamanioMemoria){
 	uint32_t cantidadmarcos = (tamanioMemoria*1024)/256;
+	printf("Cantidad de marcos: %i \n", cantidadmarcos);
 	return cantidadmarcos;
 }
 
@@ -176,7 +189,7 @@ void crearArchivoSwapEnDisco(t_pagina pagina){
 
 	//Abro un nuevo archivo
 	FILE* arch_swap = NULL;
-	arch_swap = fopen(file_name, "w+"); //FIXME Aca el modo es w+ lo hablamos con el ayudante
+	arch_swap = fopen(file_name, "w+");
 
 	//Pongo la informacion necesaria en el archivo
 	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
@@ -244,7 +257,7 @@ uint32_t buscarPaginaMenosUsada(){
 	uint32_t i, maximo, numeroMarco;
 	maximo=tabla_marcos[0].bitAlgoritmo;
 	numeroMarco=0;
-	for(i=0;i==cant_marcos-1;i++){
+	for(i=0;i<=cant_marcos-1;i++){
 		if(tabla_marcos[i].bitAlgoritmo>maximo){
 			maximo=tabla_marcos[i].bitAlgoritmo;
 			numeroMarco=i;
@@ -274,8 +287,8 @@ void destruir_archivo(char* nombre_archivo) {
 	if (remove(nombre_archivo) != 0) {
 		paginas_en_disco--;
 		pthread_mutex_lock(&mutex_log);
-		printf("No se pudo eliminar el archivo %s\n", nombre_archivo);
-		log_error(logger, "No se pudo eliminar el archivo %s\n",nombre_archivo);
+		printf("No se pudo eliminar el archivo %s o nunca se creo\n", nombre_archivo);
+		log_error(logger, "No se pudo eliminar el archivo o nunca se creo %s\n",nombre_archivo);
 		pthread_mutex_unlock(&mutex_log);
 	} else {
 		/*pthread_mutex_lock(&mutex_log);
@@ -358,16 +371,6 @@ void* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 }
 
 void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento, uint32_t numeroMarco){
-	/*bool mismaPagina(t_lista_paginas *numeroPagina){
-					return numeroPagina->numeroPagina==tabla_marcos[numeroMarco].pagina;
-				}
-	t_lista_paginas *paginaSacada = malloc(sizeof(t_lista_paginas));
-	paginaSacada = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
-	printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
-	printf("Pagina en swap: %i\n", paginaSacada->swap);
-	paginaSacada->swap=1;
-	printf("Pagina en swap: %i\n", paginaSacada->swap);
-	paginaSacada->marcoEnMemPpal=-1;*/
 	t_pagina paginaASacar;
 	paginaASacar.PID=tabla_marcos[numeroMarco].pid;
 	paginaASacar.num_pag=tabla_marcos[numeroMarco].pagina;
@@ -394,21 +397,24 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 	tabla_marcos[numeroMarco].pagina=direccion.pagina;
 	tabla_marcos[numeroMarco].segmento=direccion.segmento;
 	tabla_marcos[numeroMarco].pid=PID;
-	modificarBitAlgoritmo(numeroMarco);
+	//modificarBitAlgoritmo(numeroMarco);
 	printf("HICE SWAP \n");
 }
 
 void modificarBitAlgoritmo(uint32_t numeroMarco){
 	uint32_t i;
 	if(string_equals_ignore_case(alg_sustitucion,"LRU")){
-		for(i=0;i==cant_marcos-1;i++){
+		for(i=0;i<=cant_marcos-1;i++){
+			printf("marco Libre: %i \n", tabla_marcos[i].marco_libre);
 			if(tabla_marcos[i].marco_libre==0){
 			tabla_marcos[i].bitAlgoritmo+=1;
-		}
+			printf("bitAlgoritmo: %i, numeroMarco: %i \n", tabla_marcos[i].bitAlgoritmo, i);
+			}}
 		tabla_marcos[numeroMarco].bitAlgoritmo=0;
-		}
+		printf("bitAlgoritmo: %i, numeroMarco: %i \n", tabla_marcos[numeroMarco].bitAlgoritmo, numeroMarco);
+
 		} else {
-			tabla_marcos[punteroClock].bitAlgoritmo=1;
+			tabla_marcos[numeroMarco].bitAlgoritmo=1;
 			if(punteroClock==cant_marcos){
 				punteroClock=0;
 			}else{
@@ -666,7 +672,7 @@ return NULL;
 	 printf("El PID ingresado: %d, no existe en el sistema", PID);}
  }
 
- void listar_marcos(){//FIXME ARREGLAR LISTA DE MARCOS!
+ void listar_marcos(){
 	 char* trueofalse(uint32_t unNumero){
 		char* resultado;
 		 if(unNumero==0){

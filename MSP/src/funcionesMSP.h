@@ -71,8 +71,7 @@ typedef struct marco{
 
 typedef struct conexion_entrante{
 	uint32_t socket;
-	//pthread_t *hiloDeConexion;
-	//TODO Archivo de logeo
+	//pthread_t *hiloDeConexion; TODO ??
 } t_conexion_entrante;
 
 
@@ -89,8 +88,9 @@ extern uint32_t punteroClock;
 //Semaforos
 extern pthread_mutex_t mutex_consola;
 extern pthread_mutex_t mutex_log;
-
-
+extern pthread_mutex_t mutex_reservarMemoria;
+extern pthread_mutex_t mutex_crearSegmento;
+extern pthread_mutex_t mutex_tablaMarcos;
 ////////////Consola//////////////
 void *inciarConsola(void *param1);
 void indicaciones_consola();
@@ -103,7 +103,6 @@ void listar_marcos();
 uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
 void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
 void* solicitar_memoria(uint32_t PID, uint32_t direccion_log, uint32_t tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
-//TODO no estamos seguros de que devuelta esta funcion. Consultar
 int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 
 ///////////CONEXIONES//////////
