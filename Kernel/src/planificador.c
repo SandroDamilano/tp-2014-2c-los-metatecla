@@ -155,10 +155,10 @@ int obtener_socket_consola(uint32_t pid){
 
 void terminar_proceso(t_hilo* tcb){
 	uint32_t pid = tcb->pid;
-	//eliminar_ready(pid);
-	//eliminar_block(pid);
-	//eliminar_exec(pid);
-	//sacar_de_consolas(pid);
+	eliminar_ready(pid);
+	eliminar_block(pid);
+	eliminar_exec(pid);
+	sacar_de_consolas(pid);
 	terminar_hilo(tcb);
 }
 
@@ -271,11 +271,8 @@ void mandar_a_exit(t_hilo* tcb, t_fin fin){
 	free(tcb);
 	pthread_mutex_lock(&mutex_exit);
 	push_exit(data);
-	printf("Luego de poner, quedan en la cola de exit %d procesos\n", queue_size(cola_exit));
 	pthread_mutex_unlock(&mutex_exit);
-	printf("SEM_EXIT antes: %d\n", sem_exit.__align);
 	sem_post(&sem_exit);
-	printf("SEM_EXIT después: %d\n", sem_exit.__align);
 	(data->tcb)->cola = EXIT;
 	printf("Se mando a exit el tid %d\n", (data->tcb)->tid);
 }
@@ -807,14 +804,14 @@ void handler_cpu(int sockCPU){
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//La CPU cerró la conexión
 		printf("Se perdió la comunicación con la CPU: %d\n", sockCPU);
-	/*	t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
+		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
 		if (tcb!=NULL){
 			if (tcb->kernel_mode == 0){
 				mandar_a_exit(tcb, ABORTAR);
 			}else{
 				retornar_de_systcall(tcb, ABORTAR);
 			}
-		}*/
+		}
 		close(sockCPU);
 		pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);

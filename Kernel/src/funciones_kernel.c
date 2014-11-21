@@ -66,12 +66,13 @@ int obtener_tid(){
 	return tid;
 };
 
+/*
 void pop_exit(t_data_nodo_exit* data){
 	//void *nuevo = queue_pop(cola_exit);
-	//*data = *(t_data_nodo_exit*)nuevo;
+	*data = *(t_data_nodo_exit*)nuevo;
 	data = (t_data_nodo_exit*)queue_pop(cola_exit);
 	printf("en el pop, data->tcb->tid = %d\n", (data->tcb)->tid);
-};
+};*/
 
 t_data_nodo_exit* sacar_de_exit(){
 //	consumir_tcb(pop_exit, &sem_exit, &mutex_exit, tcb);
