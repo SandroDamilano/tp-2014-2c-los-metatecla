@@ -89,6 +89,18 @@ int inicializar_semaforos(){
 		printf("mutex_log failed");
 		return EXIT_FAILURE;
 	}
+	if(pthread_mutex_init(&mutex_reservarMemoria,NULL) != 0){
+			printf("mutex_reservarMemoria failed");
+			return EXIT_FAILURE;
+		}
+	if(pthread_mutex_init(&mutex_crearSegmento,NULL) != 0){
+			printf("mutex_crearSegmento failed");
+			return EXIT_FAILURE;
+		}
+	if(pthread_mutex_init(&mutex_tablaMarcos,NULL) != 0){
+			printf("mutex_tablaMarcos failed");
+			return EXIT_FAILURE;
+		}
 
 	return EXIT_SUCCESS;
 }
@@ -177,7 +189,7 @@ void crearArchivoSwapEnDisco(t_pagina pagina){
 
 	//Abro un nuevo archivo
 	FILE* arch_swap = NULL;
-	arch_swap = fopen(file_name, "w+"); //FIXME Aca el modo es w+ lo hablamos con el ayudante
+	arch_swap = fopen(file_name, "w+");
 
 	//Pongo la informacion necesaria en el archivo
 	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
@@ -660,7 +672,7 @@ return NULL;
 	 printf("El PID ingresado: %d, no existe en el sistema", PID);}
  }
 
- void listar_marcos(){//FIXME ARREGLAR LISTA DE MARCOS!
+ void listar_marcos(){
 	 char* trueofalse(uint32_t unNumero){
 		char* resultado;
 		 if(unNumero==0){
