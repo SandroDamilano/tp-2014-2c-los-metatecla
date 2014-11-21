@@ -500,7 +500,7 @@ void boot(char* systcalls_path){
 		respuesta = ((t_struct_numero *) structRecibido)->numero;
 		if (respuesta != -1){
 			direccion_codigo_syscalls = ((t_struct_numero *) structRecibido)->numero;
-			//printf("Recibi direccion %d\n", direccion_codigo_syscalls);
+			printf("Recibi direccion %d de codigo de syscalls\n", direccion_codigo_syscalls);
 		}else{
 			printf("No hay espacio suficiente en memoria para el código de las systcalls\n");
 		}
@@ -525,7 +525,7 @@ void boot(char* systcalls_path){
 		respuesta = ((t_struct_numero *) structRecibido)->numero;
 		if (respuesta != -1){
 			direccion_stack_syscalls = ((t_struct_numero *) structRecibido)->numero;
-			//printf("Se recibio la direcc del stack %d\n", direccion_stack_syscalls);
+			printf("Se recibio la direcc del stack %d\n", direccion_stack_syscalls);
 		}else{
 			printf("No hay espacio suficiente en memoria para el stack del TCB Kernel\n");
 		}
@@ -577,9 +577,7 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	printf("Procedo a atender la systcall del TCB de pid: %d\n", tcb->pid);
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
-	printf("Como desbloqueé el TCB de kernel, la cola block quedó vacía: %d\n", list_size(cola_block));
 	bloquear_tcbSystcall(tcb, dir_systcall);
-	printf("Como bloqueé el TCB que pidió la systcall, la cola block no está vacía: %d\n", list_size(cola_block));
 //	printf("está atendiendo al tid: %d\n", tcb->tid);
 	if (tcb_kernel != NULL){
 		copiar_tcb(tcb, tcb_kernel);
@@ -785,7 +783,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 }
 
 void handler_cpu(int sockCPU){
-	t_hilo* tcb = malloc(sizeof(t_hilo));
+	t_hilo* tcb;// = malloc(sizeof(t_hilo));
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
 	uint32_t tid_padre;
@@ -826,17 +824,17 @@ void handler_cpu(int sockCPU){
 	//TODO: PONER LOGS!
 	switch(tipoRecibido){
 	case D_STRUCT_INTE:
+		tcb = malloc(sizeof(t_hilo));
 		//Recibo la direccion
 		direccion_syscall = ((t_struct_direccion*) structRecibido)->numero;
 		//otro socket para el tcb
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 
 		if(tipoRecibido2 == D_STRUCT_TCB){
-			copiar_structRecibido_a_tcb(tcb, structRecibido);
+			copiar_structRecibido_a_tcb(tcb, structRecibido2);
 		} else {
 			printf("No llegó el TCB para la operacion INTE\n");
 		}
-		printf("Me llegó un INTE de un TCB de pid: %d\n", ((t_struct_tcb*)structRecibido)->pid);
 
 		obtener_tcb_de_cpu(sockCPU);
 		atender_systcall(tcb, direccion_syscall);

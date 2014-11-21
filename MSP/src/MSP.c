@@ -283,8 +283,6 @@ void destruirSegmento(uint32_t PID, uint32_t direccBase){
 int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio){ //PUSE EL BUFFER EN VOID. A LO SUMO ES CHAR*
 	//1. traducir direccion y validarla
 
-	printf("LLEGO PA ESCRIBIR: %s\n", bytes_escribir);
-
 	t_direccion direccion = traducirDireccion(direcc_log);
 	printf("direccion: %i, %i, %i\n", direccion.desplazamiento,direccion.pagina,direccion.segmento);
 	//2.fijarse si la pagina solicitada esta en memoria si no cargarla(haciendo swap etc)
@@ -368,7 +366,6 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 							guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,tamanio);
 							tamanio=0;
 						} else {
-						 printf("LLEGUE ACA \n");
 							uint32_t espacioLibre = 256-direccion.desplazamiento;
 						 guardarInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256),direccion,bytes_escribir,espacioLibre);
 						 //bytes_escribir=string_substring(bytes_escribir,espacioLibre, tamanio-espacioLibre);
@@ -402,6 +399,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 	int memoriaGuardada = 0;
 
 	t_direccion direccion = traducirDireccion(direcc_log);
+	printf("direccion: %i, %i, %i\n", direccion.desplazamiento,direccion.pagina,direccion.segmento);
 
 	bool mismoPID(t_lista_procesos *PIDEncontrado){
 			return PIDEncontrado->pid==PID;
@@ -413,24 +411,20 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 			return numeroPagina->numeroPagina==direccion.pagina;
 		}
 
-	t_lista_procesos* proceso = malloc(sizeof(t_lista_procesos));
+	t_lista_procesos* proceso;// = malloc(sizeof(t_lista_procesos));
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
 	if(proceso != NULL){
-		printf("LLEGO PID: %d\n", proceso->pid);
-		t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+		t_lista_segmentos *segmento;// = malloc(sizeof(t_lista_segmentos));
 		segmento = list_find(proceso->lista_Segmentos, (void*) (*mismoSegmento));
 		if(segmento != NULL){
-			printf("LLEGO SEGMENTO %d\n", segmento->numeroSegmento);
 			if((direccion.pagina*256+direccion.desplazamiento+tamanio)<=segmento->tamanio){
 				while(tamanio>0){
 
-					t_lista_paginas* pagina = malloc(sizeof(t_lista_paginas));
+					t_lista_paginas* pagina;// = malloc(sizeof(t_lista_paginas));
 					pagina = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
 					if(pagina != NULL){
-						printf("LLEGO PAGINA %d\n", pagina->numeroPagina);
 						if(pagina->swap==1){ //NO ESTÁ EN MEMORIA
-							printf("No esta en mem ppal (?)\n");
 							uint32_t numeroDeMarcoLibre= buscarMarcoLibre(tabla_marcos);
 
 							if(numeroDeMarcoLibre!=-1){//Hay un marco libre en memoria principal donde cargar la pagina
@@ -438,7 +432,6 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								printf("extraigo info de archivo\n");
 								paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
 								printf("extraida info de archivo\n");
-								printf("Codigo extraid= %s\n", paginaACargar.codigo);
 								t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
 								memcpy(&direccion_base.segmento, &segmento->numeroSegmento, sizeof(uint32_t));
 								memcpy(&direccion_base.pagina, &pagina->numeroPagina, sizeof(uint32_t));
@@ -491,7 +484,6 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									uint32_t espacioLibre = 256-direccion.desplazamiento;
 									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, espacioLibre);
 									memcpy(respuesta+memoriaGuardada, buff, espacioLibre);
-									printf("Por ahora la respuesta es: %s\n", respuesta);
 									direccion.pagina = direccion.pagina + 1;
 									direccion.desplazamiento = 0;
 									tamanio -= espacioLibre;
@@ -500,7 +492,6 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								} else {
 									void* buff = devolverInformacion(memoria_ppal+((pagina->marcoEnMemPpal)*256), direccion, tamanio);
 									memcpy(respuesta+memoriaGuardada, buff, tamanio);
-									printf("Ahora la respuesta es: %s\n", respuesta);
 									tamanio = 0;
 									memoriaGuardada += tamanio;
 									free(buff);

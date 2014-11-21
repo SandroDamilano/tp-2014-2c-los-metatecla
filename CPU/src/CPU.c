@@ -154,7 +154,7 @@ void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]) {
 	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
 	uint32_t direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 	datos_solicitados->base = direccionMSP;
-	datos_solicitados->PID = tcb->pid;
+	datos_solicitados->PID = registros_cpu.I;
 	datos_solicitados->tamanio = 4; //tamaño bytecode
 	int resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
 	controlar_envio(resultado, D_STRUCT_SOL_BYTES);

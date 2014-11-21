@@ -27,7 +27,7 @@ void ejecutarLinea(int* bytecode){
 
 	t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
 	t_struct_numero* id_semaforo = malloc(sizeof(t_struct_numero));
-t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
+	t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
 	t_struct_env_bytes* datos_enviados = malloc(sizeof(t_struct_env_bytes));
 	void* datos_recibidos;
@@ -37,7 +37,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 	char param_reg1[2];
 	char param_reg2[2];
 
-	printf("PID: %d\n", tcb->pid);
+	printf("PID: %d\n", registros_cpu.I);
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -45,7 +45,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 		datos_solicitados->tamanio = 1 + 4; //registro + numero
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -77,7 +77,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -110,7 +110,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		}
 
 		datos_solicitados->base = numero_enviar;//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 		datos_solicitados->tamanio = 1; //FIXME MEDIO TURBIO PERO ANDA
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -131,7 +131,6 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 			printf("El reg 1 tiene %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 		}
 
-		//registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
@@ -143,7 +142,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 4 + 1 + 1; //numero + registro + registro
 
@@ -163,7 +162,6 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		param_reg1[1] = '\0';
 		param_reg2[0] = reg2;
 		param_reg2[1] = '\0';
-		printf("REGISTROS: %c y %c\n", reg1, reg2);
 		list_add(parametros,string_itoa(numero));
 		list_add(parametros,param_reg1);
 		list_add(parametros, param_reg2);
@@ -177,7 +175,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 			memcpy(&numero_enviar, &registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
 		} //TURBIO :S
 
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 		datos_enviados->buffer = &numero_enviar;
 		datos_enviados->tamanio = sizeof(int32_t);
 
@@ -196,7 +194,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -231,7 +229,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -271,7 +269,6 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 			}
 		}
 
-		//registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 		incrementar_pc(sizeof(char)*2);
 
@@ -282,7 +279,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -317,7 +314,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -352,7 +349,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -387,7 +384,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -427,7 +424,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1; //registro
 
@@ -461,7 +458,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1; //registro
 
@@ -491,7 +488,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -525,7 +522,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -559,7 +556,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1 + 1; //registro + registro
 
@@ -593,7 +590,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 1; //registro
 
@@ -621,7 +618,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 4; //direccion
 
@@ -649,7 +646,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 4; //direccion
 
@@ -677,7 +674,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 4; //direccion
 
@@ -704,16 +701,11 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 
 		incrementar_pc(4); //direccion
 
-		printf("Cuando aún no copié los registros, el pid del TCB es %d\n", tcb->pid);
-
 		//Mando tcb
 		copiar_registros_a_tcb();
 
-		printf("Cuando ya copié los registros, el pid del TCB es %d\n", tcb->pid);
-
 		//t_struct_tcb* tcb_syscalls = malloc(sizeof(t_struct_tcb));
 		copiar_tcb_a_structTcb(tcb, tcb_enviar);
-		printf("Cuando ya copié el TCB, el pid es %d\n", tcb_enviar->pid);
 		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
 		controlar_envio(resultado, D_STRUCT_TCB);
 		//free(tcb_enviar);
@@ -729,6 +721,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		copiar_tcb_a_registros();
+		registros_cpu.I = 0;
 
 		list_clean(parametros);
 		break;
@@ -737,7 +730,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 4 + 1; //numero + registro
 
@@ -781,7 +774,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 4 + 1; //numero + registro
 
@@ -812,10 +805,9 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S);
 
 		datos_enviados->base = direccionMSP;
-		datos_enviados->PID = tcb->pid;
+		datos_enviados->PID = registros_cpu.I;
 		datos_enviados->buffer = &auxiliar_copiar;
 		printf("PUSHEO %d\n", auxiliar_copiar);
-		//datos_enviados->tamanio = sizeof(int32_t);
 		datos_enviados->tamanio = numero;
 
 		int resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
@@ -836,7 +828,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 
 		datos_solicitados->tamanio = 4 + 1; //numero + registro
 
@@ -864,7 +856,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S - numero);
 
 		datos_solicitados->base = direccionMSP;
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 		datos_solicitados->tamanio = numero;
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -967,7 +959,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		char* cadena = ((t_struct_string*) structRecibido)->string;
 
 		datos_enviados->base = registros_cpu.registros_programacion[0];
-		datos_enviados->PID = tcb->pid;
+		datos_enviados->PID = registros_cpu.I;
 		datos_enviados->buffer = cadena;
 		datos_enviados->tamanio = strlen(cadena);
 
@@ -993,7 +985,7 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 
 		//Pido la cadena apuntada por registro A en memoria
 		datos_solicitados->base = registros_cpu.registros_programacion[0];
-		datos_solicitados->PID = tcb->pid;
+		datos_solicitados->PID = registros_cpu.I;
 		datos_solicitados->tamanio = registros_cpu.registros_programacion[1];
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
