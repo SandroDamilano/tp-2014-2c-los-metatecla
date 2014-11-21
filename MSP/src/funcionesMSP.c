@@ -358,16 +358,6 @@ void* devolverInformacion(void* baseMarco, t_direccion direccion, uint32_t taman
 }
 
 void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento, uint32_t numeroMarco){
-	/*bool mismaPagina(t_lista_paginas *numeroPagina){
-					return numeroPagina->numeroPagina==tabla_marcos[numeroMarco].pagina;
-				}
-	t_lista_paginas *paginaSacada = malloc(sizeof(t_lista_paginas));
-	paginaSacada = list_find(segmento->lista_Paginas, (void*) (*mismaPagina));
-	printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
-	printf("Pagina en swap: %i\n", paginaSacada->swap);
-	paginaSacada->swap=1;
-	printf("Pagina en swap: %i\n", paginaSacada->swap);
-	paginaSacada->marcoEnMemPpal=-1;*/
 	t_pagina paginaASacar;
 	paginaASacar.PID=tabla_marcos[numeroMarco].pid;
 	paginaASacar.num_pag=tabla_marcos[numeroMarco].pagina;
@@ -394,7 +384,7 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 	tabla_marcos[numeroMarco].pagina=direccion.pagina;
 	tabla_marcos[numeroMarco].segmento=direccion.segmento;
 	tabla_marcos[numeroMarco].pid=PID;
-	modificarBitAlgoritmo(numeroMarco);
+	//modificarBitAlgoritmo(numeroMarco);
 	printf("HICE SWAP \n");
 }
 
@@ -408,7 +398,7 @@ void modificarBitAlgoritmo(uint32_t numeroMarco){
 		tabla_marcos[numeroMarco].bitAlgoritmo=0;
 		}
 		} else {
-			tabla_marcos[punteroClock].bitAlgoritmo=1;
+			tabla_marcos[numeroMarco].bitAlgoritmo=1;
 			if(punteroClock==cant_marcos){
 				punteroClock=0;
 			}else{

@@ -28,16 +28,16 @@ int main(int argc, char *argv[]) {
 	//1. Crear archivo de log, Leer archivo de configuracion e Iniciar semaforos
 	crear_logger();
 	leer_config(path_config);
-	printf("Memoria: %u, Swap: %i",tamanio_mem_ppal, cant_mem_swap);
+	printf("Memoria: %u Kb, Swap: %i Mb\n",tamanio_mem_ppal, cant_mem_swap);
 	inicializar_semaforos();
 
 	//2. Reservar bloque de memoria principal
 	memoria_ppal = reservarBloquePpal(tamanio_mem_ppal);
-	printf("pase la mem ppal \n");	//DEBUG
+	printf("Pase la mem ppal \n");	//DEBUG
 	cant_marcos = calcularMarcos(tamanio_mem_ppal);
 	//3. Generar estructuras administrativas
 	tabla_marcos = crearTablaDeMarcos();
-	printf("pase division de marcos\n");	//DEBUG
+	printf("Pase division de marcos\n");	//DEBUG
 	paginasMemoriaPpalActual = tamanio_mem_ppal*1024/256;
 	paginasMemoriaSwapActual = cant_mem_swap*1024*1024/256 ;
 	listaProcesos = list_create();
@@ -328,11 +328,22 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 									numeroMarcoASwapear = buscarPaginaMenosUsada();
 									} else { numeroMarcoASwapear = algoritmo_clock();}
 									bool paginaASacar(t_lista_paginas *numeroPagina){
+										printf("Numero de pagina en Marco: %i Pagina: %i \n",tabla_marcos[numeroMarcoASwapear].pagina, numeroPagina->numeroPagina);
 										return numeroPagina->numeroPagina==tabla_marcos[numeroMarcoASwapear].pagina;
 										}
-									printf("Numero de marco a swapear: %i", numeroMarcoASwapear);
-									t_lista_paginas *paginaSacada = malloc(sizeof(t_lista_paginas));
-									paginaSacada = list_find(segmento->lista_Paginas, (void*) (*paginaASacar));
+									bool segmentoASacar(t_lista_segmentos *numeroSegmento){
+										return numeroSegmento->numeroSegmento==tabla_marcos[numeroMarcoASwapear].segmento;
+										}
+									bool pidASacar(t_lista_procesos *PIDEncontrado){
+														return PIDEncontrado->pid==tabla_marcos[numeroMarcoASwapear].pid;
+													}
+									printf("Numero de marco a swapear: %i \n", numeroMarcoASwapear);
+									t_lista_procesos *procesoDePaginaASacar;
+									t_lista_paginas *paginaSacada;
+									t_lista_segmentos *segmentoDePaginaASacar;
+									procesoDePaginaASacar = list_find(listaProcesos,(void*) (*pidASacar));
+									segmentoDePaginaASacar = list_find(procesoDePaginaASacar->lista_Segmentos, (void*) (*segmentoASacar));
+									paginaSacada = list_find(segmentoDePaginaASacar->lista_Paginas, (void*) (*paginaASacar));
 									printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
 									printf("Pagina en swap: %i\n", paginaSacada->swap);
 									paginaSacada->swap=1;
@@ -436,21 +447,34 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 									if(string_equals_ignore_case(alg_sustitucion,"LRU")){
 											numeroMarcoASwapear = buscarPaginaMenosUsada();
 										} else { numeroMarcoASwapear = algoritmo_clock();}
-										bool paginaASacar(t_lista_paginas *numeroPagina){
+									bool paginaASacar(t_lista_paginas *numeroPagina){
+										printf("Numero de pagina en Marco: %i Pagina: %i \n",tabla_marcos[numeroMarcoASwapear].pagina, numeroPagina->numeroPagina);
 												return numeroPagina->numeroPagina==tabla_marcos[numeroMarcoASwapear].pagina;
 												}
-										t_lista_paginas *paginaSacada /* = malloc(sizeof(t_lista_paginas))*/;
-										paginaSacada = list_find(segmento->lista_Paginas, (void*) (*paginaASacar));
-										printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
-										printf("Pagina en swap: %i\n", paginaSacada->swap);
-										paginaSacada->swap=1;
-										printf("Pagina en swap: %i\n", paginaSacada->swap);
-										paginaSacada->marcoEnMemPpal=-1;
-										hacerSwap(PID,direccion,pagina,segmento,numeroMarcoASwapear);
-									}
+									bool segmentoASacar(t_lista_segmentos *numeroSegmento){
+												return numeroSegmento->numeroSegmento==tabla_marcos[numeroMarcoASwapear].segmento;
+												}
+									bool pidASacar(t_lista_procesos *PIDEncontrado){
+												return PIDEncontrado->pid==tabla_marcos[numeroMarcoASwapear].pid;
+												}
+									printf("Numero de marco a swapear: %i \n", numeroMarcoASwapear);
+									t_lista_procesos *procesoDePaginaASacar;
+									t_lista_paginas *paginaSacada;
+									t_lista_segmentos *segmentoDePaginaASacar;
+									procesoDePaginaASacar = list_find(listaProcesos,(void*) (*pidASacar));
+									segmentoDePaginaASacar = list_find(procesoDePaginaASacar->lista_Segmentos, (void*) (*segmentoASacar));
+									paginaSacada = list_find(segmentoDePaginaASacar->lista_Paginas, (void*) (*paginaASacar));
+									printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
+									printf("Pagina en swap: %i\n", paginaSacada->swap);
+									paginaSacada->swap=1;
+									printf("Pagina en swap: %i\n", paginaSacada->swap);
+									paginaSacada->marcoEnMemPpal=-1;
+									hacerSwap(PID,direccion,pagina,segmento, numeroMarcoASwapear);}
 						}
 
-								modificarBitAlgoritmo(pagina->marcoEnMemPpal);
+							printf("Bit de Algoritmo antes: %i \n", tabla_marcos[pagina->marcoEnMemPpal].bitAlgoritmo);
+							modificarBitAlgoritmo(pagina->marcoEnMemPpal);
+							printf("Bit de Algoritmo despues: %i \n", tabla_marcos[pagina->marcoEnMemPpal].bitAlgoritmo);
 								if((256-direccion.desplazamiento) <= tamanio){
 									printf("Llego a perdir\n");
 									uint32_t espacioLibre = 256-direccion.desplazamiento;
