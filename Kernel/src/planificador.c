@@ -118,6 +118,7 @@ void terminar_TCBs(){
 			terminar_proceso(data->tcb);
 			break;
 		};
+		//free(data);
 	};
 }
 
@@ -171,15 +172,17 @@ void liberar_memoria(t_hilo* tcb){
 	t_struct_free* free_segmento = malloc(sizeof(t_struct_free));
 	free_segmento->PID = tcb->pid;
 	free_segmento->direccion_base = tcb->segmento_codigo;
+	printf("Libero el segmento de código, ubicado en: %d\n", free_segmento->direccion_base);
 
 	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
 
 	//Libero segmento de stack
 	free_segmento->direccion_base = tcb->base_stack;
+	printf("Libero el segmento de stack, ubicado en: %d\n", free_segmento->direccion_base);
 	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
 
-	free(free_segmento);
 	//free(tcb);
+	free(free_segmento);
 }
 
 void eliminar_ready(uint32_t pid){
@@ -262,11 +265,17 @@ void push_exit(t_data_nodo_exit* data){
 void mandar_a_exit(t_hilo* tcb, t_fin fin){
 	t_data_nodo_exit* data = malloc(sizeof(t_data_nodo_exit));
 	data->fin = fin;
-	data->tcb = tcb;
+	data->tcb = malloc(sizeof(t_hilo));
+	//data->tcb = tcb;
+	memcpy(data->tcb, tcb, sizeof(t_hilo));
+	free(tcb);
 	pthread_mutex_lock(&mutex_exit);
 	push_exit(data);
+	printf("Luego de poner, quedan en la cola de exit %d procesos\n", queue_size(cola_exit));
 	pthread_mutex_unlock(&mutex_exit);
+	printf("SEM_EXIT antes: %d\n", sem_exit.__align);
 	sem_post(&sem_exit);
+	printf("SEM_EXIT después: %d\n", sem_exit.__align);
 	(data->tcb)->cola = EXIT;
 	printf("Se mando a exit el tid %d\n", (data->tcb)->tid);
 }
@@ -281,7 +290,7 @@ t_hilo* obtener_tcb_a_ejecutar(){
 t_hilo* obtener_tcb_de_cpu(int sock_cpu){
 	sockCPU_a_buscar = sock_cpu;
 	t_data_nodo_exec* data;
-	t_hilo* tcb;
+	t_hilo* tcb = NULL;
 	pthread_mutex_lock(&mutex_exec);
 	data = list_remove_by_condition(cola_exec, (void*)es_el_tcbCPU);
 	pthread_mutex_unlock(&mutex_exec);
@@ -774,7 +783,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 }
 
 void handler_cpu(int sockCPU){
-	t_hilo* tcb;
+	t_hilo* tcb = malloc(sizeof(t_hilo));
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
 	uint32_t tid_padre;
@@ -798,17 +807,19 @@ void handler_cpu(int sockCPU){
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//La CPU cerró la conexión
 		printf("Se perdió la comunicación con la CPU: %d\n", sockCPU);
-		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
-		if (tcb->kernel_mode == 0){
-			mandar_a_exit(tcb, ABORTAR);
-		}else{
-			retornar_de_systcall(tcb, ABORTAR);
-		}
+	/*	t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
+		if (tcb!=NULL){
+			if (tcb->kernel_mode == 0){
+				mandar_a_exit(tcb, ABORTAR);
+			}else{
+				retornar_de_systcall(tcb, ABORTAR);
+			}
+		}*/
 		close(sockCPU);
 		pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);
 		pthread_mutex_unlock(&mutex_master_cpus);
-	}
+	}else{
 
 	//TODO: PONER LOGS!
 	switch(tipoRecibido){
@@ -933,7 +944,8 @@ void handler_cpu(int sockCPU){
 		socket_consola = obtener_socket_consola(pid);
 		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 		break;
-	}
-	free(structRecibido);
+	}//ACÁ TERMINA EL SWITCH
+	//free(structRecibido);
+	}//ACÁ TERMINA EL ELSE DEL IF
 }
 
