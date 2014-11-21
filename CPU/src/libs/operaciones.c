@@ -702,16 +702,33 @@ t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 		controlar_envio(resultado, D_STRUCT_INTE);
 		free(direccion_syscalls);
 
+		incrementar_pc(4); //direccion
+
+		printf("Cuando aún no copié los registros, el pid del TCB es %d\n", tcb->pid);
+
 		//Mando tcb
 		copiar_registros_a_tcb();
 
-		t_struct_tcb* tcb_syscalls = malloc(sizeof(t_struct_tcb));
-		copiar_tcb_a_structTcb(tcb, tcb_syscalls);
-		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_syscalls);
-		controlar_envio(resultado, D_STRUCT_TCB);
-		free(tcb_syscalls);
+		printf("Cuando ya copié los registros, el pid del TCB es %d\n", tcb->pid);
 
-		incrementar_pc(4); //direccion
+		//t_struct_tcb* tcb_syscalls = malloc(sizeof(t_struct_tcb));
+		copiar_tcb_a_structTcb(tcb, tcb_enviar);
+		printf("Cuando ya copié el TCB, el pid es %d\n", tcb_enviar->pid);
+		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
+		controlar_envio(resultado, D_STRUCT_TCB);
+		//free(tcb_enviar);
+
+		//Pido tcb del kernel
+		t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
+		pedir_tcb->numero = D_STRUCT_PEDIR_TCB;
+		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
+		controlar_envio(resultado, D_STRUCT_NUMERO);
+
+		resultado = socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_TCB);
+
+		copiar_structRecibido_a_tcb(tcb, structRecibido);
+		copiar_tcb_a_registros();
 
 		list_clean(parametros);
 		break;
