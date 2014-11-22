@@ -637,6 +637,8 @@ void ejecutarLinea(int* bytecode){
 
 		if(registros_cpu.registros_programacion[0] == 0){
 			registros_cpu.P = direccion;
+		} else {
+			incrementar_pc(4);
 		}
 
 		list_clean(parametros);
@@ -665,6 +667,8 @@ void ejecutarLinea(int* bytecode){
 
 		if(registros_cpu.registros_programacion[0] != 0){
 					registros_cpu.P = direccion;
+		} else {
+			incrementar_pc(4);
 		}
 
 		list_clean(parametros);

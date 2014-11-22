@@ -718,7 +718,6 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre){
 /******************************** HANDLER CPU *****************************************/
 
 void mandar_a_ejecutar(t_hilo* tcb, int sockCPU){
-	printf("Tengo que mandar a ejecutar el TCB de pid: %d\n", tcb->pid);
 	t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
 	copiar_tcb_a_structTcb(tcb, paquete_tcb);
 	socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
