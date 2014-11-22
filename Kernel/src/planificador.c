@@ -246,6 +246,8 @@ void encolar_en_ready(t_hilo* tcb){
 	};
 	pthread_mutex_unlock(&mutex_ready);
 	tcb->cola = READY;
+
+	printf("Se encoló en ready el pid %d con PC %d\n", tcb->pid, tcb->puntero_instruccion);
 };
 
 
@@ -331,7 +333,7 @@ void agregar_a_exec(int sockCPU, t_hilo* tcb){
 void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t parametro){
 	t_data_nodo_block* data = malloc(sizeof(t_data_nodo_block));
 	data->tcb = malloc(sizeof(t_hilo));
-	data->tcb = tcb;
+	memcpy(data->tcb, tcb, sizeof(t_hilo));
 	data->evento = evento;
 	data->parametro = parametro;
 	pthread_mutex_lock(&mutex_block);
@@ -429,7 +431,7 @@ t_hilo* desbloquear_tcbSystcall(uint32_t tid){
 	pthread_mutex_lock(&mutex_block);
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbSystcall);
 	pthread_mutex_unlock(&mutex_block);
-	t_hilo* tcb;
+	t_hilo* tcb;// = malloc(sizeof(t_hilo));
 	if (data != NULL){
 		tcb = data->tcb;
 	}
@@ -588,7 +590,7 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 		//tcb_kernel->pid = 0; //Pid de kernel
 		encolar_en_ready(tcb_kernel);
 	}
-	//Avisarle a la cpu que pida otro proceso para ejecutar
+	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
 };
 
 bool esta_por_systcall(t_data_nodo_block* data){
@@ -608,6 +610,7 @@ void retornar_de_systcall(t_hilo* tcb_kernel, t_fin fin){
 	int i;
 
 	if (tcb!=NULL){
+		printf("TCB que vuelve de syscall tiene PID: %d y PC: %d\n", tcb->pid, tcb->puntero_instruccion);
 		switch(fin){
 		case TERMINAR:
 			for(i=0; i<=4; i++){

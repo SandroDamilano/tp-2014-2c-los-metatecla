@@ -169,7 +169,8 @@ void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]) {
 t_struct_numero* terminar_y_pedir_tcb(t_hilo* tcb) {
 	//socket a Kernel pidiendo tcb
 	t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
-	int resultado = socket_enviar(sockKernel, D_STRUCT_PEDIR_TCB, pedir_tcb);
+	pedir_tcb->numero = D_STRUCT_PEDIR_TCB;
+	int resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
 	if (resultado != 1) {
 		printf("No se pudo pedir TCB\n");
 	}
@@ -180,6 +181,7 @@ t_struct_numero* terminar_y_pedir_tcb(t_hilo* tcb) {
 	terminoEjecucion = false;
 	free(pedir_tcb);
 	comienzo_ejecucion(tcb, quantum);
+	copiar_tcb_a_registros();
 	return pedir_tcb;
 }
 

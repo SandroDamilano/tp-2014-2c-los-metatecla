@@ -103,10 +103,10 @@ void ejecutarLinea(int* bytecode){
 
 		if(reg2 == 'S'){ //HORRIBLE
 			numero_enviar = registros_cpu.S;
-			printf("Numero a enviar %d (llego S))\n", numero_enviar);
+			//printf("Numero a enviar %d (llego S))\n", numero_enviar);
 		} else {
 			numero_enviar = registros_cpu.registros_programacion[elegirRegistro(reg2)];
-			printf("Numero a enviar %d (no es S)\n", numero_enviar);
+			//printf("Numero a enviar %d (no es S)\n", numero_enviar);
 		}
 
 		datos_solicitados->base = numero_enviar;//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
@@ -121,14 +121,14 @@ void ejecutarLinea(int* bytecode){
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
-		printf("Me llego de memoria %s\n",datos_recibidos);
+		//printf("Me llego de memoria %s\n",datos_recibidos);
 
 		if(reg1 == 'S'){
 			obtener_num(datos_recibidos, 0,&registros_cpu.S);
-			printf("El reg 1 (S) tiene %d\n", registros_cpu.S);
+			//printf("El reg 1 (S) tiene %d\n", registros_cpu.S);
 		} else {
 			obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
-			printf("El reg 1 tiene %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+			//printf("El reg 1 tiene %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 		}
 
 
@@ -669,7 +669,7 @@ void ejecutarLinea(int* bytecode){
 
 		list_clean(parametros);
 		break;
-	case INTE:
+	case INTE: //TODO INTE (SOLO PARA UBICARME EN LA BARRA)
 
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
 
@@ -704,11 +704,9 @@ void ejecutarLinea(int* bytecode){
 		//Mando tcb
 		copiar_registros_a_tcb();
 
-		//t_struct_tcb* tcb_syscalls = malloc(sizeof(t_struct_tcb));
 		copiar_tcb_a_structTcb(tcb, tcb_enviar);
 		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
 		controlar_envio(resultado, D_STRUCT_TCB);
-		//free(tcb_enviar);
 
 		//Pido tcb del kernel
 		t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
@@ -722,6 +720,8 @@ void ejecutarLinea(int* bytecode){
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		copiar_tcb_a_registros();
 		registros_cpu.I = 0;
+
+		comienzo_ejecucion(tcb, quantum);
 
 		list_clean(parametros);
 		break;

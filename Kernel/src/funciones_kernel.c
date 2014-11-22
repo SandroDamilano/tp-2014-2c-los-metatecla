@@ -115,7 +115,8 @@ t_hilo *crear_TCB(uint32_t pid, uint32_t dir_codigo, uint32_t dir_stack, uint32_
 	tcb->kernel_mode = false;	// teniendo en cuenta que TODOS los que vengan por aca seran programas de usuario
 	tcb->segmento_codigo = dir_codigo;
 	tcb->segmento_codigo_size = tamanio_codigo;
-	tcb->puntero_instruccion = dir_codigo;	// se inicializa con la base del segmento de codigo (segun enunciado)
+	//tcb->puntero_instruccion = dir_codigo;	// se inicializa con la base del segmento de codigo (segun enunciado)
+	tcb->puntero_instruccion = 0;
 	tcb->base_stack = dir_stack;
 	tcb->cursor_stack = 0; // TODO: Consultar con ayudante si esta bien
 
