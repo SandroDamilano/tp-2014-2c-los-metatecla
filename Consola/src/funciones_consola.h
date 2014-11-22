@@ -51,6 +51,7 @@
 	// FUNCIONES Grales
 	void leer_config();
 	void liberarMemoria();
+	void escuchar_mensajes(int sockKernel);
 
 	//Funciones para Handshake
 	int handleHandshake(char *datos);

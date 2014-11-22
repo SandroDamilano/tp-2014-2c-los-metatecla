@@ -1004,7 +1004,7 @@ void ejecutarLinea(int* bytecode){
 
 		//Envio cadena a kernel para ser mostrada por consola
 		t_struct_string* cadena_consola = malloc(sizeof(t_struct_string));
-		cadena_consola->string = (char*)datos_recibidos;
+		cadena_consola->string = (char*)datos_recibidos;//FIXME Está bien copiar el string así?
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_OUTC, cadena_consola);
 		controlar_envio(resultado, D_STRUCT_OUTC);

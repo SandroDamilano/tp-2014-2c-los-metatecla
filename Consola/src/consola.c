@@ -82,9 +82,10 @@ int main(int argc, char	**argv){
 	free(beso_code);
 	fclose(BESO);
 
+	escuchar_mensajes(sockKernel);
+
 	return 0;
 }
-
 
 /*//4.1- Analiza el primer mensaje (handshake con Kernel) y esperar por respuesta
 analizar_paquete(buffer, &idOperacion);

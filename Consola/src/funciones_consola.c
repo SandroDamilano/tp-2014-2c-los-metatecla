@@ -212,4 +212,47 @@ void leer_config()
 
 }
 
+void escuchar_mensajes(int sockKernel){
+	t_tipoEstructura tipoRecibido;
+	void* structRecibido;
+	int num;
+	int maximo;
+	char* texto;
+
+	while(1){
+		socket_recibir(sockKernel, &tipoRecibido, &structRecibido);
+
+		switch(tipoRecibido){
+		case D_STRUCT_NUMERO://Recibo la orden de hacer un imput de un número
+			scanf("Ingrese un número: %d\n", num);
+			t_struct_numero* innn = malloc(sizeof(t_struct_numero));
+			innn->numero = num;
+			socket_enviar(sockKernel, D_STRUCT_INNN, innn);
+			free(innn);
+			break;
+
+		case D_STRUCT_INNC:
+			maximo = ((t_struct_numero*)structRecibido)->numero;
+			texto = malloc(maximo);
+			printf("Ingrese una cadena de texto no mayor a %d caracteres: ", maximo);
+			scanf("%s\n", texto);//FIXME Habrá que validar la longitud?
+			t_struct_string* innc = malloc(sizeof(t_struct_string));
+			innc->string = malloc(strlen(texto)+1);
+			memcpy(innc->string, texto, strlen(texto)+1);
+			socket_enviar(sockKernel, D_STRUCT_INNC, innc);
+			free(innc);
+			break;
+
+		case D_STRUCT_OUTN:
+			printf("%d\n", ((t_struct_numero*)structRecibido)->numero);
+			break;
+
+		case D_STRUCT_OUTC:
+			printf("%s\n", ((t_struct_string*)structRecibido)->string);
+			break;
+		}
+	}
+}
+
+
 

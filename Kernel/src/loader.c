@@ -636,10 +636,6 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	agregar_consola(pid, tcb->tid, sock_consola);
 	poner_en_new(tcb);
 
-	while(1){
-
-	}
-
 	return 1;
 }
 
