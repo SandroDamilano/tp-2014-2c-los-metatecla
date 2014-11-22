@@ -230,6 +230,18 @@ void eliminar_exec(uint32_t pid){
 	free(data);
 }
 
+bool es_la_solicitud(int* solicitud){
+	return(*solicitud == solicitud_a_eliminar);
+}
+
+void eliminar_solicitud(int sockCPU){
+	solicitud_a_eliminar = sockCPU;
+	int* solicitud = list_remove_by_condition(solicitudes_tcb, (void*)es_la_solicitud);
+	if(solicitud!=NULL){
+		free(solicitud);
+	}
+}
+
 void sacar_de_consolas(uint32_t pid){
 	pid_de_consola = pid;
 	pthread_mutex_lock(&mutex_consolas);
@@ -821,6 +833,7 @@ void handler_cpu(int sockCPU){
 				retornar_de_systcall(tcb, ABORTAR);
 			}
 		}
+		eliminar_solicitud(sockCPU);
 		close(sockCPU);
 		pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);

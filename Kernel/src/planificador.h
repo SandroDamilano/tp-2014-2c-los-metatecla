@@ -55,6 +55,7 @@
 	pthread_mutex_t mutex_ready, mutex_block, mutex_exec;
 
 	//Variables de búsqueda en las colas
+	int solicitud_a_eliminar;
 	//block
 	uint32_t tid_a_buscar; //Para encontrar al TCB que hizo la systcall
 	uint32_t parametro_a_buscar; //Puede ser un tid o un recurso (semáforo)
