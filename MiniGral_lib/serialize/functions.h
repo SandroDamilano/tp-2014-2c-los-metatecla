@@ -27,7 +27,8 @@
 	t_stream* serializeStruct_tcb(t_struct_tcb* estructuraOrigen);
 	t_stream* serializeStruct_tcbQuantum(t_struct_tcb* estructuraOrigen);
 	t_stream* serializeStruct_INNN(t_struct_numero* estructuraOrigen);
-	t_stream* serializeStruct_INNC(t_struct_string* estructuraOrigen);
+	//t_stream* serializeStruct_INNC(t_struct_string* estructuraOrigen);
+	t_stream* serializeStruct_INNC(t_struct_numero* estructuraOrigen);
 	t_stream* serializeStruct_OUTN(t_struct_numero* estructuraOrigen);
 	t_stream* serializeStruct_OUTC(t_struct_string* estructuraOrigen);
 	t_stream* serializeStruct_tcbCREA(t_struct_tcb* estructuraOrigen);

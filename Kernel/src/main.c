@@ -335,7 +335,7 @@ void handshake_thread(){
 			FD_SET(socket_atendido, &master_consolas);
 			pthread_mutex_unlock(&mutex_master_consolas);
 
-			handler_consola(socket_atendido);
+			//handler_consola(socket_atendido);
 
 			printf("salgo de atencion consola\n");
 			break;

@@ -214,17 +214,21 @@ void leer_config()
 
 void escuchar_mensajes(int sockKernel){
 	t_tipoEstructura tipoRecibido;
+	t_tipoEstructura tipoRecibido2;
 	void* structRecibido;
+	void* structRecibido2;
 	int num;
 	int maximo;
 	char* texto;
 
+
 	while(1){
-		socket_recibir(sockKernel, &tipoRecibido, &structRecibido);
+		if(socket_recibir(sockKernel, &tipoRecibido, &structRecibido)!=-1){
 
 		switch(tipoRecibido){
 		case D_STRUCT_NUMERO://Recibo la orden de hacer un imput de un número
-			scanf("Ingrese un número: %d\n", num);
+			printf("Ingrese un número:\n");
+			scanf("%d", &num);
 			t_struct_numero* innn = malloc(sizeof(t_struct_numero));
 			innn->numero = num;
 			socket_enviar(sockKernel, D_STRUCT_INNN, innn);
@@ -234,12 +238,14 @@ void escuchar_mensajes(int sockKernel){
 		case D_STRUCT_INNC:
 			maximo = ((t_struct_numero*)structRecibido)->numero;
 			texto = malloc(maximo);
-			printf("Ingrese una cadena de texto no mayor a %d caracteres: ", maximo);
-			scanf("%s\n", texto);//FIXME Habrá que validar la longitud?
+			printf("Ingrese una cadena de texto no mayor a %d caracteres:\n", maximo);
+			scanf("%s", texto);
 			t_struct_string* innc = malloc(sizeof(t_struct_string));
 			innc->string = malloc(strlen(texto)+1);
-			memcpy(innc->string, texto, strlen(texto)+1);
-			socket_enviar(sockKernel, D_STRUCT_INNC, innc);
+			memcpy(innc->string,texto, maximo);
+			(innc->string)[maximo] = '\0';
+			socket_enviar(sockKernel, D_STRUCT_STRING, innc);
+			free(innc->string);
 			free(innc);
 			break;
 
@@ -248,11 +254,17 @@ void escuchar_mensajes(int sockKernel){
 			break;
 
 		case D_STRUCT_OUTC:
-			printf("%s\n", ((t_struct_string*)structRecibido)->string);
+			socket_recibir(sockKernel, &tipoRecibido2, &structRecibido2);
+			int length = ((t_struct_numero*) structRecibido2)->numero;
+			texto = ((t_struct_string*)structRecibido)->string;
+			texto[length] = '\0';
+			printf("%s\n", texto);
 			break;
+		}
 		}
 	}
 }
 
+//TODO HACER FREES
 
 

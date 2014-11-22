@@ -447,16 +447,21 @@ void* main_LOADER(void* parametros) {
 		fd_set read_consolas;
 		FD_ZERO(&read_consolas);
 
+		struct timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+
 		pthread_mutex_lock(&mutex_master_consolas);
 		read_consolas = master_consolas;
 		pthread_mutex_unlock(&mutex_master_consolas);
 
-		if (select(consolas_fdmax+1, &read_consolas, NULL, NULL, NULL) == -1) {
+		if (select(consolas_fdmax+1, &read_consolas, NULL, NULL, &tv) == -1) {
 			perror("select");
 			exit(1);
 		}
 		for(i=0; i<=consolas_fdmax; i++){
 			if(FD_ISSET(i, &read_consolas)){
+				printf("Procedo a atender a la Consola %d\n", i);
 				handler_consola(i);
 			}
 		}
@@ -509,7 +514,7 @@ void handler_consola(int sock_consola){
 
 		break;
 
-	case D_STRUCT_INNC:
+	case D_STRUCT_STRING:
 		//Recibo un imput de una cadena de texto
 
 		//Así como viene, se lo mando a la CPU
@@ -517,8 +522,10 @@ void handler_consola(int sock_consola){
 		//texto = malloc(tamanio);
 		//memcpy(texto, ((t_struct_string*)structRecibido)->string, tamanio);
 		//TODO
+		printf("Me llego una cadena\n");
 		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
 		socket_enviar(sockCPU, tipoRecibido, structRecibido);
+		printf("Mande cadena a CPU %d\n", sockCPU);
 
 		break;
 

@@ -962,18 +962,22 @@ void ejecutarLinea(int* bytecode){
 
 		//Recibo un string que se ingreso por consola
 		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_INNC);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_STRING);
 
 		//Envio cadena recibida a memoria
 		char* cadena = ((t_struct_string*) structRecibido)->string;
 
 		datos_enviados->base = registros_cpu.registros_programacion[0];
-		datos_enviados->PID = registros_cpu.I;
+		datos_enviados->PID = tcb->pid;
 		datos_enviados->buffer = cadena;
 		datos_enviados->tamanio = strlen(cadena);
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
+
+		resultado = socket_recibir(sockMSP, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO);
+		//TODO validar
 
 		list_clean(parametros);
 		break;
@@ -993,8 +997,8 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("OUTC",parametros);
 
 		//Pido la cadena apuntada por registro A en memoria
-		datos_solicitados->base = registros_cpu.registros_programacion[0];
-		datos_solicitados->PID = registros_cpu.I;
+		datos_solicitados->base = sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[0]);
+		datos_solicitados->PID = tcb->pid;
 		datos_solicitados->tamanio = registros_cpu.registros_programacion[1];
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -1013,6 +1017,14 @@ void ejecutarLinea(int* bytecode){
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_OUTC, cadena_consola);
 		controlar_envio(resultado, D_STRUCT_OUTC);
+		free(cadena_consola);
+
+		t_struct_numero* tamanio = malloc(sizeof(t_struct_numero));
+		tamanio->numero = registros_cpu.registros_programacion[1];
+		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, tamanio);
+		controlar_envio(resultado, D_STRUCT_NUMERO);
+		free(tamanio);
+
 
 		list_clean(parametros);
 		break;
@@ -1081,7 +1093,7 @@ void ejecutarLinea(int* bytecode){
 	}
 
 	//printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
-	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
+	printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
 	//printf("Registro C: %d\n", registros_cpu.registros_programacion[2]);
 	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
 	//printf("Registro S: %d\n", registros_cpu.S);

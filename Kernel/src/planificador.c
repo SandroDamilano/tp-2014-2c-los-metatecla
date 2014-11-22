@@ -735,13 +735,14 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
-
+		printf("Estoy en INNN\n");
 		//pido numero por consola
 		pid = obtener_pid_de_cpu(sockCPU);
 		int socket_consola = obtener_socket_consola(pid);
 		t_struct_numero* innn = malloc(sizeof(t_struct_numero));
 		innn->numero = D_STRUCT_INNN;
 		socket_enviar(socket_consola, D_STRUCT_NUMERO, innn);
+		printf("MANDE INNN A CONSOLA\n");
 
 		break;
 	case D_STRUCT_ABORT:
@@ -949,6 +950,9 @@ void handler_cpu(int sockCPU){
 		pid = obtener_pid_de_cpu(sockCPU);
 		socket_consola = obtener_socket_consola(pid);
 		socket_enviar(socket_consola, tipoRecibido, structRecibido);
+
+		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
+		socket_enviar(socket_consola, tipoRecibido2, structRecibido2);
 		break;
 	}//ACÁ TERMINA EL SWITCH
 	//free(structRecibido);

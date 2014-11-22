@@ -448,7 +448,7 @@ t_stream* serializeStruct_INNN(t_struct_numero* estructuraOrigen){
 
 	return paquete;}
 
-t_stream* serializeStruct_INNC(t_struct_string* estructuraOrigen){
+/*t_stream* serializeStruct_INNC(t_struct_string* estructuraOrigen){
 
 	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
 
@@ -459,6 +459,21 @@ t_stream* serializeStruct_INNC(t_struct_string* estructuraOrigen){
 	int tamanoTotal = sizeof(t_header);
 
 	memcpy(data + tamanoTotal, estructuraOrigen->string, strlen(estructuraOrigen->string)+1);		//copio a data el string.
+
+	paquete->data = data;
+
+	return paquete;
+}*/
+
+t_stream* serializeStruct_INNC(t_struct_numero* estructuraOrigen){
+
+	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
+
+	paquete->length = sizeof(t_header) + sizeof(int32_t);
+
+	char * data = crearDataConHeader(D_STRUCT_INNC, paquete->length); //creo el data
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));		//copio a data el numero.
 
 	paquete->data = data;
 
@@ -568,6 +583,7 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 			case D_STRUCT_SIGNAL:
 				estructuraDestino = deserializeStruct_signal(dataPaquete, length);
 				break;
+			case D_STRUCT_INNC:
 			case D_STRUCT_INNN:
 			case D_STRUCT_OUTN:
 			case D_STRUCT_WAKE:
@@ -588,7 +604,6 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 			case D_STRUCT_CHAR:
 				estructuraDestino = deserializeStruct_char(dataPaquete,length);
 				break;
-			case D_STRUCT_INNC:
 			case D_STRUCT_OUTC:
 			case D_STRUCT_STRING:
 				estructuraDestino = deserializeStruct_string(dataPaquete,length);
