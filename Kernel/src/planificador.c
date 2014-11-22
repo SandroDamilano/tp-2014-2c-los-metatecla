@@ -898,7 +898,7 @@ void handler_cpu(int sockCPU){
 			int tid_a_bloquear = ((t_struct_numero *) structRecibido2)->numero;
 			tcb = desbloquear_tcbSystcall(tid_a_bloquear);
 			bloquear_tcbSemaforo(tcb, id_semaforo);
-			obtener_tcb_de_cpu(sockCPU);
+			//obtener_tcb_de_cpu(sockCPU);
 		} else {
 			printf("No se recibio el TID para la operacion BLOCK\n");
 		}
@@ -923,7 +923,7 @@ void handler_cpu(int sockCPU){
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		//Lo saco de EXEC
 		obtener_tcb_de_cpu(sockCPU);
-		printf("Me devolvieron el TCB de TID %d porque finalizó\n", tcb->pid);
+		printf("Me devolvieron el TCB de PID %d porque finalizó. El reg B vale %d\n", tcb->pid, tcb->registros[1]);
 
 		//Verifico si es el de Kernel
 		if(tcb->kernel_mode == true){

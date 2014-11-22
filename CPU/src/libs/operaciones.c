@@ -37,7 +37,7 @@ void ejecutarLinea(int* bytecode){
 	char param_reg1[2];
 	char param_reg2[2];
 
-	printf("PID: %d\n", registros_cpu.I);
+	//printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -109,7 +109,7 @@ void ejecutarLinea(int* bytecode){
 			//printf("Numero a enviar %d (no es S)\n", numero_enviar);
 		}
 
-		datos_solicitados->base = numero_enviar;//sumar_desplazamiento(registros_cpu.M,registros_cpu.registros_programacion[elegirRegistro(reg2)]);
+		datos_solicitados->base = sumar_desplazamiento(registros_cpu.X,numero_enviar);
 		datos_solicitados->PID = registros_cpu.I;
 		datos_solicitados->tamanio = 1; //FIXME MEDIO TURBIO PERO ANDA
 
@@ -169,15 +169,20 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("SETM",parametros);
 
 		//HORRIBLEEEE
+		int dir;
+
 		if(reg1 == 'S'){
 			memcpy(&numero_enviar, &registros_cpu.S, numero);
+			dir = sumar_desplazamiento(datos_enviados->base = registros_cpu.X, registros_cpu.S);
 		} else {
 			memcpy(&numero_enviar, &registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
+			dir = sumar_desplazamiento(datos_enviados->base = registros_cpu.X, registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 		} //TURBIO :S
 
-		datos_solicitados->PID = registros_cpu.I;
+		datos_enviados->PID = registros_cpu.I;
 		datos_enviados->buffer = &numero_enviar;
 		datos_enviados->tamanio = sizeof(int32_t);
+		datos_enviados->base = dir;
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
@@ -1077,6 +1082,9 @@ void ejecutarLinea(int* bytecode){
 
 	//printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
 	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
+	//printf("Registro C: %d\n", registros_cpu.registros_programacion[2]);
+	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
+	//printf("Registro S: %d\n", registros_cpu.S);
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
 	free(id_semaforo);
