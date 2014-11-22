@@ -118,6 +118,7 @@ void terminar_TCBs(){
 			terminar_proceso(data->tcb);
 			break;
 		};
+		//free(data->tcb);
 		//free(data);
 	};
 }
@@ -159,29 +160,31 @@ void terminar_proceso(t_hilo* tcb){
 	eliminar_block(pid);
 	eliminar_exec(pid);
 	sacar_de_consolas(pid);
+	liberar_memoria_codigo(tcb);
 	terminar_hilo(tcb);
 }
 
 void terminar_hilo(t_hilo* tcb){
-	liberar_memoria(tcb);
+	liberar_memoria_stack(tcb);
 }
 
-void liberar_memoria(t_hilo* tcb){
-	printf("Procedo a destruir los segmentos de PID %d\n", tcb->pid);
+void liberar_memoria_stack(t_hilo* tcb){
+	//Libero segmento de stack
+	t_struct_free* free_segmento = malloc(sizeof(t_struct_free));
+	free_segmento->PID = tcb->pid;
+	free_segmento->direccion_base = tcb->base_stack;
+	printf("Libero el segmento de stack, ubicado en: %d\n", free_segmento->direccion_base);
+	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
+	free(free_segmento);
+}
+
+void liberar_memoria_codigo(t_hilo* tcb){
 	//Libero segmento de codigo
 	t_struct_free* free_segmento = malloc(sizeof(t_struct_free));
 	free_segmento->PID = tcb->pid;
 	free_segmento->direccion_base = tcb->segmento_codigo;
 	printf("Libero el segmento de código, ubicado en: %d\n", free_segmento->direccion_base);
-
 	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
-
-	//Libero segmento de stack
-	free_segmento->direccion_base = tcb->base_stack;
-	printf("Libero el segmento de stack, ubicado en: %d\n", free_segmento->direccion_base);
-	socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
-
-	//free(tcb);
 	free(free_segmento);
 }
 
@@ -785,7 +788,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 }
 
 void handler_cpu(int sockCPU){
-	t_hilo* tcb;// = malloc(sizeof(t_hilo));
+	t_hilo* tcb = malloc(sizeof(t_hilo));
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
 	uint32_t tid_padre;

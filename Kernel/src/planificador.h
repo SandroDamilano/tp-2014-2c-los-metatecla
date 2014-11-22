@@ -96,7 +96,8 @@
 	void escribir_consola(uint32_t pid, char* mensaje);
 	void terminar_proceso(t_hilo* tcb);
 	void terminar_hilo(t_hilo* tcb);
-	void liberar_memoria(t_hilo* tcb);
+	void liberar_memoria_stack(t_hilo* tcb);
+	void liberar_memoria_codigo(t_hilo* tcb);
 	void eliminar_ready(uint32_t pid);
 	void eliminar_block(uint32_t pid);
 	void eliminar_exec(uint32_t pid);
