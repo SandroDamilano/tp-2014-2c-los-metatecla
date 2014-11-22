@@ -31,7 +31,7 @@
 	t_stream* serializeStruct_INNC(t_struct_numero* estructuraOrigen);
 	t_stream* serializeStruct_OUTN(t_struct_numero* estructuraOrigen);
 	t_stream* serializeStruct_OUTC(t_struct_string* estructuraOrigen);
-	t_stream* serializeStruct_tcbCREA(t_struct_tcb* estructuraOrigen);
+	t_stream* serializeStruct_tcbCREA(t_struct_numero* estructuraOrigen);
 	t_stream * serializeStruct_join(t_struct_join * estructuraOrigen);
 	t_stream * serializeStruct_inte(t_struct_direccion * estructuraOrigen);
 	t_stream * serializeStruct_block(t_struct_numero * estructuraOrigen);

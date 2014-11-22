@@ -83,7 +83,7 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 				paquete = serializeStruct_INNN((t_struct_numero *) estructuraOrigen);
 				break;
 			case D_STRUCT_INNC:
-				paquete = serializeStruct_INNC((t_struct_string *) estructuraOrigen);
+				paquete = serializeStruct_INNC((t_struct_numero *) estructuraOrigen);
 				break;
 			case D_STRUCT_OUTN:
 				paquete = serializeStruct_OUTN((t_struct_numero *) estructuraOrigen);
@@ -92,7 +92,7 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 				paquete = serializeStruct_OUTC((t_struct_string *) estructuraOrigen);
 				break;
 			case D_STRUCT_TCB_CREA:
-				paquete = serializeStruct_tcbCREA((t_struct_tcb *) estructuraOrigen);
+				paquete = serializeStruct_tcbCREA((t_struct_numero *) estructuraOrigen);
 				break;
 			case D_STRUCT_JOIN:
 				paquete = serializeStruct_join((t_struct_join *) estructuraOrigen);
@@ -512,15 +512,15 @@ t_stream* serializeStruct_OUTC(t_struct_string* estructuraOrigen){
 	return paquete;
 }
 
-t_stream* serializeStruct_tcbCREA(t_struct_tcb* estructuraOrigen){
+t_stream* serializeStruct_tcbCREA(t_struct_numero* estructuraOrigen){
 
 	t_stream* paquete = malloc(sizeof(t_stream));
 
-	paquete->length = sizeof(t_header) + sizeof(t_struct_tcb);
+	paquete->length = sizeof(t_header) + sizeof(t_struct_numero);
 
 	char* data = crearDataConHeader(D_STRUCT_TCB_CREA, paquete->length);
 
-	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_tcb));
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));
 
 	paquete->data = data;
 
@@ -583,6 +583,7 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 			case D_STRUCT_SIGNAL:
 				estructuraDestino = deserializeStruct_signal(dataPaquete, length);
 				break;
+			case D_STRUCT_TCB_CREA:
 			case D_STRUCT_INNC:
 			case D_STRUCT_INNN:
 			case D_STRUCT_OUTN:
@@ -619,7 +620,6 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 				break;
 			case D_STRUCT_TCB:
 			case D_STRUCT_TCB_QUANTUM:
-			case D_STRUCT_TCB_CREA:
 				estructuraDestino = deserializeStruct_tcb(dataPaquete,length);
 				break;
 			case D_STRUCT_JOIN:

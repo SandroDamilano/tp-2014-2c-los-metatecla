@@ -1031,12 +1031,12 @@ void ejecutarLinea(int* bytecode){
 	case CREA: //FIXME: RECIBO EL ALGO DESPUES DE MANDAR ESTO?
 		ejecucion_instruccion("CREA",parametros);
 
-		//Mando TCB
+		t_struct_numero* tid = malloc(sizeof(t_struct_numero));
+		tid->numero = tcb->tid;
 
-		copiar_registros_a_tcb();
-		copiar_tcb_a_structTcb(tcb, tcb_enviar);
+		printf("BASE DE STACK %d\n", tcb->base_stack);
 
-		resultado = socket_enviar(sockKernel, D_STRUCT_TCB_CREA, tcb_enviar);
+		resultado = socket_enviar(sockKernel, D_STRUCT_TCB_CREA, tid);
 		controlar_envio(resultado, D_STRUCT_TCB_CREA);
 
 		//Mando PC
@@ -1045,6 +1045,15 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, program_counter);
 		controlar_envio(resultado, D_STRUCT_NUMERO);
 		free(program_counter);
+
+		//Recibo TID del hijo
+		resultado = socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO);
+
+		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
+
+		printf("Tid del hijo %d\n", registros_cpu.registros_programacion[0]);
+
 
 		list_clean(parametros);
 		break;
@@ -1055,10 +1064,12 @@ void ejecutarLinea(int* bytecode){
 		join->tid_a_esperar = registros_cpu.registros_programacion[0];
 		join->tid_llamador = tcb->tid;
 
+
 		resultado = socket_enviar(sockKernel, D_STRUCT_JOIN, join);
 		controlar_envio(resultado, D_STRUCT_JOIN);
 
 		free(join);
+
 
 		list_clean(parametros);
 		break;
@@ -1070,13 +1081,11 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
 		controlar_envio(resultado, D_STRUCT_BLOCK);
 
-
-		//copiar_registros_a_tcb();
-		//copiar_tcb_a_structTcb(tcb, tcb_enviar);
 		tid_enviar->numero = tcb->tid;
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, tid_enviar);
 		controlar_envio(resultado, D_STRUCT_NUMERO);
+
 
 		list_clean(parametros);
 		break;
@@ -1088,12 +1097,13 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
 		controlar_envio(resultado, D_STRUCT_BLOCK);
 
+
 		list_clean(parametros);
 		break;
 	}
 
 	//printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
-	printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
+	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
 	//printf("Registro C: %d\n", registros_cpu.registros_programacion[2]);
 	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
 	//printf("Registro S: %d\n", registros_cpu.S);

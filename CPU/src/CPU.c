@@ -81,23 +81,6 @@ int main(int argc, char** argv) {
 
 	}
 
-	//////////////////////
-	quantum = 30;
-
-	/*tcb->pid = 0;
-	tcb->tid = 0;
-	tcb->kernel_mode = true;
-	tcb->segmento_codigo = 0;
-	tcb->segmento_codigo_size = 99;
-	tcb->registros[0] = 0;
-	tcb->registros[1] = 0;
-	tcb->registros[2] = 0;
-	tcb->registros[3] = 0;
-	tcb->registros[4] = 0;
-	tcb->puntero_instruccion = 0;*/
-	///////////////////////
-
-
 	int bytecode[4];// = malloc(sizeof(uint32_t));
 
 	cantidad_lineas_ejecutadas = 0;

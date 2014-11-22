@@ -425,8 +425,8 @@ void desbloquear_proceso(t_evento evento, uint32_t parametro){
 	if (data_desbloqueado != NULL){
 		t_hilo * tcb_desbloqueado = data_desbloqueado->tcb;
 		encolar_en_ready(tcb_desbloqueado);
+		free(data_desbloqueado);
 	}
-	free(data_desbloqueado);
 }
 
 t_hilo* desbloquear_tcbKernel(){
@@ -643,7 +643,7 @@ void retornar_de_systcall(t_hilo* tcb_kernel, t_fin fin){
 	atender_otra_systcall_si_hay(tcb_kernel);
 }
 
-uint32_t crear_nuevo_hilo(t_hilo* tcb_padre){
+uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 	void * structRecibido;
 	t_tipoEstructura tipoStruct;
 	uint32_t dir_stack_hijo;
@@ -711,7 +711,7 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre){
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if (tipoStruct != D_STRUCT_NUMERO) {
 		if(((t_struct_numero*) structRecibido)->numero == 0){
-			printf("Se escribio correctamente en memoria\n");
+			printf("Se escribió correctamente en memoria\n");
 		}else{
 			printf("Hubo un problema al copiar el stack del padre al hijo\n");
 			return 0;
@@ -720,7 +720,7 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre){
 
 	//Creo el TCB hijo, copio los datos del padre, y lo mando a READY
 	t_hilo* tcb_hijo = crear_TCB(tcb_padre->pid, tcb_padre->segmento_codigo, dir_stack_hijo, tcb_padre->segmento_codigo_size);
-	tcb_hijo->puntero_instruccion = tcb_padre->puntero_instruccion;
+	tcb_hijo->puntero_instruccion = pc;
 	tcb_hijo->cursor_stack = tcb_padre->cursor_stack;
 	int i;
 	for(i=0; i<=4; i++){
@@ -878,7 +878,11 @@ void handler_cpu(int sockCPU){
 		//copiar_structRecibido_a_tcb(tcb, structRecibido);
 		tid_padre = ((t_struct_numero*) structRecibido)->numero;
 		tcb = desbloquear_tcbSystcall(tid_padre);
-		tid_hijo = crear_nuevo_hilo(tcb);
+
+		//RECIBO PC
+		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
+		int pc = ((t_struct_numero*) structRecibido2)->numero;
+		tid_hijo = crear_nuevo_hilo(tcb, pc);
 
 		if(tid_hijo != 0){
 			paquete_crea = malloc(sizeof(t_struct_numero));
@@ -894,6 +898,8 @@ void handler_cpu(int sockCPU){
 	case D_STRUCT_JOIN:
 		tid_llamador = ((t_struct_join*) structRecibido)->tid_llamador;
 		tid_a_esperar = ((t_struct_join*) structRecibido)->tid_a_esperar;
+
+		printf("Tids del join: %d y %d\n", tid_a_esperar, tid_llamador);
 
 		tcb = desbloquear_tcbSystcall(tid_llamador);
 		bloquear_tcbJoin(tcb, tid_a_esperar);
@@ -946,7 +952,7 @@ void handler_cpu(int sockCPU){
 			//terminar tcb
 			mandar_a_exit(tcb, TERMINAR);
 		}
-
+		desbloquear_por_join(tcb->tid);
 		break;
 
 	case D_STRUCT_OUTN:
