@@ -91,6 +91,8 @@ extern pthread_mutex_t mutex_log;
 extern pthread_mutex_t mutex_reservarMemoria;
 extern pthread_mutex_t mutex_crearSegmento;
 extern pthread_mutex_t mutex_tablaMarcos;
+extern pthread_mutex_t mutex_swap;
+extern pthread_mutex_t mutex_memoriaPpal;
 ////////////Consola//////////////
 void *inciarConsola(void *param1);
 void indicaciones_consola();
@@ -101,7 +103,7 @@ void listar_marcos();
 
 ///////////Interfaz MSP/////////
 uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento); // crea un nuevo segmento para PID del tamanio pedido y devuelta la direcion de memoria base del segmento
-void destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
+uint32_t destruirSegmento(uint32_t PID, uint32_t base_segmento); //destruye el segmento correspodiente a su base del proceso PID
 void* solicitar_memoria(uint32_t PID, uint32_t direccion_log, uint32_t tamanio_mem); //muestra desde direcc logica hasta tamanio_mem lo que se encuentra escrito
 int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uint32_t tamanio); // para el espacio de direcc de PID escribe hasta tamaño los bytes
 

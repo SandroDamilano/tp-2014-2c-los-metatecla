@@ -108,11 +108,11 @@ int inicializar_semaforos(){
 void *reservarBloquePpal(uint32_t tamanioMemoria){
      void *bloquePrincipal = malloc(tamanioMemoria*1024);
      if(NULL == bloquePrincipal){
-    	 //TODO log "no se pudo crear memoria principal"
-         //TODO liberar recursos
+    		pthread_mutex_lock(&mutex_log);
+    		log_debug(logger,"No se pudo crear la memoria Principal", cant_marcos);
+    		pthread_mutex_unlock(&mutex_log);
     	 exit(0);
      }
- 	//Se puede inicializar la memoria, en este caso creo que conviene guardar un \0 en los bloques
  	memset(bloquePrincipal,0,tamanioMemoria);
 
  	return bloquePrincipal;
@@ -120,7 +120,6 @@ void *reservarBloquePpal(uint32_t tamanioMemoria){
 
 uint32_t calcularMarcos(uint32_t tamanioMemoria){
 	uint32_t cantidadmarcos = (tamanioMemoria*1024)/256;
-	printf("Cantidad de marcos: %i \n", cantidadmarcos);
 	return cantidadmarcos;
 }
 
@@ -152,23 +151,27 @@ uint32_t buscarMarcoLibre(t_marco *unaTabla){//Devuelve -1 en caso no encontrar 
 }
 /************************************ EXCEPCIONES ************************************/
 void PID_not_found_exception(uint32_t PID){
-	printf("No se encontro el PID %d\n", PID);
-	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+	pthread_mutex_lock(&mutex_log);
+		log_error(logger,"No se encontro el PID %d\n", PID);
+	pthread_mutex_unlock(&mutex_log);
 }
 
 void segment_not_found_exception(uint32_t segmento){
-	printf("No se encontro el segmento %d\n", segmento);
-	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+	pthread_mutex_lock(&mutex_log);
+		log_error(logger,"No se encontro el segmento %d\n", segmento);
+		pthread_mutex_unlock(&mutex_log);
 }
 
 void page_not_found_exception(uint32_t pagina){
-	printf("No se encontro la pagina %d\n",pagina);
-	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+	pthread_mutex_lock(&mutex_log);
+	log_error(logger,"La pagina no existe en el sistema, %i", pagina);
+	pthread_mutex_unlock(&mutex_log);
 }
 
 void segmentation_fault(){
-	printf("Se produjo segmentation fault\n");
-	//TODO: AGREGAR LOGS Y NO SE SI ABORTAR
+	pthread_mutex_lock(&mutex_log);
+	log_error(logger,"Se produjo SEGMENTATION FAULT");
+	pthread_mutex_unlock(&mutex_log);
 }
 /*********************************** FUNCIONES DE SWAP *******************************/
 
@@ -195,9 +198,9 @@ void crearArchivoSwapEnDisco(t_pagina pagina){
 	fwrite(pagina.codigo, 1,pagina.tamanio_buffer, arch_swap);
 
 
-	/*pthread_mutex_lock(&mutex_log);
+	pthread_mutex_lock(&mutex_log);
 	log_debug(logger,"Creado el archivo %s",file_name);
-	pthread_mutex_unlock(&mutex_log);*/
+	pthread_mutex_unlock(&mutex_log);
 
 	paginas_en_disco++;
 
@@ -219,12 +222,7 @@ t_pagina extraerInfoDeArchSwap(uint32_t pid, uint32_t seg, uint32_t pagina){ //A
 	if(dir == NULL){
 		return pag; //Devuelvo t_pagina con valores negativos => Error
 	}
-    printf("Abri el directorio, ahora abro archivo\n");
 	pag = abrir_archivo_en_direcctorio(pid, seg, pagina);
-
-	if(pag.PID == -1){
-		printf("no se encontro archivo\n");
-	}
 
 	long int tamanio_archivo = calcular_tamanio_archivo(pag.archivo);
 
@@ -287,13 +285,8 @@ void destruir_archivo(char* nombre_archivo) {
 	if (remove(nombre_archivo) != 0) {
 		paginas_en_disco--;
 		pthread_mutex_lock(&mutex_log);
-		printf("No se pudo eliminar el archivo %s o nunca se creo\n", nombre_archivo);
-		log_error(logger, "No se pudo eliminar el archivo o nunca se creo %s\n",nombre_archivo);
+		log_info(logger, "No fue necesario crear el archivo %s\n",nombre_archivo);
 		pthread_mutex_unlock(&mutex_log);
-	} else {
-		/*pthread_mutex_lock(&mutex_log);
-		 log_info(logger,"Eliminado archivo %s del directorio %s", dirent->d_name, path_swap);
-		 pthread_mutex_unlock(&mutex_log);*/
 	}
 	free(nombre_archivo);
 }
@@ -323,7 +316,6 @@ DIR* abrir_directorio_swap(){
 	dir = opendir(path_swap); //abro el directorio donde se encuentran los archivos
 		if(dir == NULL){
 			pthread_mutex_lock(&mutex_log);
-			printf("No se pudo abrir el directorio %s\n", path_swap);
 			log_error(logger,"No se pudo abrir el directorio %s\n", path_swap);
 			pthread_mutex_unlock(&mutex_log);
 			closedir(dir);
@@ -392,12 +384,10 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 	guardarInformacion(memoria_ppal+(numeroMarco*256),direccionACargar,paginaACargar.codigo,paginaACargar.tamanio_buffer);
 	pagina->marcoEnMemPpal=numeroMarco;
 	pagina->swap=0;
-	printf("guarde el archivo en memoria\n"); //DEBUG
 	tabla_marcos[numeroMarco].marco_libre = 0;
 	tabla_marcos[numeroMarco].pagina=direccion.pagina;
 	tabla_marcos[numeroMarco].segmento=direccion.segmento;
 	tabla_marcos[numeroMarco].pid=PID;
-	//modificarBitAlgoritmo(numeroMarco);
 	printf("HICE SWAP \n");
 }
 
@@ -427,8 +417,11 @@ void modificarBitAlgoritmo(uint32_t numeroMarco){
 void handler_conexiones(void){
 	int socket_servidor = socket_crearServidor("127.0.0.1", puertoMSP);
 	pthread_t nueva_solicitud;
-
+	pthread_mutex_lock(&mutex_log);
+	log_info(logger,"MSP a la escucha de nuevas conexiones");
+	pthread_mutex_unlock(&mutex_log);
 	while(1){
+
 		t_conexion_entrante* conexion = malloc(sizeof(t_conexion_entrante));
 		conexion->socket = socket_aceptarCliente(socket_servidor);
 		pthread_create(&nueva_solicitud, NULL, (void*) &handler_solicitudes, conexion);
@@ -460,7 +453,7 @@ void handler_conexiones(void){
 	 				solicitud = (t_struct_sol_bytes*) structRecibido;
 
 	 				pthread_mutex_lock(&mutex_log);
-	 				//TODO LOG diciendo lo que se solicita
+	 				log_info(logger,"Recepcion de una solicitud de Solicitar Memoria con los paramentros: PID: %i, Direccion Base: %i, Tamaño: %i\n", solicitud->PID, solicitud->base, solicitud->tamanio);
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
@@ -481,7 +474,7 @@ void handler_conexiones(void){
 	 				escritura = (t_struct_env_bytes*) structRecibido;
 
 	 				pthread_mutex_lock(&mutex_log);
-	 				//TODO LOG diciendo lo que se envio
+	 				log_info(logger,"Recepcion de una solicitud de Escribir Memoria con los paramentros: PID: %i, Direccion Base: %i,Bytes a Escribir: %s, Tamaño: %i\n", escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
@@ -489,9 +482,9 @@ void handler_conexiones(void){
 	 				respuesta->numero = resultado;
 	 				socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
 
-	 				pthread_mutex_lock(&mutex_log);
-	 				//TODO LOG diciendo si se pudo enviar correctamente
-	 				pthread_mutex_unlock(&mutex_log);
+	 				/*pthread_mutex_lock(&mutex_log);
+	 				log_info(logger,"Se envio la respuesta del Escribir Memoria con exito");
+	 				pthread_mutex_unlock(&mutex_log);*/
 
 	 				//free(structRecibido);
 	 				free(respuesta);
@@ -499,7 +492,7 @@ void handler_conexiones(void){
 
 	 			case D_STRUCT_MALC:
 	 				pthread_mutex_lock(&mutex_log);
-	 				//TODO LOG diciendo que se va a crear un segmento con el tamaño recibido
+	 				log_info(logger,"Recepcion de una solicitud de Crear Segmento con los paramentros: PID: %i,  Tamaño: %i\n", ((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
@@ -510,7 +503,11 @@ void handler_conexiones(void){
 	 				socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
 
 	 				pthread_mutex_lock(&mutex_log);
-	 				//TODO LOG diciendo si se pudo crear correctamente (si es -1, poner error)
+	 				if(resultado == -1){
+		 			log_error(logger,"No se pudo crear el segmento solicitado \n");
+	 				} else {
+	 				log_info(logger,"Se creo con exito el segmento solicitado y la base es: %i \n", resultado);
+	 				}
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				free(respuesta);
@@ -520,19 +517,23 @@ void handler_conexiones(void){
 	 			case D_STRUCT_FREE:
 
 	 				pthread_mutex_lock(&mutex_log);
-	 				//TODO LOG diciendo que se va a liberar un segmento de direccion tal
+	 				log_info(logger,"Recepcion de una solicitud de Destruir Segmento con los paramentros: PID: %i, Direccion Base: %i\n", ((t_struct_free *) structRecibido)->PID, ((t_struct_free *) structRecibido)->direccion_base);
 	 				pthread_mutex_unlock(&mutex_log);
 
-	 				destruirSegmento(((t_struct_free *) structRecibido)->PID, ((t_struct_free *) structRecibido)->direccion_base);
+	 				resultado = destruirSegmento(((t_struct_free *) structRecibido)->PID, ((t_struct_free *) structRecibido)->direccion_base);
 
 	 				/*Le comunico a CPU si se pudo destruir segmento?
 	 				t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
 	 				respuesta->numero = resultado;
-	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);
+	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);*/
 
-	 				pthread_mutex_lock(mutex_log);
-	 				//TODO LOG diciendo si se pudo borrar correctamente (si es -1, poner error)
-	 				pthread_mutex_unlock(mutex_log);*/
+	 				pthread_mutex_lock(&mutex_log);
+	 				if(resultado == -1){
+	 				log_error(logger,"No se pudo destruir el segmento solicitado \n");
+	 				} else {
+	 				log_info(logger,"Se destruyo con exito el segmento solicitado \n");
+	 					}
+	 				pthread_mutex_unlock(&mutex_log);
 
 	 				//free(structRecibido);
 
