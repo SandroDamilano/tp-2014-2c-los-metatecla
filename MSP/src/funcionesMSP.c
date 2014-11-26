@@ -424,6 +424,28 @@ void handler_conexiones(void){
 
 		t_conexion_entrante* conexion = malloc(sizeof(t_conexion_entrante));
 		conexion->socket = socket_aceptarCliente(socket_servidor);
+
+		void* structRecibido;
+		t_tipoEstructura tipo_struct;
+		socket_recibir(conexion->socket, &tipo_struct, &structRecibido);
+
+		if(tipo_struct == D_STRUCT_NUMERO){
+			switch(((t_struct_numero*) structRecibido)->numero){
+			case ES_KERNEL:
+				printf("Se conecto el Kernel\n");
+				break;
+			case ES_CPU:
+				printf("Se conecto una CPU\n");
+				break;
+			default:
+				printf("No se pudo hacer el handshake (switch) \n");
+			}
+		} else {
+			printf("No se pudo hacer el handshake\n");
+		}
+
+		free(structRecibido);
+
 		pthread_create(&nueva_solicitud, NULL, (void*) &handler_solicitudes, conexion);
 	}
 

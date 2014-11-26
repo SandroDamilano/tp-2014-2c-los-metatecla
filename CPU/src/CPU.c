@@ -35,22 +35,26 @@ int main(int argc, char** argv) {
 	//Abrir conexion de sockets con Kernel y MSP.
 	int sockKernel = socket_crearYConectarCliente(config_struct_cpu.ip_kernel, config_struct_cpu.puerto_kernel);
 
+	if(sockKernel == -1){
+			printf("No se pudo conectar a Kernel\n");
+		} else {
+			printf("Me conecte al Kernel. Socket %d\n", sockKernel);
+			t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
+			es_cpu->numero = ES_CPU;
+			socket_enviar(sockKernel, D_STRUCT_NUMERO, es_cpu);
+			free(es_cpu);
+		}
+
+
 	int sockMSP = socket_crearYConectarCliente(config_struct_cpu.ip_msp, config_struct_cpu.puerto_msp);
 
 	if(sockMSP == -1){
 		printf("No se pudo conectar a MSP\n");
 	} else {
 		printf("Numero de socket de MSP es %d\n", sockMSP);
-	}
-
-	if(sockKernel == -1){
-		printf("No se pudo conectar a Kernel\n");
-	} else {
-		printf("Me conecte al Kernel. Socket %d\n", sockKernel);
 		t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
 		es_cpu->numero = ES_CPU;
-		socket_enviar(sockKernel, D_STRUCT_NUMERO, es_cpu);
-		printf("Envie el aviso a Kenel\n");
+		socket_enviar(sockMSP, D_STRUCT_NUMERO, es_cpu);
 		free(es_cpu);
 	}
 

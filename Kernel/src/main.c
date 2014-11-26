@@ -205,6 +205,10 @@ void cargar_arg_PLANIFICADOR(arg_PLANIFICADOR* arg)
 int crear_cliente_MSP(char* ip, uint32_t puerto){
 	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%d]\n", ip, puerto);
 	socket_MSP = socket_crearYConectarCliente(ip, puerto);
+	t_struct_numero* es_kernel = malloc(sizeof(t_struct_numero));
+	es_kernel->numero = ES_KERNEL;
+	socket_enviar(socket_MSP, D_STRUCT_NUMERO, es_kernel);
+	free(es_kernel);
 	return socket_MSP;
 }
 /*
