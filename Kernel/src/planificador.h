@@ -52,7 +52,8 @@
 	//Por ahora estas van aca porque el planificador es el único que las usa
 	t_list *cola_ready, *cola_block, *cola_exec; //Colas de planificación.
 
-	pthread_mutex_t mutex_ready, mutex_block, mutex_exec;
+	pthread_mutex_t mutex_ready, mutex_block, mutex_exec, mutex_solicitudes;
+	sem_t sem_ready, sem_solicitudes;
 
 	//Variables de búsqueda en las colas
 	int solicitud_a_eliminar;
@@ -117,6 +118,8 @@
 	void atender_solicitudes_pendientes();
 	void atender_cpus();
 	void handler_cpu(int sockCPU);
+
+	void* mostrar_solicitud_cpu(int* sock);
 
 	void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros);
 
