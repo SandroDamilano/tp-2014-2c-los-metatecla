@@ -111,18 +111,18 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 }
 
-int asignarNumeroSegmento(int tamanioListaSegmentos, t_list *listaSegmentos){
-	t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
-
+int asignarNumeroSegmento(t_list *listaSegmentos){
+	//t_lista_segmentos *segmento = malloc(sizeof(t_lista_segmentos));
+	uint32_t numeroAAsignar = 0;
 	bool mismoSegmento(t_lista_segmentos *numeroSegmento){
-				return numeroSegmento->numeroSegmento==tamanioListaSegmentos;
+				return numeroSegmento->numeroSegmento==numeroAAsignar;
 			}
 
 	while (list_any_satisfy(listaSegmentos, (void*) (*mismoSegmento)) == true){
-		tamanioListaSegmentos=tamanioListaSegmentos+1;
+		numeroAAsignar+=1;
 	}
-	free(segmento);
-	return tamanioListaSegmentos;
+	//free(segmento);
+	return numeroAAsignar;
 }
 
 //PUSE QUE SI ES ERROR, DEVUELVA -1 QUE ES MAS CLARO QUE 0
@@ -196,12 +196,9 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	t_lista_segmentos *nuevoSegmento = malloc(sizeof(t_lista_segmentos));
 	if(tamanioListaSeg<4096){
 		(*nuevoSegmento).lista_Paginas=list_create();
-		(*nuevoSegmento).numeroSegmento=asignarNumeroSegmento(tamanioListaSeg,(*proceso).lista_Segmentos);
+		(*nuevoSegmento).numeroSegmento=asignarNumeroSegmento((*proceso).lista_Segmentos);
 		(*nuevoSegmento).tamanio=tamanio_segmento;
 		list_add((*proceso).lista_Segmentos, nuevoSegmento);
-		pthread_mutex_lock(&mutex_log);
-		log_info(logger,"Se creo el nuevo segmento del proceso: %d y tiene el tamaño: %d",PID,tamanio_segmento);
-		pthread_mutex_unlock(&mutex_log);
 	} else {
 		pthread_mutex_lock(&mutex_log);
 		log_error(logger,"Se supera el maximo de segmentos por programa");
@@ -250,6 +247,9 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		 pthread_mutex_lock(&mutex_tablaMarcos);
 		 }
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
+  pthread_mutex_lock(&mutex_log);
+  		log_info(logger,"Se creo el nuevo segmento del proceso: %d, tiene el tamaño: %d y su direccion base es: %u",PID,tamanio_segmento, direccionBaseDelSegmento);
+  		pthread_mutex_unlock(&mutex_log);
 	return direccionBaseDelSegmento ;
 }
 

@@ -152,13 +152,13 @@ uint32_t buscarMarcoLibre(t_marco *unaTabla){//Devuelve -1 en caso no encontrar 
 /************************************ EXCEPCIONES ************************************/
 void PID_not_found_exception(uint32_t PID){
 	pthread_mutex_lock(&mutex_log);
-		log_error(logger,"No se encontro el PID %d\n", PID);
+		log_error(logger,"No se encontro el PID %d", PID);
 	pthread_mutex_unlock(&mutex_log);
 }
 
 void segment_not_found_exception(uint32_t segmento){
 	pthread_mutex_lock(&mutex_log);
-		log_error(logger,"No se encontro el segmento %d\n", segmento);
+		log_error(logger,"No se encontro el segmento %d", segmento);
 		pthread_mutex_unlock(&mutex_log);
 }
 
@@ -432,16 +432,24 @@ void handler_conexiones(void){
 		if(tipo_struct == D_STRUCT_NUMERO){
 			switch(((t_struct_numero*) structRecibido)->numero){
 			case ES_KERNEL:
-				printf("Se conecto el Kernel\n");
+				pthread_mutex_lock(&mutex_log);
+				   log_info(logger,"Se conecto el Kernel");
+				pthread_mutex_unlock(&mutex_log);
 				break;
 			case ES_CPU:
-				printf("Se conecto una CPU\n");
+				pthread_mutex_lock(&mutex_log);
+					log_info(logger,"Se conecto un nuevo CPU");
+				pthread_mutex_unlock(&mutex_log);
 				break;
 			default:
-				printf("No se pudo hacer el handshake (switch) \n");
+				pthread_mutex_lock(&mutex_log);
+					log_error(logger,"No se pudo hacer el handshake");
+				pthread_mutex_unlock(&mutex_log);
 			}
 		} else {
-			printf("No se pudo hacer el handshake\n");
+			pthread_mutex_lock(&mutex_log);
+				log_error(logger,"No se pudo hacer el handshake");
+			pthread_mutex_unlock(&mutex_log);
 		}
 
 		free(structRecibido);
@@ -475,7 +483,7 @@ void handler_conexiones(void){
 	 				solicitud = (t_struct_sol_bytes*) structRecibido;
 
 	 				pthread_mutex_lock(&mutex_log);
-	 				log_info(logger,"Recepcion de una solicitud de Solicitar Memoria con los paramentros: PID: %i, Direccion Base: %i, Tamaño: %i\n", solicitud->PID, solicitud->base, solicitud->tamanio);
+	 				log_info(logger,"Recepcion de una solicitud de Solicitar Memoria con los paramentros: PID: %i, Direccion Base: %i, Tamaño: %i", solicitud->PID, solicitud->base, solicitud->tamanio);
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				t_struct_respuesta_msp* buffer = malloc(sizeof(t_struct_respuesta_msp));
@@ -646,7 +654,15 @@ void handler_conexiones(void){
 	case '8': terminarConsola=0; break;
 	}
 	}
+
+	pthread_mutex_lock(&mutex_log);
+	   log_info(logger,"Finalizo el hilo de la Consola");
+	pthread_mutex_unlock(&mutex_log);
+
 pthread_exit(NULL);	/* No se si esta bien implementado el pthread_exit */
+
+
+
 return NULL;
 }
 
