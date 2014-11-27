@@ -119,7 +119,7 @@
 	void atender_cpus();
 	void handler_cpu(int sockCPU);
 
-	void* mostrar_solicitud_cpu(int* sock);
+	void mostrar_solicitud_cpu(int* sock);
 
 	void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros);
 

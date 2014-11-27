@@ -44,16 +44,15 @@ bool hay_en_ready(){
 	return resp; //Este valor puede quedar desactualizado, pero no importa
 }*/
 
-void* mostrar_solicitud_cpu(int* sock){
+void mostrar_solicitud_cpu(int* sock){
 	printf("Tengo la solicitud: %d\n", *sock);
-	return sock;
 }
 
 void atender_solicitudes_pendientes(){
 	while(1){
 	//while((!list_is_empty(solicitudes_tcb)) && (hay_en_ready())){
 
-		//list_map(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
+		//list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 		sem_wait(&sem_solicitudes);
 		pthread_mutex_lock(&mutex_solicitudes);
 		int* sockCPU = list_remove(solicitudes_tcb, 0);
@@ -89,7 +88,7 @@ void atender_cpus(){
 	for(i=0; i<=cpus_fdmax; i++){
 		if(FD_ISSET(i, &read_cpus)){
 			printf("Procedo a atender a la CPU: %d\n", i);
-			list_map(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
+			list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 			handler_cpu(i);
 		}
 	}
@@ -768,9 +767,9 @@ void mandar_a_ejecutar(t_hilo* tcb, int sockCPU){
 	agregar_a_exec(sockCPU, tcb);
 }
 
-void agregar_solicitud(int sockCPU){
+void agregar_solicitud(int* sockCPU){
 	pthread_mutex_lock(&mutex_solicitudes);
-	list_add(solicitudes_tcb, (void*)&sockCPU);
+	list_add(solicitudes_tcb, sockCPU);
 	pthread_mutex_unlock(&mutex_solicitudes);
 	sem_post(&sem_solicitudes);
 }
@@ -780,7 +779,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	uint32_t pid;
 
 	printf("ESTOY EN HANDLER NÚMEROS\n");
-		list_map(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
+		list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
@@ -819,16 +818,16 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		//}else{
 			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
 			printf("Agrego a las solicitudes a la CPU %d\n", sockCPU);
-			//int* solicitud = malloc(sizeof(int));
-			//solicitud = &sockCPU;
+			int* solicitud = malloc(sizeof(int));
+			*solicitud = sockCPU;
 			//list_add(solicitudes_tcb, (void*)&sockCPU);
 			//(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 			/*if (!list_is_empty(solicitudes_tcb)){
 				printf("Antes de poner la nueva, la primera solicitud es %d\n", *(int*)(list_get(solicitudes_tcb, 0)));
 			}*/
 			//list_add(solicitudes_tcb, (void*)solicitud);
-			agregar_solicitud(sockCPU);
-			//list_map(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
+			agregar_solicitud(solicitud);
+			//list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 			//printf("Y la primera es %d\n", *(int*)(list_get(solicitudes_tcb, 0)));
 
 		//}
@@ -839,7 +838,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 
 void handler_cpu(int sockCPU){
 	printf("ESTOY EN HANDLER CPU\n");
-		list_map(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
+		list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 	t_hilo* tcb = malloc(sizeof(t_hilo));
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
@@ -901,7 +900,7 @@ void handler_cpu(int sockCPU){
 	case D_STRUCT_NUMERO:
 
 		printf("ESTOY EN D_STRUCT_NUMERO\n");
-		list_map(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
+		list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 		numero_cpu = ((t_struct_numero*) structRecibido)->numero;
 		handler_numeros_cpu(numero_cpu, sockCPU);
 		break;
