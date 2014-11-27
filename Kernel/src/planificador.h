@@ -30,6 +30,9 @@
 
 	t_list* solicitudes_tcb;
 
+	t_list* terminados;
+	pthread_mutex_t mutex_terminados;
+
 	fd_set master_cpus;
 	int cpus_fdmax;
 	pthread_mutex_t mutex_master_cpus;

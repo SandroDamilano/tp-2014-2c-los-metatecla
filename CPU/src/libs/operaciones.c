@@ -37,7 +37,7 @@ void ejecutarLinea(int* bytecode){
 	char param_reg1[2];
 	char param_reg2[2];
 
-	//printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
+	printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -124,7 +124,7 @@ void ejecutarLinea(int* bytecode){
 		//printf("Me llego de memoria %s\n",datos_recibidos);
 
 		if(reg1 == 'S'){
-			obtener_num(datos_recibidos, 0,&registros_cpu.S);
+			obtener_direc(datos_recibidos, 0,&registros_cpu.S);
 			//printf("El reg 1 (S) tiene %d\n", registros_cpu.S);
 		} else {
 			obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
@@ -728,7 +728,8 @@ void ejecutarLinea(int* bytecode){
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		copiar_tcb_a_registros();
-		registros_cpu.I = 0;
+		//registros_cpu.I = 0;
+		cantidad_lineas_ejecutadas = 0;
 
 		comienzo_ejecucion(tcb, quantum);
 

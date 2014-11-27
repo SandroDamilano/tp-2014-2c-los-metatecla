@@ -126,6 +126,7 @@ void terminar_TCBs(){
 			}else{
 				// Se finaliza sólo este hilo
 				terminar_hilo(data->tcb);
+
 			};
 			break;
 
@@ -141,6 +142,14 @@ void terminar_TCBs(){
 }
 
 /***************** FUNCIONES DEL HILO TERMINAR_TCBS() *****************/
+
+void agregar_a_terminados(int tid){
+	int* TID = malloc(sizeof(int));
+	*TID = tid;
+	pthread_mutex_lock(&mutex_terminados);
+	list_add(terminados, TID);
+	pthread_mutex_unlock(&mutex_terminados);
+}
 
 bool es_padre(t_hilo* tcb){
 	tid_de_consola = tcb->tid;
@@ -308,12 +317,12 @@ void mandar_a_exit(t_hilo* tcb, t_fin fin){
 	//data->tcb = tcb;
 	memcpy(data->tcb, tcb, sizeof(t_hilo));
 	free(tcb);
+	(data->tcb)->cola = EXIT;
 	pthread_mutex_lock(&mutex_exit);
 	push_exit(data);
 	pthread_mutex_unlock(&mutex_exit);
-	sem_post(&sem_exit);
-	(data->tcb)->cola = EXIT;
 	printf("Se mando a exit el tid %d\n", (data->tcb)->tid);
+	sem_post(&sem_exit);
 }
 
 t_hilo* obtener_tcb_a_ejecutar(){
@@ -499,6 +508,7 @@ void inicializar_ready_block(){
 	cola_block = list_create();
 	cola_exec = list_create();
 	solicitudes_tcb = list_create();
+	terminados = list_create();
 }
 
 void inicializar_semaforos_colas(){
@@ -506,6 +516,7 @@ void inicializar_semaforos_colas(){
 	pthread_mutex_init(&mutex_block, NULL);
 	pthread_mutex_init(&mutex_exec, NULL);
 	pthread_mutex_init(&mutex_solicitudes, NULL);
+	pthread_mutex_init(&mutex_terminados, NULL);
 	sem_init(&sem_ready, 1, 0);
 	sem_init(&sem_solicitudes, 1, 0);
 };
@@ -896,6 +907,7 @@ void handler_cpu(int sockCPU){
 		obtener_tcb_de_cpu(sockCPU);
 		atender_systcall(tcb, direccion_syscall);
 
+
 		break;
 	case D_STRUCT_NUMERO:
 
@@ -939,11 +951,23 @@ void handler_cpu(int sockCPU){
 		tid_llamador = ((t_struct_join*) structRecibido)->tid_llamador;
 		tid_a_esperar = ((t_struct_join*) structRecibido)->tid_a_esperar;
 
+		int tid_buscado = tid_a_esperar;
+		bool esta_terminado(int* tid){
+			return *tid == tid_buscado;
+		}
 		printf("Tids del join: %d y %d\n", tid_a_esperar, tid_llamador);
 
-		tcb = desbloquear_tcbSystcall(tid_llamador);
-		bloquear_tcbJoin(tcb, tid_a_esperar);
+		pthread_mutex_lock(&mutex_terminados);
+		bool termino = list_any_satisfy(terminados, (void*)esta_terminado);
+		pthread_mutex_unlock(&mutex_terminados);
 
+		tcb = desbloquear_tcbSystcall(tid_llamador);
+
+		if(!termino){
+			bloquear_tcbJoin(tcb, tid_a_esperar);
+		}else{
+			encolar_en_ready(tcb);
+		}
 		break;
 	case D_STRUCT_BLOCK: //TODO: ARREGLAR (recibir un TID)
 
@@ -990,9 +1014,10 @@ void handler_cpu(int sockCPU){
 			retornar_de_systcall(tcb, TERMINAR);
 		}else{
 			//terminar tcb
+			agregar_a_terminados(tcb->tid);
 			mandar_a_exit(tcb, TERMINAR);
+			desbloquear_por_join(tcb->tid);
 		}
-		desbloquear_por_join(tcb->tid);
 		break;
 
 	case D_STRUCT_OUTN:

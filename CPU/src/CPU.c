@@ -89,6 +89,7 @@ int main(int argc, char** argv) {
 
 	cantidad_lineas_ejecutadas = 0;
 	copiar_tcb_a_registros();
+	registros_cpu.I = tcb->pid;
 	comienzo_ejecucion(tcb,quantum);
 
 
@@ -113,6 +114,7 @@ int main(int argc, char** argv) {
 
 			} else{
 				cantidad_lineas_ejecutadas++;
+				registros_cpu.I = tcb->pid;
 				ejecutar_otra_linea(sockMSP, tcb, bytecode);
 			}
 		}
@@ -122,6 +124,7 @@ int main(int argc, char** argv) {
 		if(terminoEjecucion == true){
 			terminar_y_pedir_tcb(tcb);
 		} else{
+			registros_cpu.I = 0;
 			ejecutar_otra_linea(sockMSP,tcb,bytecode);
 			}
 		}

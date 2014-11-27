@@ -11,7 +11,7 @@ int sockMSP;
 int sockKernel;
 
 void copiar_tcb_a_registros(){
-	registros_cpu.I = tcb->pid;
+	//registros_cpu.I = tcb->pid;
 	registros_cpu.K = tcb->kernel_mode;
 	registros_cpu.M = tcb->segmento_codigo;
 	registros_cpu.P = tcb->puntero_instruccion;
@@ -26,7 +26,7 @@ void copiar_tcb_a_registros(){
 }
 
 void copiar_registros_a_tcb(){
-	tcb->pid = registros_cpu.I;
+	//tcb->pid = registros_cpu.I;
 	tcb->kernel_mode = registros_cpu.K;
 	tcb->segmento_codigo = registros_cpu.M;
 	tcb->puntero_instruccion = registros_cpu.P;
