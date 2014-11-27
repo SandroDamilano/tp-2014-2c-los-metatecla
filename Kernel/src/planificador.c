@@ -36,13 +36,6 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 
 return 0;
 }
-/*
-bool hay_en_ready(){
-	pthread_mutex_lock(&mutex_ready);
-	bool resp = !list_is_empty(cola_ready);
-	pthread_mutex_unlock(&mutex_ready);
-	return resp; //Este valor puede quedar desactualizado, pero no importa
-}*/
 
 void mostrar_solicitud_cpu(int* sock){
 	printf("Tengo la solicitud: %d\n", *sock);
@@ -50,19 +43,15 @@ void mostrar_solicitud_cpu(int* sock){
 
 void atender_solicitudes_pendientes(){
 	while(1){
-	//while((!list_is_empty(solicitudes_tcb)) && (hay_en_ready())){
 
-		//list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 		sem_wait(&sem_solicitudes);
 		pthread_mutex_lock(&mutex_solicitudes);
 		int* sockCPU = list_remove(solicitudes_tcb, 0);
 		pthread_mutex_unlock(&mutex_solicitudes);
 		sem_wait(&sem_ready);
 		t_hilo* tcb = obtener_tcb_a_ejecutar();
-		printf("obtuve para ejecutar a tcb pid %d\n", tcb->pid);
-		//printf("antes de remover la solicitud, tengo %d solicitudes en la cola\n", list_size(solicitudes_tcb));
+		printf("obtuve para ejecutar a tcb tid %d\n", tcb->tid);
 
-		//printf("después de remover la solicitud, me quedan %d en la cola (y saqué a la CPU %d)\n", list_size(solicitudes_tcb), *sockCPU);
 		mandar_a_ejecutar(tcb, *sockCPU);
 	}
 }
@@ -336,7 +325,7 @@ t_hilo* obtener_tcb_a_ejecutar(){
 t_hilo* obtener_tcb_de_cpu(int sock_cpu){
 	sockCPU_a_buscar = sock_cpu;
 	t_data_nodo_exec* data;
-	t_hilo* tcb = NULL;
+	t_hilo* tcb;
 	pthread_mutex_lock(&mutex_exec);
 	data = list_remove_by_condition(cola_exec, (void*)es_el_tcbCPU);
 	pthread_mutex_unlock(&mutex_exec);
@@ -344,9 +333,15 @@ t_hilo* obtener_tcb_de_cpu(int sock_cpu){
 		tcb = data->tcb;
 	}else{
 		printf("ERROR: No fue encontrado el CPU\n");
+		tcb = NULL;
 	};
 	free(data);
 	return tcb;
+}
+
+void sacar_de_exec(int sockCPU){
+	t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
+	free(tcb);
 }
 
 uint32_t obtener_pid_de_cpu(int sock_cpu){
@@ -455,7 +450,8 @@ void desbloquear_proceso(t_evento evento, uint32_t parametro){
 	data_desbloqueado = list_remove_by_condition(cola_block,(void*)es_el_tcbBuscado);
 	pthread_mutex_unlock(&mutex_block);
 	if (data_desbloqueado != NULL){
-		t_hilo * tcb_desbloqueado = data_desbloqueado->tcb;
+		t_hilo * tcb_desbloqueado;// = malloc(sizeof(t_hilo));
+		tcb_desbloqueado = data_desbloqueado->tcb;
 		encolar_en_ready(tcb_desbloqueado);
 		free(data_desbloqueado);
 	}
@@ -468,6 +464,8 @@ t_hilo* desbloquear_tcbKernel(){
 	t_hilo* tcbKM;
 	if (data != NULL){
 		tcbKM = data->tcb;
+	}else{
+		tcbKM = NULL;
 	}
 	free(data);
 	return tcbKM;
@@ -478,9 +476,11 @@ t_hilo* desbloquear_tcbSystcall(uint32_t tid){
 	pthread_mutex_lock(&mutex_block);
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)es_el_tcbSystcall);
 	pthread_mutex_unlock(&mutex_block);
-	t_hilo* tcb;// = malloc(sizeof(t_hilo));
+	t_hilo* tcb;
 	if (data != NULL){
 		tcb = data->tcb;
+	}else{
+		tcb = NULL;
 	}
 	free(data);
 	return tcb;
@@ -494,7 +494,7 @@ void desbloquear_por_semaforo(uint32_t sem){
 	desbloquear_proceso(SEM, sem);
 }
 
-t_data_nodo_block* desbloquear_alguno_por_systcall(t_hilo* tcb_kernel){
+t_data_nodo_block* desbloquear_alguno_por_systcall(){//t_hilo* tcb_kernel){
 	pthread_mutex_lock(&mutex_block);
 	t_data_nodo_block* data = list_remove_by_condition(cola_block, (void*)esta_por_systcall);
 	pthread_mutex_unlock(&mutex_block);
@@ -620,22 +620,24 @@ void boot(char* systcalls_path){
 /*************************** SYSCALLS *******************************************/
 
 void copiar_tcb(t_hilo* original, t_hilo* copia){
+	printf("Original: %d Copia: %d\n", original->tid, copia->tid);
 	copia->tid = original->tid;
 	copia->pid = original->pid;
 	int i;
 	for(i=0; i<=4; i++){
+		printf("I: %d\n", i);
 		copia->registros[i] = original->registros[i];
 	}
 };
 
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
-	printf("Procedo a atender la systcall del TCB de pid: %d\n", tcb->pid);
+	printf("Procedo a atender la systcall del TCB de tid: %d\n", tcb->tid);
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
 	bloquear_tcbSystcall(tcb, dir_systcall);
 //	printf("está atendiendo al tid: %d\n", tcb->tid);
 	if (tcb_kernel != NULL){
+		printf("Desbloqueé el TCB de kernel y lo mando a ready, tenía el tid: %d\n", tcb_kernel->tid);
 		copiar_tcb(tcb, tcb_kernel);
-		printf("Desbloqueé el TCB de kernel y lo mando a ready, con el pid: %d\n", tcb_kernel->pid);
 		tcb_kernel->puntero_instruccion = dir_systcall;
 		//tcb_kernel->segmento_codigo = direccion_codigo_syscalls; //FIXME: FIJARSE QUE ESTO ESTE BIEN
 		//tcb_kernel->base_stack = direccion_stack_syscalls;
@@ -649,8 +651,8 @@ bool esta_por_systcall(t_data_nodo_block* data){
 	return (data->evento == SYSTCALL);
 }
 
-void atender_otra_systcall_si_hay(t_hilo* tcb_kernel){
-	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall(tcb_kernel);
+void atender_otra_systcall_si_hay(){//t_hilo* tcb_kernel){
+	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall();//tcb_kernel);
 
 	if (data_otro_tcb != NULL){
 		atender_systcall(data_otro_tcb->tcb, data_otro_tcb->parametro);
@@ -677,7 +679,7 @@ void retornar_de_systcall(t_hilo* tcb_kernel, t_fin fin){
 	}
 	bloquear_tcbKernel(tcb_kernel);
 
-	atender_otra_systcall_si_hay(tcb_kernel);
+	atender_otra_systcall_si_hay();//tcb_kernel);
 }
 
 uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
@@ -819,37 +821,17 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		break;
 
 	case D_STRUCT_PEDIR_TCB:
-		printf("me pidieron TCB\n");
-		//darle otro tcb a cpu, si tiene
-		//tcb = obtener_tcb_a_ejecutar();
-
-		//if (tcb!=NULL){
-			//Había un tcb en ready, entonces se lo mando
-		//	mandar_a_ejecutar(tcb, sockCPU);
-		//}else{
-			//No hay ninguno en ready, por lo que guardo la solicitud para atenderla después
+			printf("me pidieron TCB\n");
 			printf("Agrego a las solicitudes a la CPU %d\n", sockCPU);
 			int* solicitud = malloc(sizeof(int));
 			*solicitud = sockCPU;
-			//list_add(solicitudes_tcb, (void*)&sockCPU);
-			//(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
-			/*if (!list_is_empty(solicitudes_tcb)){
-				printf("Antes de poner la nueva, la primera solicitud es %d\n", *(int*)(list_get(solicitudes_tcb, 0)));
-			}*/
-			//list_add(solicitudes_tcb, (void*)solicitud);
 			agregar_solicitud(solicitud);
-			//list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
-			//printf("Y la primera es %d\n", *(int*)(list_get(solicitudes_tcb, 0)));
-
-		//}
-
-		break;
+			break;
 	}
 }
 
 void handler_cpu(int sockCPU){
 	printf("ESTOY EN HANDLER CPU\n");
-		list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 	t_hilo* tcb = malloc(sizeof(t_hilo));
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
@@ -892,7 +874,7 @@ void handler_cpu(int sockCPU){
 	//TODO: PONER LOGS!
 	switch(tipoRecibido){
 	case D_STRUCT_INTE:
-		tcb = malloc(sizeof(t_hilo));
+		//tcb = malloc(sizeof(t_hilo));
 		//Recibo la direccion
 		direccion_syscall = ((t_struct_direccion*) structRecibido)->numero;
 		//otro socket para el tcb
@@ -904,7 +886,7 @@ void handler_cpu(int sockCPU){
 			printf("No llegó el TCB para la operacion INTE\n");
 		}
 
-		obtener_tcb_de_cpu(sockCPU);
+		sacar_de_exec(sockCPU);
 		atender_systcall(tcb, direccion_syscall);
 
 
@@ -998,7 +980,7 @@ void handler_cpu(int sockCPU){
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		//Lo saco de EXEC
-		obtener_tcb_de_cpu(sockCPU);
+		sacar_de_exec(sockCPU);
 		encolar_en_ready(tcb);
 
 		break;
@@ -1006,11 +988,12 @@ void handler_cpu(int sockCPU){
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		//Lo saco de EXEC
-		obtener_tcb_de_cpu(sockCPU);
+		sacar_de_exec(sockCPU);
 		printf("Me devolvieron el TCB de PID %d porque finalizó. El reg B vale %d\n", tcb->pid, tcb->registros[1]);
 
 		//Verifico si es el de Kernel
 		if(tcb->kernel_mode == true){
+			printf("Me devolvieron el TCB del kernel, con el tid: %d\n", tcb->tid);
 			retornar_de_systcall(tcb, TERMINAR);
 		}else{
 			//terminar tcb

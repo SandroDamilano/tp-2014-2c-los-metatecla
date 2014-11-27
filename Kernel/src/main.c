@@ -332,12 +332,13 @@ void handshake_thread(){
 		case ES_CONSOLA:
 			printf("Me llego una consola\n");
 			// Si es una consola
-			if (socket_atendido>consolas_fdmax){
-				consolas_fdmax = socket_atendido;
-			}
 			pthread_mutex_lock(&mutex_master_consolas);
 			FD_SET(socket_atendido, &master_consolas);
 			pthread_mutex_unlock(&mutex_master_consolas);
+
+			if (socket_atendido>consolas_fdmax){
+				consolas_fdmax = socket_atendido;
+			}
 
 			//handler_consola(socket_atendido);
 
@@ -347,6 +348,10 @@ void handshake_thread(){
 		case ES_CPU:
 			printf("Me llego una CPU\n");
 			// Si es una cpu
+			pthread_mutex_lock(&mutex_master_cpus);
+			FD_SET(socket_atendido, &master_cpus);
+			pthread_mutex_unlock(&mutex_master_cpus);
+
 			paquete_quantum = malloc(sizeof(t_struct_numero));
 			paquete_quantum->numero = quantum;
 			socket_enviar(socket_atendido, D_STRUCT_NUMERO, paquete_quantum);
@@ -355,9 +360,6 @@ void handshake_thread(){
 			if (socket_atendido>cpus_fdmax){
 				cpus_fdmax = socket_atendido;
 			}
-			pthread_mutex_lock(&mutex_master_cpus);
-			FD_SET(socket_atendido, &master_cpus);
-			pthread_mutex_unlock(&mutex_master_cpus);
 
 			//handler_cpu(socket_atendido);
 
