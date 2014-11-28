@@ -16,6 +16,8 @@
 	pthread_mutex_t mutex_PIDs;
 	pthread_mutex_t mutex_log;
 	pthread_mutex_t mutex_consolas;
+	pthread_mutex_t mutex_consolas_conectadas;
+	pthread_mutex_t mutex_cpus_conectadas;
 	int cantidad_de_PIDs = 1;
 	int cantidad_de_TIDs;
 
@@ -28,6 +30,8 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_TIDs, NULL);
 	pthread_mutex_init(&mutex_log, NULL);
 	pthread_mutex_init(&mutex_consolas, NULL);
+	pthread_mutex_init(&mutex_consolas_conectadas, NULL);
+	pthread_mutex_init(&mutex_cpus_conectadas, NULL);
 }
 
 void inicializar_colas_new_exit(){

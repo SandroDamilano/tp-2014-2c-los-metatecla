@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <commons/string.h>
 #include <string.h>
-#include <ansisop-panel/cpu.h>
+#include <panel/cpu.h>
 #include <unistd.h>
 #include <sockets/enviar_recibir_paquete.h>
 

@@ -25,7 +25,7 @@
 	#include "loader.h"
 	#include "planificador.h"
 	#include "funciones_kernel.h"
-	#include <ansisop-panel/kernel.h>
+	#include <panel/kernel.h>
 	#include <estructuras_auxiliares.h>
 	#include <sockets/enviar_recibir_paquete.h>
 

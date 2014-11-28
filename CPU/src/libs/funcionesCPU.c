@@ -7,7 +7,6 @@
 
 #include "funcionesCPU.h"
 
-t_log* log_cpu;
 int retardo;
 
 void leer_configuracion(){
@@ -18,8 +17,8 @@ void leer_configuracion(){
 
 	direccion_ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
 	puerto_kernel = config_get_int_value(config_cpu,"PUERTO_KERNEL");
-	//log_info(log_cpu,"La direccion IP del kernel es:%s",direccion_ip_kernel);
-	//log_info(log_cpu,"El puerto del kernel es:%d",puerto_kernel);
+	log_info(logger,"La direccion IP del kernel es:%s",direccion_ip_kernel);
+	log_info(logger,"El puerto del kernel es:%d",puerto_kernel);
 
 	dictionary_put(config_cpu->properties,"IP_KERNEL",direccion_ip_kernel);
 	dictionary_put(config_cpu->properties,"PUERTO_KERNEL",&puerto_kernel);
@@ -29,8 +28,8 @@ void leer_configuracion(){
 
 	direccion_ip_msp = config_get_string_value(config_cpu, "IP_MSP");
 	puerto_msp = config_get_int_value(config_cpu,"PUERTO_MSP");
-	//log_info(log_cpu,"La direccion IP de la MSP es:%s",direccion_ip_msp);
-	//log_info(log_cpu,"El puerto de la MSP es:%d",puerto_msp);
+	log_info(logger,"La direccion IP de la MSP es:%s",direccion_ip_msp);
+	log_info(logger,"El puerto de la MSP es:%d",puerto_msp);
 
 	dictionary_put(config_cpu->properties,"IP_MSP",direccion_ip_msp);
 	dictionary_put(config_cpu->properties,"PUERTO_MSP",&puerto_msp);
@@ -39,7 +38,7 @@ void leer_configuracion(){
 	config_struct_cpu.puerto_msp = puerto_msp;
 
 	ret = config_get_int_value(config_cpu,"RETARDO");
-	//log_info(log_cpu,"El retardo es:%d",ret);
+	log_info(logger,"El retardo es:%d",ret);
 	retardo = ret;
 	dictionary_put(config_cpu->properties,"RETARDO",&ret);
 
@@ -48,16 +47,16 @@ void leer_configuracion(){
 }
 
 void inicializar_configuracion(){
-	//log_cpu=log_create("log_CPU","log_CPU",1, LOG_LEVEL_INFO);
+	logger = malloc(sizeof(t_log));
+	inicializar_panel(CPU,"/home/utnso/tp-2014-2c-los-metatecla/");
 	struct stat config_file;
 	int control = lstat(PATH,&config_file);
 	if(control == -1){
-		//log_error(log_cpu, "No existe el archivo de configuracion");
+		log_error(logger, "No existe el archivo de configuracion");
 	} else{
 		leer_configuracion();
 	}
 
-	inicializar_panel(CPU,"/home/utnso/tp-2014-2c-los-metatecla/CPU");
 }
 
 

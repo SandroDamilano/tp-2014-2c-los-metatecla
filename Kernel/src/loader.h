@@ -22,7 +22,7 @@
 	#include <commons/collections/queue.h>
 	#include <commons/process.h>
 	#include <commons/log.h>
-	#include <ansisop-panel/panel.h>
+	#include <panel/panel.h>
 
 	#include <sockets/enviar_recibir_paquete.h>
 	#include <estructuras_auxiliares.h>

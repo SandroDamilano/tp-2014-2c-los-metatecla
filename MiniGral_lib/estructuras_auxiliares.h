@@ -19,7 +19,7 @@
 	#include <sys/socket.h>
 	#include <errno.h>
 	#include <stdint.h>
-	#include <ansisop-panel/panel.h>
+	#include <panel/panel.h>
 
 	#include <commons/log.h>
 	#include <commons/config.h>
@@ -34,7 +34,6 @@ typedef struct direccion{
 
 // Vars globales ( referenciada por todos los procesos)
 	t_config* config_file;
-	t_log* logger;
 
 // Estructuras necesarias para serializar
 

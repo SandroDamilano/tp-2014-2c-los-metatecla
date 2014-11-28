@@ -30,11 +30,8 @@ char s_clt[INET6_ADDRSTRLEN];
 int main(int argc, char **argv){
 
 	// 1- Inicializar panel ansisop
-	inicializar_panel(KERNEL, "/home/utnso/git/tp-2014-2c-los-metatecla/Kernel");
-
-	// 2- Crear/Abrir file log del programa para el registro de actividades
-	logger = log_create("kernel.log", "KERNEL", false, LOG_LEVEL_TRACE);
-	log_info(logger,"Inicio de registro de actividades del Proceso KERNEL.");
+	logger = malloc(sizeof(t_log));
+	inicializar_panel(KERNEL, "/home/utnso/tp-2014-2c-los-metatecla/");
 
 	// 3- Leer archivo de configuracion y asignar valores
 	leer_config();
@@ -90,7 +87,9 @@ int main(int argc, char **argv){
 void leer_config()
 {
 	config_file = config_create("config.cfg");
+	pthread_mutex_lock(&mutex_log);
     log_info(logger,"Parseo y Extraccion de valores de archivo de configuracion");
+    pthread_mutex_unlock(&mutex_log);
 
 	if (config_keys_amount(config_file) != MAX_COUNT_OF_CONFIG_KEYS)
 	{
@@ -438,7 +437,11 @@ void handler_nuevas_conexiones(int socket_escucha, int* maxfd){
 
 	switch(((t_struct_numero *)structRecibido)->numero){
 	case ES_CONSOLA:
+		pthread_mutex_lock(&mutex_consolas_conectadas);
+		pthread_mutex_lock(&mutex_log);
 		conexion_consola(socket_atendido);
+		pthread_mutex_lock(&mutex_log);
+		pthread_mutex_lock(&mutex_consolas_conectadas);
 
 		// Si es una consola
 		//pthread_mutex_lock(&mutex_master_consolas);
@@ -449,7 +452,11 @@ void handler_nuevas_conexiones(int socket_escucha, int* maxfd){
 		break;
 
 	case ES_CPU:
+		pthread_mutex_lock(&mutex_consolas_conectadas);
+		pthread_mutex_lock(&mutex_log);
 		conexion_cpu(socket_atendido);
+		pthread_mutex_lock(&mutex_log);
+		pthread_mutex_lock(&mutex_consolas_conectadas);
 
 		// Si es una cpu
 		//pthread_mutex_lock(&mutex_master_cpus);

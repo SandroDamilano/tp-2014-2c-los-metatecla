@@ -9,7 +9,7 @@
  */
 
 #include "MSP.h"
-#include <ansisop-panel/panel.h>
+#include <panel/panel.h>
 
 pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_consola = PTHREAD_MUTEX_INITIALIZER;

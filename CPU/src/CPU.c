@@ -24,6 +24,8 @@ t_tipoEstructura tipo_struct;
 void* datos_recibidos;
 int resultado;
 
+int sockKernel;
+int sockMSP;
 
 int main(int argc, char** argv) {
 
@@ -33,7 +35,7 @@ int main(int argc, char** argv) {
 	tcb = malloc(sizeof(t_hilo));
 
 	//Abrir conexion de sockets con Kernel y MSP.
-	int sockKernel = socket_crearYConectarCliente(config_struct_cpu.ip_kernel, config_struct_cpu.puerto_kernel);
+	sockKernel = socket_crearYConectarCliente(config_struct_cpu.ip_kernel, config_struct_cpu.puerto_kernel);
 
 	if(sockKernel == -1){
 			printf("No se pudo conectar a Kernel\n");
@@ -46,7 +48,7 @@ int main(int argc, char** argv) {
 		}
 
 
-	int sockMSP = socket_crearYConectarCliente(config_struct_cpu.ip_msp, config_struct_cpu.puerto_msp);
+	sockMSP = socket_crearYConectarCliente(config_struct_cpu.ip_msp, config_struct_cpu.puerto_msp);
 
 	if(sockMSP == -1){
 		printf("No se pudo conectar a MSP\n");

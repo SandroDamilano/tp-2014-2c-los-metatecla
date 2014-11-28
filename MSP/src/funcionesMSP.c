@@ -13,7 +13,8 @@ char* alg_sustitucion;
 
 /*********************************** INICIO *******************************************************************/
 void crear_logger(){
-	if ((logger = log_create("logger.log", "MSP", false, LOG_LEVEL_TRACE)) == NULL) {
+	logger = malloc(sizeof(t_log));
+	if ((logger = log_create("/home/utnso/tp-2014-2c-los-metatecla/MSP.log", "MSP", false, LOG_LEVEL_TRACE)) == NULL) {
 		printf("No se pudo crear el logger. Proceso abortado.\n");
 		exit(1);
 	}

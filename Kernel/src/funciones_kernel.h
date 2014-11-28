@@ -11,7 +11,7 @@
 	#include <commons/collections/queue.h>
 	#include <pthread.h>
 	#include <semaphore.h>
-	#include <ansisop-panel/kernel.h>
+	#include <panel/kernel.h>
 	#include <stdlib.h>
 	#include <sockets/enviar_recibir_paquete.h>
 
@@ -27,7 +27,11 @@
 	extern pthread_mutex_t mutex_exec;
 	extern pthread_mutex_t mutex_TIDs;
 	extern pthread_mutex_t mutex_PIDs;
+
 	extern pthread_mutex_t mutex_log;
+	extern pthread_mutex_t mutex_cpus_conectadas;
+	extern pthread_mutex_t mutex_consolas_conectadas;
+
 	//TODO Inicializar cantidad de PIDs y TIDs
 	extern int cantidad_de_PIDs;
 	extern int cantidad_de_TIDs;

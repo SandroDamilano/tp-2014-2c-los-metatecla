@@ -8,8 +8,8 @@
 #include "operaciones.h"
 #include <estructuras_auxiliares.h>
 
-int sockMSP = 4; //HARDCODEADO
-int sockKernel = 3;
+int sockMSP;
+int sockKernel;
 
 void ejecutarLinea(int* bytecode){
 
