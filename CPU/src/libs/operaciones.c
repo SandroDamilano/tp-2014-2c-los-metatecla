@@ -723,6 +723,8 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
 		controlar_envio(resultado, D_STRUCT_NUMERO);
 
+		printf("PEDI TCB (INTE)\n");
+
 		resultado = socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 		controlar_struct_recibido(tipo_struct, D_STRUCT_TCB);
 
@@ -806,9 +808,20 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("PUSH",parametros);
 
 		int32_t auxiliar_copiar;
-		printf("ME LLEGO NUM %d\n", numero);
-		printf("EN %c TENGO %d\n", reg1,registros_cpu.registros_programacion[elegirRegistro(reg1)]);
-		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)]+4-numero,numero);
+
+		/***********************************************************/
+		//FIXME EL ARREGLO MAS TURBIO DE TODA MI PUTA VIDA. No anda sin esto
+		char* A = malloc(4);
+		char* aux = malloc(numero);
+		int a;
+		int b = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+		memcpy(&a, &b, 1);
+		/***********************************************************/
+
+		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
+
+		free(aux);
+		free(A);
 
 		//socket a MSP enviando auxiliar_copiar con la direccion del cursor de stack
 
