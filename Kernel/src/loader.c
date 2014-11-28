@@ -61,9 +61,9 @@ void handler_consola(int sock_consola){
 		//Cierro el socket y lo saco del FD maestro
 		desconexion_consola(sock_consola);
 		close(sock_consola);
-		pthread_mutex_lock(&mutex_master_consolas);
+		//pthread_mutex_lock(&mutex_master_consolas);
 		FD_CLR(sock_consola, &master_consolas);
-		pthread_mutex_unlock(&mutex_master_consolas);
+		//pthread_mutex_unlock(&mutex_master_consolas);
 	}else{
 
 	switch(tipoRecibido){

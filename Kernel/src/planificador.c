@@ -20,15 +20,15 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 
 	boot(parametros->syscalls_path);
 
-	while(1){
+	//while(1){
 	/*
 	 * 1 - Mandar a ejecutar TCBs a CPUs que lo hayan requerido
 	 * 2 - Atender nuevas solicitudes de CPUs
 	 */
 		//atender_solicitudes_pendientes();
-		atender_cpus();
+	//	atender_cpus();
 
-	}
+	//}
 
 	pthread_join(thr_consumidor_new, NULL);
 	pthread_join(thr_parca, NULL);
@@ -905,9 +905,9 @@ void handler_cpu(int sockCPU){
 		eliminar_solicitud(sockCPU);
 		desconexion_cpu(sockCPU);
 		close(sockCPU);
-		pthread_mutex_lock(&mutex_master_cpus);
+		//pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);
-		pthread_mutex_unlock(&mutex_master_cpus);
+		//pthread_mutex_unlock(&mutex_master_cpus);
 	}else{
 
 	//TODO: PONER LOGS!
@@ -917,6 +917,8 @@ void handler_cpu(int sockCPU){
 		direccion_syscall = ((t_struct_direccion*) structRecibido)->numero;
 		//otro socket para el tcb
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
+
+		printf("Estoy en INTE y ya me llegó el tcb\n");
 
 		if(tipoRecibido2 == D_STRUCT_TCB){
 			copiar_structRecibido_a_tcb(tcb, structRecibido2);

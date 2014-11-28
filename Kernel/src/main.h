@@ -64,5 +64,7 @@
 	void conectar_a_MSP(char *ip, uint32_t puerto);
 	void handshake_thread();
 	void inicializar_multiplex();
+	void handler_nuevas_conexiones(int socket_escucha, int* maxfd);
+	fd_set combinar_master_fd(fd_set* master1, fd_set* master2, int maxfd);
 
 #endif /* MAIN_H_ */

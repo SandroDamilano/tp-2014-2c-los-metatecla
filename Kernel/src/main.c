@@ -63,13 +63,13 @@ int main(int argc, char **argv){
 	}
 
 		//6.2- Levantar Hilo LOADER
-	if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
+	/*if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
 	{
 		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d\n", ret_LOADER);
 		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d", ret_LOADER);
 		log_error(logger, bufferLog);
 		exit(EXIT_FAILURE);
-	}
+	}*/
 
 		//6.3- Levantar Hilo PLANIFICADOR
 	if((ret_PLANIFICADOR = pthread_create(&thread_PLANIFICADOR, NULL, (void*)&main_PLANIFICADOR, &param_PLANIFICADOR)))
@@ -310,6 +310,7 @@ void inicializar_multiplex(){
 	FD_ZERO(&master_consolas);
 }
 
+/*
 void handshake_thread(){
 	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
 
@@ -341,8 +342,6 @@ void handshake_thread(){
 				consolas_fdmax = socket_atendido;
 			}
 
-			//handler_consola(socket_atendido);
-
 			printf("salgo de atencion consola\n");
 			break;
 
@@ -363,11 +362,110 @@ void handshake_thread(){
 				cpus_fdmax = socket_atendido;
 			}
 
-			//handler_cpu(socket_atendido);
-
 			break;
 
 		}
+	}
+
+}
+*/
+
+fd_set combinar_master_fd(fd_set* master1, fd_set* master2, int maxfd){
+	fd_set combinado;
+	FD_ZERO(&combinado);
+	int i;
+
+	for(i=0; i <= maxfd; i++){
+		if(FD_ISSET(i, master1) || FD_ISSET(i, master2)){
+			FD_SET(i, &combinado);
+		}
+	}
+
+	return combinado;
+}
+
+void handshake_thread(){
+	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
+	fd_set read_fd;
+	int maxfd = socket_escucha;
+	int i;
+
+		while(1){
+			read_fd = combinar_master_fd(&master_cpus, &master_consolas, maxfd);
+			FD_SET(socket_escucha, &read_fd);
+
+			if (select(maxfd+1, &read_fd, NULL, NULL, NULL) == -1) {
+				perror("select");
+				exit(1);
+			}
+			printf("No me quedé bloqueado en el select!\n");
+
+			for(i=0; i<=maxfd; i++){
+				//Verifico si es un socket
+				if(FD_ISSET(i, &read_fd)){
+					//Verifico si el socket es de una CPU
+					if(FD_ISSET(i, &master_cpus)){
+						printf("Procedo a atender a la CPU: %d\n", i);
+						handler_cpu(i);
+					}
+					//Verifico si el socket es de una Consola
+					if(FD_ISSET(i, &master_consolas)){
+						printf("Procedo a atender a la Consola %d\n", i);
+						handler_consola(i);
+					}
+					//Verifico si es el socket que escucha nuevas conexiones
+					if(i==socket_escucha){
+						handler_nuevas_conexiones(i, &maxfd);
+					}
+				}
+			}//Fin for
+		}//Fin while
+}
+
+void handler_nuevas_conexiones(int socket_escucha, int* maxfd){
+
+	int socket_atendido = socket_aceptarCliente(socket_escucha);
+
+	void * structRecibido;
+	t_tipoEstructura tipoStruct;
+	int resultado = socket_recibir(socket_atendido, &tipoStruct, &structRecibido);
+	if(resultado == -1 || tipoStruct != D_STRUCT_NUMERO){
+		printf("No se recibio correctamente a quien atiendo en el kernel\n");
+		printf("d struct %d, rdo %d\n", tipoStruct, resultado);
+	}
+
+	t_struct_numero* paquete_quantum;
+
+	switch(((t_struct_numero *)structRecibido)->numero){
+	case ES_CONSOLA:
+		conexion_consola(socket_atendido);
+
+		// Si es una consola
+		//pthread_mutex_lock(&mutex_master_consolas);
+		FD_SET(socket_atendido, &master_consolas);
+		//pthread_mutex_unlock(&mutex_master_consolas);
+
+		printf("salgo de atencion consola\n");
+		break;
+
+	case ES_CPU:
+		conexion_cpu(socket_atendido);
+
+		// Si es una cpu
+		//pthread_mutex_lock(&mutex_master_cpus);
+		FD_SET(socket_atendido, &master_cpus);
+		//pthread_mutex_unlock(&mutex_master_cpus);
+
+		paquete_quantum = malloc(sizeof(t_struct_numero));
+		paquete_quantum->numero = quantum;
+		socket_enviar(socket_atendido, D_STRUCT_NUMERO, paquete_quantum);
+		free(paquete_quantum);
+
+		break;
+	}
+
+	if (socket_atendido>*maxfd){
+		*maxfd = socket_atendido;
 	}
 
 }
