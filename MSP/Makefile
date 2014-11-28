@@ -20,6 +20,11 @@ MSP.o: ./src/MSP.c ./src/funcionesMSP.c
 funcionesMSP.o: ./src/funcionesMSP.c  ../MiniGral_lib/sockets/enviar_recibir_paquete.c
 	gcc -c -I $(MINI) -I $(ANSI) ./src/funcionesMSP.c ../MiniGral_lib/sockets/enviar_recibir_paquete.c 
 
+#Correr MSP
+#Hay que correrlo con valgrind en la prueba ??
+run: 
+	./MSP ./config.cfg
+
 #Clean
 clean: 
 	rm MSP $(OBJS)
