@@ -620,6 +620,11 @@ void boot(char* systcalls_path){
 /*************************** SYSCALLS *******************************************/
 
 void copiar_tcb(t_hilo* original, t_hilo* copia){
+	t_list* lista_hilos= list_create();
+	list_add(lista_hilos, original);
+	list_add(lista_hilos, copia);
+	hilos(lista_hilos);
+
 	printf("Original: %d Copia: %d\n", original->tid, copia->tid);
 	copia->tid = original->tid;
 	copia->pid = original->pid;
@@ -630,8 +635,52 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 	}
 };
 
+char* nombre_syscall(uint32_t dir_systcall){
+	switch(dir_systcall){
+	case 0:
+		return "MALC";
+		break;
+	case 28:
+		return "FREE";
+		break;
+	case 48:
+		return "INNN";
+		break;
+	case 64:
+		return "INNC";
+		break;
+	case 76:
+		return "OUTN";
+		break;
+	case 108:
+		return "OUTC";
+		break;
+	case 132:
+		return "CREA";
+		break;
+	case 164:
+		return "JOIN";
+		break;
+	case 176:
+		return "BLOK";
+		break;
+	case 244:
+		return "WAKE";
+		break;
+	case 312:
+		return "SETSEM";
+		break;
+	default:
+		return "No se encontro la instruccion protegida";
+
+	}
+}
+
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	printf("Procedo a atender la systcall del TCB de tid: %d\n", tcb->tid);
+
+	instruccion_protegida(nombre_syscall(dir_systcall), tcb);
+
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
 	bloquear_tcbSystcall(tcb, dir_systcall);
 //	printf("está atendiendo al tid: %d\n", tcb->tid);
@@ -865,6 +914,7 @@ void handler_cpu(int sockCPU){
 			}
 		}
 		eliminar_solicitud(sockCPU);
+		desconexion_cpu(sockCPU);
 		close(sockCPU);
 		pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);

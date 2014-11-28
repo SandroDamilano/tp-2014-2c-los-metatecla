@@ -330,7 +330,8 @@ void handshake_thread(){
 		switch(((t_struct_numero *)structRecibido)->numero){
 
 		case ES_CONSOLA:
-			printf("Me llego una consola\n");
+			conexion_consola(socket_atendido);
+
 			// Si es una consola
 			pthread_mutex_lock(&mutex_master_consolas);
 			FD_SET(socket_atendido, &master_consolas);
@@ -346,7 +347,8 @@ void handshake_thread(){
 			break;
 
 		case ES_CPU:
-			printf("Me llego una CPU\n");
+			conexion_cpu(socket_atendido);
+
 			// Si es una cpu
 			pthread_mutex_lock(&mutex_master_cpus);
 			FD_SET(socket_atendido, &master_cpus);
