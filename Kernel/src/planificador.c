@@ -623,7 +623,12 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 	t_list* lista_hilos= list_create();
 	list_add(lista_hilos, original);
 	list_add(lista_hilos, copia);
+
+	pthread_mutex_lock(&mutex_log);
 	hilos(lista_hilos);
+	pthread_mutex_unlock(&mutex_log);
+
+	list_destroy(lista_hilos);
 
 	copia->tid = original->tid;
 	copia->pid = original->pid;
@@ -677,7 +682,9 @@ char* nombre_syscall(uint32_t dir_systcall){
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	printf("Procedo a atender la systcall del TCB de tid: %d\n", tcb->tid);
 
+	pthread_mutex_lock(&mutex_log);
 	instruccion_protegida(nombre_syscall(dir_systcall), tcb);
+	pthread_mutex_unlock(&mutex_log);
 
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
 	bloquear_tcbSystcall(tcb, dir_systcall);
@@ -903,7 +910,12 @@ void handler_cpu(int sockCPU){
 			}
 		}
 		eliminar_solicitud(sockCPU);
+		pthread_mutex_lock(&mutex_cpus_conectadas);
+		pthread_mutex_lock(&mutex_log);
 		desconexion_cpu(sockCPU);
+		pthread_mutex_unlock(&mutex_log);
+		pthread_mutex_unlock(&mutex_cpus_conectadas);
+
 		close(sockCPU);
 		//pthread_mutex_lock(&mutex_master_cpus);
 		FD_CLR(sockCPU, &master_cpus);

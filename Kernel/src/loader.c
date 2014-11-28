@@ -59,7 +59,11 @@ void handler_consola(int sock_consola){
 		eliminar_consola(sock_consola);
 
 		//Cierro el socket y lo saco del FD maestro
+		pthread_mutex_lock(&mutex_consolas_conectadas);
+		pthread_mutex_lock(&mutex_log);
 		desconexion_consola(sock_consola);
+		pthread_mutex_unlock(&mutex_log);
+		pthread_mutex_unlock(&mutex_consolas_conectadas);
 		close(sock_consola);
 		//pthread_mutex_lock(&mutex_master_consolas);
 		FD_CLR(sock_consola, &master_consolas);

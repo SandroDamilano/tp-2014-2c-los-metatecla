@@ -210,68 +210,6 @@ int crear_cliente_MSP(char* ip, uint32_t puerto){
 	free(es_kernel);
 	return socket_MSP;
 }
-/*
-int crear_cliente_MSP(const char *ip, const char* puerto)
-{
-	printf("[Kernel]: Probando de conectar a MSP por host [%s] y port [%d]\n", ip, puerto);
-
-	memset(&hints_clt, 0, sizeof hints_clt);
-	hints_clt.ai_family = AF_INET;
-	hints_clt.ai_socktype = SOCK_STREAM;
-
-	if ((rv_clt = getaddrinfo(ip, puerto, &hints_clt, &servinfo_clt)) != 0)	{
-		fprintf(stderr, "[Kernel]: Error on 'getaddrinfo_cliente' -> %s\n", gai_strerror(rv_clt));
-		return 1;
-	}
-
-	for(p_clt = servinfo_clt; p_clt != NULL; p_clt = p_clt->ai_next)
-	{
-		if ((sockfd_cte = socket(p_clt->ai_family, p_clt->ai_socktype, p_clt->ai_protocol)) == -1)	{
-			perror("[Kernel]: Error on 'socket()' function");
-			continue;
-		}
-		if (connect(sockfd_cte, p_clt->ai_addr, p_clt->ai_addrlen) == -1)	{
-			close(sockfd_cte);
-			perror("[Kernel]: Error on 'connect()' function");
-			continue;
-		}
-		break;
-	}
-
-	if (p_clt == NULL)	{
-		fprintf(stderr, "[Kernel]: Falla en la conexion a la MSP\n");
-		return 2;
-	}
-	inet_ntop(p_clt->ai_family, get_in_addr((struct sockaddr *)p_clt->ai_addr), s_clt, sizeof s_clt);
-	freeaddrinfo(servinfo_clt); // all done with this structure
-
-	return 0;
-}
-*/
-
-int analizar_paquete(u_int32_t socket, char *paquete, t_tipoEstructura *op)
-{
-	int res; // Resultado de cada handler
-
-	socket_recibir(socket, op, (void*)paquete);
-
-	switch(*op) {
-		case HANDSHAKE_MSP_SUCCESS: case HANDSHAKE_MSP_FAIL:
-			log_trace(logger, "Respuesta Handshake, recibida.");
-			res = print_package_to_output(paquete);
-			break;
-		default:
-			return -1;
-			break;
-	}
-
-	// Se libera el mensaje  cuando ya no lo necesitamos
-	if (paquete != NULL) {
-		free (paquete);
-		paquete = NULL;
-	}
-	return res;
-}
 
 void conectar_a_MSP(char *ip, uint32_t puerto)
 {
@@ -286,15 +224,6 @@ void conectar_a_MSP(char *ip, uint32_t puerto)
 		perror("[Kernel]: No se puede conectar a la MSP. Abortando.");
 		exit(1);
 	}
-
-	/*analizar_paquete(sockfd_cte, bufferMSP, &operacion); //Espera respuesta Handshake
-
-	if(operacion == HANDSHAKE_MSP_FAIL)	{
-		perror("[Kernel]: Handshake con MSP, sin exito!");
-		log_error(logger, "Handshake con MSP, sin exito!");
-		close(sockfd_cte);
-		exit(1);
-	}*/
 
 	printf("[Kernel]: Conexion a MSP establecida.\n");
 	log_info(logger, "Conexion a MSP establecida.");
@@ -440,8 +369,8 @@ void handler_nuevas_conexiones(int socket_escucha, int* maxfd){
 		pthread_mutex_lock(&mutex_consolas_conectadas);
 		pthread_mutex_lock(&mutex_log);
 		conexion_consola(socket_atendido);
-		pthread_mutex_lock(&mutex_log);
-		pthread_mutex_lock(&mutex_consolas_conectadas);
+		pthread_mutex_unlock(&mutex_log);
+		pthread_mutex_unlock(&mutex_consolas_conectadas);
 
 		// Si es una consola
 		//pthread_mutex_lock(&mutex_master_consolas);
@@ -455,8 +384,8 @@ void handler_nuevas_conexiones(int socket_escucha, int* maxfd){
 		pthread_mutex_lock(&mutex_consolas_conectadas);
 		pthread_mutex_lock(&mutex_log);
 		conexion_cpu(socket_atendido);
-		pthread_mutex_lock(&mutex_log);
-		pthread_mutex_lock(&mutex_consolas_conectadas);
+		pthread_mutex_unlock(&mutex_log);
+		pthread_mutex_unlock(&mutex_consolas_conectadas);
 
 		// Si es una cpu
 		//pthread_mutex_lock(&mutex_master_cpus);
