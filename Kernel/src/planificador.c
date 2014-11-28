@@ -77,7 +77,6 @@ void atender_cpus(){
 	for(i=0; i<=cpus_fdmax; i++){
 		if(FD_ISSET(i, &read_cpus)){
 			printf("Procedo a atender a la CPU: %d\n", i);
-			list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 			handler_cpu(i);
 		}
 	}
@@ -332,7 +331,7 @@ t_hilo* obtener_tcb_de_cpu(int sock_cpu){
 	if (data!=NULL){
 		tcb = data->tcb;
 	}else{
-		printf("ERROR: No fue encontrado el CPU\n");
+		//printf("ERROR: No fue encontrado el CPU\n");
 		tcb = NULL;
 	};
 	free(data);
@@ -354,6 +353,7 @@ uint32_t obtener_pid_de_cpu(int sock_cpu){
 	if (data!=NULL){
 		pid = data->tcb->pid;
 	}else{
+		//Esto no debería ocurrir nunca (si lo hiciera, qué pid devuelvo?)
 		printf("ERROR: No fue encontrado el CPU\n");
 	};
 	return pid;
@@ -625,12 +625,10 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 	list_add(lista_hilos, copia);
 	hilos(lista_hilos);
 
-	printf("Original: %d Copia: %d\n", original->tid, copia->tid);
 	copia->tid = original->tid;
 	copia->pid = original->pid;
 	int i;
 	for(i=0; i<=4; i++){
-		printf("I: %d\n", i);
 		copia->registros[i] = original->registros[i];
 	}
 };
@@ -683,7 +681,6 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
 	bloquear_tcbSystcall(tcb, dir_systcall);
-//	printf("está atendiendo al tid: %d\n", tcb->tid);
 	if (tcb_kernel != NULL){
 		printf("Desbloqueé el TCB de kernel y lo mando a ready, tenía el tid: %d\n", tcb_kernel->tid);
 		copiar_tcb(tcb, tcb_kernel);
@@ -693,16 +690,15 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 		//tcb_kernel->pid = 0; //Pid de kernel
 		encolar_en_ready(tcb_kernel);
 	}
-	//TODO Avisarle a la cpu que pida otro proceso para ejecutar
+	// Avisarle a la cpu que pida otro proceso para ejecutar? No. Lo hace sola.
 };
 
 bool esta_por_systcall(t_data_nodo_block* data){
 	return (data->evento == SYSTCALL);
 }
 
-void atender_otra_systcall_si_hay(){//t_hilo* tcb_kernel){
-	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall();//tcb_kernel);
-
+void atender_otra_systcall_si_hay(){
+	t_data_nodo_block* data_otro_tcb = desbloquear_alguno_por_systcall();
 	if (data_otro_tcb != NULL){
 		atender_systcall(data_otro_tcb->tcb, data_otro_tcb->parametro);
 	};
@@ -840,19 +836,14 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	t_hilo* tcb = malloc(sizeof(t_hilo));
 	uint32_t pid;
 
-	printf("ESTOY EN HANDLER NÚMEROS\n");
-		list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
-
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
-		printf("Estoy en INNN\n");
 		//pido numero por consola
 		pid = obtener_pid_de_cpu(sockCPU);
 		int socket_consola = obtener_socket_consola(pid);
 		t_struct_numero* innn = malloc(sizeof(t_struct_numero));
 		innn->numero = D_STRUCT_INNN;
 		socket_enviar(socket_consola, D_STRUCT_NUMERO, innn);
-		printf("MANDE INNN A CONSOLA\n");
 
 		break;
 	case D_STRUCT_ABORT:
@@ -880,7 +871,6 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 }
 
 void handler_cpu(int sockCPU){
-	printf("ESTOY EN HANDLER CPU\n");
 	t_hilo* tcb = malloc(sizeof(t_hilo));
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
@@ -904,7 +894,6 @@ void handler_cpu(int sockCPU){
 
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//La CPU cerró la conexión
-		printf("Se perdió la comunicación con la CPU: %d\n", sockCPU);
 		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
 		if (tcb!=NULL){
 			if (tcb->kernel_mode == 0){
@@ -924,7 +913,6 @@ void handler_cpu(int sockCPU){
 	//TODO: PONER LOGS!
 	switch(tipoRecibido){
 	case D_STRUCT_INTE:
-		//tcb = malloc(sizeof(t_hilo));
 		//Recibo la direccion
 		direccion_syscall = ((t_struct_direccion*) structRecibido)->numero;
 		//otro socket para el tcb
@@ -943,8 +931,6 @@ void handler_cpu(int sockCPU){
 		break;
 	case D_STRUCT_NUMERO:
 
-		printf("ESTOY EN D_STRUCT_NUMERO\n");
-		list_iterate(solicitudes_tcb, (void*)mostrar_solicitud_cpu);
 		numero_cpu = ((t_struct_numero*) structRecibido)->numero;
 		handler_numeros_cpu(numero_cpu, sockCPU);
 		break;
@@ -957,7 +943,7 @@ void handler_cpu(int sockCPU){
 		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 
 		break;
-	case D_STRUCT_TCB_CREA://TODO: Validar con la CPU
+	case D_STRUCT_TCB_CREA:
 
 		//copiar_structRecibido_a_tcb(tcb, structRecibido);
 		tid_padre = ((t_struct_numero*) structRecibido)->numero;
@@ -1001,7 +987,7 @@ void handler_cpu(int sockCPU){
 			encolar_en_ready(tcb);
 		}
 		break;
-	case D_STRUCT_BLOCK: //TODO: ARREGLAR (recibir un TID)
+	case D_STRUCT_BLOCK:
 
 		//Recibo id semaforo
 		id_semaforo = ((t_struct_numero*) structRecibido)->numero;
@@ -1054,7 +1040,6 @@ void handler_cpu(int sockCPU){
 		break;
 
 	case D_STRUCT_OUTN:
-		//numero_consola = ((t_struct_numero*) structRecibido)->numero;
 		//Mandar ese numero a consola para ser mostrado
 		pid = obtener_pid_de_cpu(sockCPU);
 		socket_consola = obtener_socket_consola(pid);
@@ -1062,7 +1047,6 @@ void handler_cpu(int sockCPU){
 		break;
 
 	case D_STRUCT_OUTC:
-		//cadena_consola = ((t_struct_string*) structRecibido)->string;
 		//Mandar esa cadena a consola para ser mostrada
 		pid = obtener_pid_de_cpu(sockCPU);
 		socket_consola = obtener_socket_consola(pid);

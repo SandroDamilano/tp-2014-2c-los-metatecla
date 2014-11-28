@@ -15,7 +15,7 @@ void* main_LOADER(void* parametros) {
 	while(1){
 		int i;
 		fd_set read_consolas;
-		//FD_ZERO(&read_consolas);
+		FD_ZERO(&read_consolas);
 
 		struct timeval tv;
 		tv.tv_sec = 0;
@@ -26,12 +26,10 @@ void* main_LOADER(void* parametros) {
 		pthread_mutex_unlock(&mutex_master_consolas);
 
 		if (select(consolas_fdmax+1, &read_consolas, NULL, NULL, &tv) == -1) {
-			printf("lpm\n");
 			perror("select");
 			exit(1);
 		}
 		for(i=0; i<=consolas_fdmax; i++){
-			//printf("Manga de gatos\n");
 			if(FD_ISSET(i, &read_consolas)){
 				printf("Procedo a atender a la Consola %d\n", i);
 				handler_consola(i);
@@ -45,9 +43,9 @@ void* main_LOADER(void* parametros) {
 void handler_consola(int sock_consola){
 
 	char* codigo;
-	char* texto;
+	//char* texto;
 	int tamanio;
-	int numero;
+	//int numero;
 	int sockCPU;
 
 	t_tipoEstructura tipoRecibido;
@@ -55,7 +53,6 @@ void handler_consola(int sock_consola){
 
 	if(socket_recibir(sock_consola, &tipoRecibido, &structRecibido)==-1){
 		//La Consola cerró la conexión
-		printf("Se perdió la comunicación con la Consola: %d\n", sock_consola);
 
 		//TODO: Averiguar qué hacer con el proceso que se estaba ejecutando
 		//Saco el nodo correspondiente de la estructura que relaciona el socket de la consola con el proceso
@@ -67,7 +64,7 @@ void handler_consola(int sock_consola){
 		pthread_mutex_lock(&mutex_master_consolas);
 		FD_CLR(sock_consola, &master_consolas);
 		pthread_mutex_unlock(&mutex_master_consolas);
-	}
+	}else{
 
 	switch(tipoRecibido){
 	case FILE_RECV_SUCCESS: //Habria que serializar como el struct de abajo. Por ahora queda asi porque me da paja
@@ -91,10 +88,6 @@ void handler_consola(int sock_consola){
 		//Recibo un imput de una cadena de texto
 
 		//Así como viene, se lo mando a la CPU
-		//tamanio = strlen(((t_struct_string*)structRecibido)->string);
-		//texto = malloc(tamanio);
-		//memcpy(texto, ((t_struct_string*)structRecibido)->string, tamanio);
-		//TODO
 		printf("Me llego una cadena\n");
 		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
 		socket_enviar(sockCPU, tipoRecibido, structRecibido);
@@ -106,8 +99,6 @@ void handler_consola(int sock_consola){
 		//Recibo un imput de un número
 
 		//Así como viene, se lo mando a la CPU
-		//numero = ((t_struct_numero*)structRecibido)->numero;
-		//TODO
 		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
 		socket_enviar(sockCPU, tipoRecibido, structRecibido);
 
@@ -115,6 +106,7 @@ void handler_consola(int sock_consola){
 	}
 
 	free(structRecibido);
+	}
 
 }
 
