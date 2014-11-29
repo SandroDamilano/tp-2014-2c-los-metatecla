@@ -103,13 +103,16 @@ void ejecutarLinea(int* bytecode){
 
 		if(reg2 == 'S'){ //HORRIBLE
 			numero_enviar = registros_cpu.S;
+			datos_solicitados->base = sumar_desplazamiento(registros_cpu.X,numero_enviar);
 			//printf("Numero a enviar %d (llego S))\n", numero_enviar);
 		} else {
 			numero_enviar = registros_cpu.registros_programacion[elegirRegistro(reg2)];
+			datos_solicitados->base = numero_enviar;
 			//printf("Numero a enviar %d (no es S)\n", numero_enviar);
 		}
 
-		datos_solicitados->base = sumar_desplazamiento(registros_cpu.X,numero_enviar);
+		printf("EN GETM, NUMERO ENVIAR: %d\n", numero_enviar);
+
 		datos_solicitados->PID = registros_cpu.I;
 		datos_solicitados->tamanio = 1; //FIXME MEDIO TURBIO PERO ANDA
 
@@ -119,7 +122,7 @@ void ejecutarLinea(int* bytecode){
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
 
-		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
+		datos_recibidos = malloc(sizeof(int32_t)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 		//printf("Me llego de memoria %s\n",datos_recibidos);
 
@@ -170,19 +173,29 @@ void ejecutarLinea(int* bytecode){
 
 		//HORRIBLEEEE
 		int dir;
+		void* auxxx = malloc(numero);
 
-		if(reg1 == 'S'){
-			memcpy(&numero_enviar, &registros_cpu.S, numero);
-			dir = sumar_desplazamiento(datos_enviados->base = registros_cpu.X, registros_cpu.S);
+		if(reg2 == 'S'){
+			printf("S TIENE %d\n", registros_cpu.S);
+			memcpy(auxxx, &registros_cpu.S, numero);
+
+
+			dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+
 		} else {
-			memcpy(&numero_enviar, &registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
-			dir = sumar_desplazamiento(datos_enviados->base = registros_cpu.X, registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+			printf("REG TIENE %d\n", registros_cpu.registros_programacion[elegirRegistro(reg2)]);
+			memcpy(auxxx, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+			dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
 		} //TURBIO :S
 
+		printf("NUMERO ENVIAR SETM: %d\n", *((int*)auxxx));
+
 		datos_enviados->PID = registros_cpu.I;
-		datos_enviados->buffer = &numero_enviar;
+		datos_enviados->buffer = auxxx;
 		datos_enviados->tamanio = sizeof(int32_t);
 		datos_enviados->base = dir;
+
+		printf("DIR DE SETM: %d\n", dir);
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
@@ -191,6 +204,8 @@ void ejecutarLinea(int* bytecode){
 		//TODO validar
 
 		incrementar_pc(sizeof(int32_t) + 2*sizeof(char));
+
+		free(auxxx);
 
 		list_clean(parametros);
 		break;
@@ -517,8 +532,10 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("COMP",parametros);
 
 		if(reg1 == 'S' && reg2 == 'X'){ //HORRIBLE ESTO
+			printf("REG1 = %d y REG2 = %d\n", sumar_desplazamiento(registros_cpu.X, registros_cpu.S), registros_cpu.X);
 			registros_cpu.registros_programacion[0] = (sumar_desplazamiento(registros_cpu.X, registros_cpu.S) == registros_cpu.X ? 1 : 0);
 		} else {
+			printf("REG1 = %d y REG2 = %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)], registros_cpu.registros_programacion[elegirRegistro(reg2)]);
 			registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
 		}
 
@@ -813,6 +830,8 @@ void ejecutarLinea(int* bytecode){
 
 		int32_t auxiliar_copiar;
 
+		printf("EN PUSH, EL REGISTRO TIENE: %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+
 		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
 
 		//socket a MSP enviando auxiliar_copiar con la direccion del cursor de stack
@@ -822,6 +841,7 @@ void ejecutarLinea(int* bytecode){
 		datos_enviados->base = direccionMSP;
 		datos_enviados->PID = registros_cpu.I;
 		datos_enviados->buffer = &auxiliar_copiar;
+		printf("PUSHEO %d\n", auxiliar_copiar);
 		datos_enviados->tamanio = numero;
 
 		int resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
@@ -856,6 +876,7 @@ void ejecutarLinea(int* bytecode){
 
 		datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
+		//free(datos_recibidos);
 		free(structRecibido);
 
 		obtener_num(datos_recibidos,0,&numero);
@@ -883,11 +904,13 @@ void ejecutarLinea(int* bytecode){
 		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
 		free(datos_recibidos);
 
-		datos_recibidos = malloc(numero);
+		datos_recibidos = malloc(numero); //sizeof(int32_t)); //numero
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
+		//obtener_num(datos_recibidos,0,&numero);
 		int aux;
 		aux = *((int32_t*)datos_recibidos);
+		//memcpy(&aux, datos_recibidos, numero);
 
 		printf("EL TAKE DEVUELVE: %s\n", string_itoa(aux));
 
@@ -915,8 +938,9 @@ void ejecutarLinea(int* bytecode){
 	case MALC:
 		ejecucion_instruccion("MALC",parametros);
 
-		t_struct_numero* crear_segmento_struct = malloc(sizeof(t_struct_numero));
-		crear_segmento_struct->numero = registros_cpu.registros_programacion[0];
+		t_struct_malloc* crear_segmento_struct = malloc(sizeof(t_struct_malloc));
+		crear_segmento_struct->tamano_segmento = registros_cpu.registros_programacion[0];
+		crear_segmento_struct->PID = tcb->pid;
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_MALC, crear_segmento_struct);
 		controlar_envio(resultado, D_STRUCT_MALC);
@@ -932,8 +956,9 @@ void ejecutarLinea(int* bytecode){
 	case FREE:
 		ejecucion_instruccion("FREE",parametros);
 
-		t_struct_numero* liberar_segmento_struct = malloc(sizeof(t_struct_numero));
-		liberar_segmento_struct->numero = registros_cpu.registros_programacion[0];
+		t_struct_free* liberar_segmento_struct = malloc(sizeof(t_struct_free));
+		liberar_segmento_struct->direccion_base = registros_cpu.registros_programacion[0];
+		liberar_segmento_struct->PID = tcb->pid;
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_FREE, liberar_segmento_struct);
 		controlar_envio(resultado, D_STRUCT_FREE);
@@ -1115,7 +1140,7 @@ void ejecutarLinea(int* bytecode){
 		break;
 	}
 
-	//printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
+	printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
 	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
 	//printf("Registro C: %d\n", registros_cpu.registros_programacion[2]);
 	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
