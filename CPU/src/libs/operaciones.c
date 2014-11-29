@@ -37,7 +37,7 @@ void ejecutarLinea(int* bytecode){
 	char param_reg1[2];
 	char param_reg2[2];
 
-	printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
+	//printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -122,18 +122,17 @@ void ejecutarLinea(int* bytecode){
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
 
-		datos_recibidos = malloc(sizeof(int32_t)); //registro + registro
+		datos_recibidos = malloc(1); //Un byte
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 		//printf("Me llego de memoria %s\n",datos_recibidos);
 
 		if(reg1 == 'S'){
-			obtener_direc(datos_recibidos, 0,&registros_cpu.S);
 			//printf("El reg 1 (S) tiene %d\n", registros_cpu.S);
+			registros_cpu.S = *((int*)datos_recibidos);
 		} else {
-			obtener_num(datos_recibidos, 0,&registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 			//printf("El reg 1 tiene %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
+			registros_cpu.registros_programacion[elegirRegistro(reg1)] = *((int*)datos_recibidos);
 		}
-
 
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
@@ -192,7 +191,7 @@ void ejecutarLinea(int* bytecode){
 
 		datos_enviados->PID = registros_cpu.I;
 		datos_enviados->buffer = auxxx;
-		datos_enviados->tamanio = sizeof(int32_t);
+		datos_enviados->tamanio = numero;
 		datos_enviados->base = dir;
 
 		printf("DIR DE SETM: %d\n", dir);
@@ -1141,9 +1140,9 @@ void ejecutarLinea(int* bytecode){
 	}
 
 	printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
-	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
+	printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
 	//printf("Registro C: %d\n", registros_cpu.registros_programacion[2]);
-	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
+	printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
 	//printf("Registro S: %d\n", registros_cpu.S);
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
