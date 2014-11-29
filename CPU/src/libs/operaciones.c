@@ -809,19 +809,7 @@ void ejecutarLinea(int* bytecode){
 
 		int32_t auxiliar_copiar;
 
-		/***********************************************************/
-		//FIXME EL ARREGLO MAS TURBIO DE TODA MI PUTA VIDA. No anda sin esto
-		char* A = malloc(4);
-		char* aux = malloc(numero);
-		int a;
-		int b = registros_cpu.registros_programacion[elegirRegistro(reg1)];
-		memcpy(&a, &b, 1);
-		/***********************************************************/
-
 		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
-
-		free(aux);
-		free(A);
 
 		//socket a MSP enviando auxiliar_copiar con la direccion del cursor de stack
 
@@ -829,8 +817,7 @@ void ejecutarLinea(int* bytecode){
 
 		datos_enviados->base = direccionMSP;
 		datos_enviados->PID = registros_cpu.I;
-		datos_enviados->buffer = &auxiliar_copiar;
-		printf("PUSHEO %d\n", auxiliar_copiar);
+		datos_enviados->buffer = string_itoa(auxiliar_copiar);
 		datos_enviados->tamanio = numero;
 
 		int resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
