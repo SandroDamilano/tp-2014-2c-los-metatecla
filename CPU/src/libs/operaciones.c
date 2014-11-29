@@ -516,7 +516,11 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros,param_reg2);
 		ejecucion_instruccion("COMP",parametros);
 
-		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
+		if(reg1 == 'S' && reg2 == 'X'){ //HORRIBLE ESTO
+			registros_cpu.registros_programacion[0] = (sumar_desplazamiento(registros_cpu.X, registros_cpu.S) == registros_cpu.X ? 1 : 0);
+		} else {
+			registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
+		}
 
 		incrementar_pc(sizeof(char)*2);
 
@@ -817,7 +821,7 @@ void ejecutarLinea(int* bytecode){
 
 		datos_enviados->base = direccionMSP;
 		datos_enviados->PID = registros_cpu.I;
-		datos_enviados->buffer = string_itoa(auxiliar_copiar);
+		datos_enviados->buffer = &auxiliar_copiar;
 		datos_enviados->tamanio = numero;
 
 		int resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
@@ -833,6 +837,8 @@ void ejecutarLinea(int* bytecode){
 		list_clean(parametros);
 		break;
 	case TAKE:
+
+		printf("PC EN TAKE %d\n", registros_cpu.P);
 
 		//Pido el numero y el registro que sirven como parametros de TAKE
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
@@ -850,10 +856,10 @@ void ejecutarLinea(int* bytecode){
 
 		datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
-		free(datos_recibidos);
 		free(structRecibido);
 
 		obtener_num(datos_recibidos,0,&numero);
+		printf("Llego numero %d\n", numero);
 		obtener_reg(datos_recibidos,4,&reg1);
 		param_reg1[0] = reg1;
 		param_reg1[1] = '\0';
@@ -864,6 +870,7 @@ void ejecutarLinea(int* bytecode){
 
 		//Pido lo que hay en el stack del tamanio numero que recibi antes
 		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S - numero);
+		printf("Direccion stack %d \n", direccionMSP);
 
 		datos_solicitados->base = direccionMSP;
 		datos_solicitados->PID = registros_cpu.I;
@@ -874,14 +881,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		free(datos_recibidos);
 
-
-		datos_recibidos = malloc(sizeof(int32_t)); //numero
+		datos_recibidos = malloc(numero);
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		obtener_num(datos_recibidos,0,&numero);
+		int aux;
+		aux = *((int32_t*)datos_recibidos);
 
-		registros_cpu.registros_programacion[elegirRegistro(reg1)] = numero;
+		printf("EL TAKE DEVUELVE: %s\n", string_itoa(aux));
+
+		registros_cpu.registros_programacion[elegirRegistro(reg1)] = aux;
 
 		registros_cpu.S -= numero;
 		incrementar_pc(5);
@@ -912,7 +922,7 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_MALC);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_DIRECCION);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO);
 
 		registros_cpu.registros_programacion[0] = ((t_struct_direccion*) structRecibido)->numero;
 
@@ -947,6 +957,8 @@ void ejecutarLinea(int* bytecode){
 		controlar_struct_recibido(tipo_struct, D_STRUCT_INNN);
 
 		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
+
+		printf("SE INGRESO POR CONSOLA %d\n", registros_cpu.registros_programacion[0]);
 
 		list_clean(parametros);
 		break;
