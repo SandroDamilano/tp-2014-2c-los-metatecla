@@ -9,37 +9,6 @@
 
 uint32_t tamanio_stack;
 
-void* main_LOADER(void* parametros) {
-
-	//Se atienden una a una cada solicitud de las consolas
-	while(1){
-		int i;
-		fd_set read_consolas;
-		FD_ZERO(&read_consolas);
-
-		struct timeval tv;
-		tv.tv_sec = 0;
-		tv.tv_usec = 0;
-
-		pthread_mutex_lock(&mutex_master_consolas);
-		read_consolas = master_consolas;
-		pthread_mutex_unlock(&mutex_master_consolas);
-
-		if (select(consolas_fdmax+1, &read_consolas, NULL, NULL, &tv) == -1) {
-			perror("select");
-			exit(1);
-		}
-		for(i=0; i<=consolas_fdmax; i++){
-			if(FD_ISSET(i, &read_consolas)){
-				printf("Procedo a atender a la Consola %d\n", i);
-				handler_consola(i);
-			}
-		}
-	}
-
-	return 0;
-}
-
 void handler_consola(int sock_consola){
 
 	char* codigo;
@@ -59,15 +28,12 @@ void handler_consola(int sock_consola){
 		eliminar_consola(sock_consola);
 
 		//Cierro el socket y lo saco del FD maestro
-		pthread_mutex_lock(&mutex_consolas_conectadas);
 		pthread_mutex_lock(&mutex_log);
 		desconexion_consola(sock_consola);
 		pthread_mutex_unlock(&mutex_log);
-		pthread_mutex_unlock(&mutex_consolas_conectadas);
+
 		close(sock_consola);
-		//pthread_mutex_lock(&mutex_master_consolas);
 		FD_CLR(sock_consola, &master_consolas);
-		//pthread_mutex_unlock(&mutex_master_consolas);
 	}else{
 
 	switch(tipoRecibido){
@@ -92,10 +58,8 @@ void handler_consola(int sock_consola){
 		//Recibo un imput de una cadena de texto
 
 		//Así como viene, se lo mando a la CPU
-		printf("Me llego una cadena\n");
 		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
 		socket_enviar(sockCPU, tipoRecibido, structRecibido);
-		printf("Mande cadena a CPU %d\n", sockCPU);
 
 		break;
 
@@ -202,8 +166,8 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if (tipoStruct != D_STRUCT_NUMERO) {
-		if(((t_struct_numero*) structRecibido)->numero == 0){
-			printf("Se escribio correctamente en memoria\n");
+		if(((t_struct_numero*) structRecibido)->numero != 0){
+			printf("No se escribio correctamente en memoria\n");
 		}
 	}
 
@@ -211,6 +175,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	t_hilo* tcb = crear_TCB(pid, dir_codigo, dir_stack, tamanio);
 	agregar_consola(pid, tcb->tid, sock_consola);
 	poner_en_new(tcb);
+	estado_del_sistema();
 
 	return 1;
 }

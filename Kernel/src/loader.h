@@ -29,6 +29,7 @@
 	#include <serialize/functions.h>
 	#include "funciones_kernel.h"
 	#include "loader_estructuras.h"
+	#include "planificador.h"
 
 	typedef struct arg_LOADER {	// Estructura para pasar argumentos al hilo
 		uint32_t puerto_kernel;

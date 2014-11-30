@@ -92,6 +92,7 @@ void push_new(t_hilo* tcb){
 };
 
 void poner_en_new(t_hilo* tcb){
+	tcb->cola = NEW;
 	producir_tcb(push_new, &sem_new, &mutex_new, tcb);
 }
 
@@ -134,7 +135,7 @@ t_hilo *crear_TCB(uint32_t pid, uint32_t dir_codigo, uint32_t dir_stack, uint32_
 		tcb->registros[i] = 0;
 	}
 
-	tcb->cola = NEW;
+	//tcb->cola = NEW;
 
 	return tcb;
 }

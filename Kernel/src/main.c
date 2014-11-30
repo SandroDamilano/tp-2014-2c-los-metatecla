@@ -59,15 +59,6 @@ int main(int argc, char **argv){
 		exit(EXIT_FAILURE);
 	}
 
-		//6.2- Levantar Hilo LOADER
-	/*if((ret_LOADER = pthread_create(&thread_LOADER, NULL, (void*)&main_LOADER, &param_LOADER)))
-	{
-		fprintf(stderr, "[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d\n", ret_LOADER);
-		sprintf(bufferLog,"[Kernel]: Error on 'pthread_create()' function - Hilo LOADER: %d", ret_LOADER);
-		log_error(logger, bufferLog);
-		exit(EXIT_FAILURE);
-	}*/
-
 		//6.3- Levantar Hilo PLANIFICADOR
 	if((ret_PLANIFICADOR = pthread_create(&thread_PLANIFICADOR, NULL, (void*)&main_PLANIFICADOR, &param_PLANIFICADOR)))
 	{
@@ -77,7 +68,6 @@ int main(int argc, char **argv){
 		exit(EXIT_FAILURE);
 	}
 
-//	pthread_join(thread_KERNEL, NULL);
 	pthread_join(thread_LOADER, NULL);
 	pthread_join(thread_PLANIFICADOR, NULL);
 
@@ -230,73 +220,14 @@ void conectar_a_MSP(char *ip, uint32_t puerto)
 }
 
 void inicializar_multiplex(){
-	consolas_fdmax = 0;
-	cpus_fdmax = 0;
+	//consolas_fdmax = 0;
+	//cpus_fdmax = 0;
 	pthread_mutex_init(&mutex_master_consolas, NULL);
 	pthread_mutex_init(&mutex_master_cpus, NULL);
 	FD_ZERO(&master_cpus);
 	FD_ZERO(&master_consolas);
 }
 
-/*
-void handshake_thread(){
-	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
-
-	while(1){
-
-		int socket_atendido = socket_aceptarCliente(socket_escucha);
-
-		void * structRecibido;
-		t_tipoEstructura tipoStruct;
-		int resultado = socket_recibir(socket_atendido, &tipoStruct, &structRecibido);
-		if(resultado == -1 || tipoStruct != D_STRUCT_NUMERO){
-			printf("No se recibio correctamente a quien atiendo en el kernel\n");
-			printf("d struct %d, rdo %d\n", tipoStruct, resultado);
-		}
-
-		t_struct_numero* paquete_quantum;
-
-		switch(((t_struct_numero *)structRecibido)->numero){
-
-		case ES_CONSOLA:
-			conexion_consola(socket_atendido);
-
-			// Si es una consola
-			pthread_mutex_lock(&mutex_master_consolas);
-			FD_SET(socket_atendido, &master_consolas);
-			pthread_mutex_unlock(&mutex_master_consolas);
-
-			if (socket_atendido>consolas_fdmax){
-				consolas_fdmax = socket_atendido;
-			}
-
-			printf("salgo de atencion consola\n");
-			break;
-
-		case ES_CPU:
-			conexion_cpu(socket_atendido);
-
-			// Si es una cpu
-			pthread_mutex_lock(&mutex_master_cpus);
-			FD_SET(socket_atendido, &master_cpus);
-			pthread_mutex_unlock(&mutex_master_cpus);
-
-			paquete_quantum = malloc(sizeof(t_struct_numero));
-			paquete_quantum->numero = quantum;
-			socket_enviar(socket_atendido, D_STRUCT_NUMERO, paquete_quantum);
-			free(paquete_quantum);
-
-			if (socket_atendido>cpus_fdmax){
-				cpus_fdmax = socket_atendido;
-			}
-
-			break;
-
-		}
-	}
-
-}
-*/
 
 fd_set combinar_master_fd(fd_set* master1, fd_set* master2, int maxfd){
 	fd_set combinado;
@@ -326,19 +257,16 @@ void handshake_thread(){
 				perror("select");
 				exit(1);
 			}
-			printf("No me quedé bloqueado en el select!\n");
 
 			for(i=0; i<=maxfd; i++){
 				//Verifico si es un socket
 				if(FD_ISSET(i, &read_fd)){
 					//Verifico si el socket es de una CPU
 					if(FD_ISSET(i, &master_cpus)){
-						printf("Procedo a atender a la CPU: %d\n", i);
 						handler_cpu(i);
 					}
 					//Verifico si el socket es de una Consola
 					if(FD_ISSET(i, &master_consolas)){
-						printf("Procedo a atender a la Consola %d\n", i);
 						handler_consola(i);
 					}
 					//Verifico si es el socket que escucha nuevas conexiones
@@ -359,38 +287,28 @@ void handler_nuevas_conexiones(int socket_escucha, int* maxfd){
 	int resultado = socket_recibir(socket_atendido, &tipoStruct, &structRecibido);
 	if(resultado == -1 || tipoStruct != D_STRUCT_NUMERO){
 		printf("No se recibio correctamente a quien atiendo en el kernel\n");
-		printf("d struct %d, rdo %d\n", tipoStruct, resultado);
 	}
 
 	t_struct_numero* paquete_quantum;
 
 	switch(((t_struct_numero *)structRecibido)->numero){
 	case ES_CONSOLA:
-		pthread_mutex_lock(&mutex_consolas_conectadas);
 		pthread_mutex_lock(&mutex_log);
 		conexion_consola(socket_atendido);
 		pthread_mutex_unlock(&mutex_log);
-		pthread_mutex_unlock(&mutex_consolas_conectadas);
 
 		// Si es una consola
-		//pthread_mutex_lock(&mutex_master_consolas);
 		FD_SET(socket_atendido, &master_consolas);
-		//pthread_mutex_unlock(&mutex_master_consolas);
 
-		printf("salgo de atencion consola\n");
 		break;
 
 	case ES_CPU:
-		pthread_mutex_lock(&mutex_consolas_conectadas);
 		pthread_mutex_lock(&mutex_log);
 		conexion_cpu(socket_atendido);
 		pthread_mutex_unlock(&mutex_log);
-		pthread_mutex_unlock(&mutex_consolas_conectadas);
 
 		// Si es una cpu
-		//pthread_mutex_lock(&mutex_master_cpus);
 		FD_SET(socket_atendido, &master_cpus);
-		//pthread_mutex_unlock(&mutex_master_cpus);
 
 		paquete_quantum = malloc(sizeof(t_struct_numero));
 		paquete_quantum->numero = quantum;
