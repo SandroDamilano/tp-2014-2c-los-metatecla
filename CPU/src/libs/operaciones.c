@@ -1131,8 +1131,8 @@ void ejecutarLinea(int* bytecode){
 
 		id_semaforo->numero = registros_cpu.registros_programacion[1];
 
-		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
-		controlar_envio(resultado, D_STRUCT_BLOCK);
+		resultado = socket_enviar(sockKernel, D_STRUCT_WAKE, id_semaforo);
+		controlar_envio(resultado, D_STRUCT_WAKE);
 
 
 		list_clean(parametros);

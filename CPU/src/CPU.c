@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
 			}
 		}
 
-	//esperar_retardo();
+	esperar_retardo();
 
 	}
 

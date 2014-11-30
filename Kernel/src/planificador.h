@@ -124,6 +124,9 @@
 
 	void mostrar_solicitud_cpu(int* sock);
 
+	void estado_del_sistema();
+	t_list* obtener_todos_los_tcb();
+
 	void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros);
 
 #endif /* PLANIFICADOR_H_ */

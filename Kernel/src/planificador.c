@@ -76,7 +76,7 @@ void atender_cpus(){
 	}
 	for(i=0; i<=cpus_fdmax; i++){
 		if(FD_ISSET(i, &read_cpus)){
-			printf("Procedo a atender a la CPU: %d\n", i);
+			//printf("Procedo a atender a la CPU: %d\n", i);
 			handler_cpu(i);
 		}
 	}
@@ -103,13 +103,13 @@ void terminar_TCBs(){
 		t_data_nodo_exit* data;
 		data = sacar_de_exit();
 
-		printf("Hay que matar a uno\n");
+		//printf("Hay que matar a uno\n");
 		switch(data->fin){
 		case TERMINAR:
 			if(es_padre(data->tcb)==true){
 				// Hay que finalizar todos los hijos
 				//escribir_consola(data->tcb->pid, "El proceso ha finalizado");
-				printf("Y es padre...\n");
+				//printf("Y es padre...\n");
 				terminar_proceso(data->tcb);
 			}else{
 				// Se finaliza sólo este hilo
@@ -281,7 +281,7 @@ void encolar_en_ready(t_hilo* tcb){
 	pthread_mutex_unlock(&mutex_ready);
 	sem_post(&sem_ready);
 
-	printf("Se encoló en ready el pid %d con PC %d\n", tcb->pid, tcb->puntero_instruccion);
+	//printf("Se encoló en ready el pid %d con PC %d\n", tcb->pid, tcb->puntero_instruccion);
 };
 
 
@@ -309,7 +309,7 @@ void mandar_a_exit(t_hilo* tcb, t_fin fin){
 	pthread_mutex_lock(&mutex_exit);
 	push_exit(data);
 	pthread_mutex_unlock(&mutex_exit);
-	printf("Se mando a exit el tid %d\n", (data->tcb)->tid);
+	//printf("Se mando a exit el tid %d\n", (data->tcb)->tid);
 	sem_post(&sem_exit);
 }
 
@@ -616,19 +616,19 @@ void boot(char* systcalls_path){
 	bloquear_tcbKernel(tcb_kernel);
 }
 
+void estado_del_sistema() {
+	t_list* todos = obtener_todos_los_tcb();
+	pthread_mutex_lock(&mutex_log);
+	hilos(todos);
+	pthread_mutex_unlock(&mutex_log);
+	list_destroy(todos);
+}
 
 /*************************** SYSCALLS *******************************************/
 
 void copiar_tcb(t_hilo* original, t_hilo* copia){
-	t_list* lista_hilos= list_create();
-	list_add(lista_hilos, original);
-	list_add(lista_hilos, copia);
 
-	pthread_mutex_lock(&mutex_log);
-	hilos(lista_hilos);
-	pthread_mutex_unlock(&mutex_log);
-
-	list_destroy(lista_hilos);
+	estado_del_sistema();
 
 	copia->tid = original->tid;
 	copia->pid = original->pid;
@@ -637,6 +637,68 @@ void copiar_tcb(t_hilo* original, t_hilo* copia){
 		copia->registros[i] = original->registros[i];
 	}
 };
+
+t_list* tcbs_exec(){
+
+	t_hilo* sacar_tcb_exec(t_data_nodo_exec* nodo){
+		return nodo->tcb;
+	}
+
+	return list_map(cola_exec, (void*)sacar_tcb_exec);
+}
+
+t_list* tcbs_block(){
+
+	t_hilo* sacar_tcb_block(t_data_nodo_block* nodo){
+		return nodo->tcb;
+	}
+
+	return list_map(cola_block, (void*)sacar_tcb_block);
+}
+
+t_list* tcbs_exit(){
+
+	t_hilo* sacar_tcb_exit(t_data_nodo_exit* nodo){
+		return nodo->tcb;
+	}
+
+	return list_map(cola_exit->elements, (void*)sacar_tcb_exit);
+}
+
+
+t_list* obtener_todos_los_tcb(){
+	t_list* todos = list_create();
+
+	t_list* exec = tcbs_exec();
+	t_list* exit = tcbs_exit();
+	t_list* block = tcbs_block();
+
+	pthread_mutex_lock(&mutex_ready);
+	list_add_all(todos, cola_ready);
+	pthread_mutex_unlock(&mutex_ready);
+
+	pthread_mutex_lock(&mutex_block);
+	list_add_all(todos, block);
+	pthread_mutex_unlock(&mutex_block);
+
+	pthread_mutex_lock(&mutex_exec);
+	list_add_all(todos, exec);
+	pthread_mutex_unlock(&mutex_exec);
+
+	pthread_mutex_lock(&mutex_exit);
+	list_add_all(todos, exit);
+	pthread_mutex_unlock(&mutex_exit);
+
+	pthread_mutex_lock(&mutex_new);
+	list_add_all(todos, cola_new->elements);
+	pthread_mutex_unlock(&mutex_new);
+
+	list_destroy(exec);
+	list_destroy(exit);
+	list_destroy(block);
+
+	return todos;
+}
 
 char* nombre_syscall(uint32_t dir_systcall){
 	switch(dir_systcall){
@@ -682,9 +744,6 @@ char* nombre_syscall(uint32_t dir_systcall){
 void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 	printf("Procedo a atender la systcall del TCB de tid: %d\n", tcb->tid);
 
-	pthread_mutex_lock(&mutex_log);
-	instruccion_protegida(nombre_syscall(dir_systcall), tcb);
-	pthread_mutex_unlock(&mutex_log);
 
 	t_hilo* tcb_kernel = desbloquear_tcbKernel();
 	bloquear_tcbSystcall(tcb, dir_systcall);
@@ -695,6 +754,10 @@ void atender_systcall(t_hilo* tcb, uint32_t dir_systcall){
 		//tcb_kernel->segmento_codigo = direccion_codigo_syscalls; //FIXME: FIJARSE QUE ESTO ESTE BIEN
 		//tcb_kernel->base_stack = direccion_stack_syscalls;
 		//tcb_kernel->pid = 0; //Pid de kernel
+		pthread_mutex_lock(&mutex_log);
+		instruccion_protegida(nombre_syscall(dir_systcall), tcb);
+		pthread_mutex_unlock(&mutex_log);
+
 		encolar_en_ready(tcb_kernel);
 	}
 	// Avisarle a la cpu que pida otro proceso para ejecutar? No. Lo hace sola.
@@ -748,7 +811,7 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 	crear_seg->tamano_segmento = tamanio_stack;
 	int resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
 	if(resultado != 1){
-		printf("No se pudo crear segmento de codigo\n");
+		printf("No se pudo crear segmento de stack\n");
 		return 0;
 	}
 	free(crear_seg);
@@ -767,6 +830,8 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 		printf("No se recibio la direccion del segmento de codigo del proceso\n");
 		return 0;
 	}
+
+	printf("La dirección del stack del nuevo hilo hijo es %d\n", dir_stack_hijo);
 
 	//Pido el código de stack del proceso padre
 	t_struct_sol_bytes* solicitud = malloc(sizeof(t_struct_sol_bytes));
@@ -802,7 +867,7 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if (tipoStruct != D_STRUCT_NUMERO) {
 		if(((t_struct_numero*) structRecibido)->numero == 0){
-			printf("Se escribió correctamente en memoria\n");
+			//printf("Se escribió correctamente en memoria\n");
 		}else{
 			printf("Hubo un problema al copiar el stack del padre al hijo\n");
 			return 0;
@@ -827,7 +892,7 @@ void mandar_a_ejecutar(t_hilo* tcb, int sockCPU){
 	t_struct_tcb* paquete_tcb = malloc(sizeof(t_struct_tcb));
 	copiar_tcb_a_structTcb(tcb, paquete_tcb);
 	socket_enviar(sockCPU, D_STRUCT_TCB, paquete_tcb);
-	printf("Mandé a ejecutar el tcb de pid: %d a la CPU: %d\n", paquete_tcb->pid, sockCPU);
+	//printf("Mandé a ejecutar el tcb de pid: %d a la CPU: %d\n", paquete_tcb->pid, sockCPU);
 	free(paquete_tcb);
 	agregar_a_exec(sockCPU, tcb);
 }
@@ -868,8 +933,11 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		break;
 
 	case D_STRUCT_PEDIR_TCB:
-			printf("me pidieron TCB\n");
+			//printf("me pidieron TCB\n");
 			printf("Agrego a las solicitudes a la CPU %d\n", sockCPU);
+			pthread_mutex_lock(&mutex_ready);
+			printf("En READY tengo %d procesos\n", list_size(cola_ready));
+			pthread_mutex_unlock(&mutex_ready);
 			int* solicitud = malloc(sizeof(int));
 			*solicitud = sockCPU;
 			agregar_solicitud(solicitud);
@@ -930,13 +998,15 @@ void handler_cpu(int sockCPU){
 		//otro socket para el tcb
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 
-		printf("Estoy en INTE y ya me llegó el tcb\n");
+		//printf("Estoy en INTE y ya me llegó el tcb\n");
 
 		if(tipoRecibido2 == D_STRUCT_TCB){
 			copiar_structRecibido_a_tcb(tcb, structRecibido2);
 		} else {
 			printf("No llegó el TCB para la operacion INTE\n");
 		}
+
+		estado_del_sistema();
 
 		sacar_de_exec(sockCPU);
 		atender_systcall(tcb, direccion_syscall);
@@ -987,7 +1057,7 @@ void handler_cpu(int sockCPU){
 		bool esta_terminado(int* tid){
 			return *tid == tid_buscado;
 		}
-		printf("Tids del join: %d y %d\n", tid_a_esperar, tid_llamador);
+		//printf("Tids del join: %d y %d\n", tid_a_esperar, tid_llamador);
 
 		pthread_mutex_lock(&mutex_terminados);
 		bool termino = list_any_satisfy(terminados, (void*)esta_terminado);
@@ -1014,7 +1084,6 @@ void handler_cpu(int sockCPU){
 			int tid_a_bloquear = ((t_struct_numero *) structRecibido2)->numero;
 			tcb = desbloquear_tcbSystcall(tid_a_bloquear);
 			bloquear_tcbSemaforo(tcb, id_semaforo);
-			//obtener_tcb_de_cpu(sockCPU);
 		} else {
 			printf("No se recibio el TID para la operacion BLOCK\n");
 		}
@@ -1039,11 +1108,11 @@ void handler_cpu(int sockCPU){
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		//Lo saco de EXEC
 		sacar_de_exec(sockCPU);
-		printf("Me devolvieron el TCB de PID %d porque finalizó. El reg B vale %d\n", tcb->pid, tcb->registros[1]);
+		//printf("Me devolvieron el TCB de PID %d porque finalizó. El reg B vale %d\n", tcb->pid, tcb->registros[1]);
 
 		//Verifico si es el de Kernel
 		if(tcb->kernel_mode == true){
-			printf("Me devolvieron el TCB del kernel, con el tid: %d\n", tcb->tid);
+			//printf("Me devolvieron el TCB del kernel, con el tid: %d\n", tcb->tid);
 			retornar_de_systcall(tcb, TERMINAR);
 		}else{
 			//terminar tcb
