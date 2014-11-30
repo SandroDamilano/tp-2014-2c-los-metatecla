@@ -434,15 +434,15 @@ bool es_el_pid_consola(t_data_nodo_consolas* data){
 }
 
 bool es_el_pid_ready(t_hilo* tcb){
-	return(tcb->pid == pid_a_eliminar);
+	return((tcb->pid == pid_a_eliminar) && (tcb->kernel_mode == false));
 }
 
 bool es_el_pid_block(t_data_nodo_block* data){
-	return(data->tcb->pid == pid_a_eliminar);
+	return((data->tcb->pid == pid_a_eliminar) && (data->tcb->kernel_mode == false));
 }
 
 bool es_el_pid_exec(t_data_nodo_exec* data){
-	return(data->tcb->pid == pid_a_eliminar);
+	return((data->tcb->pid == pid_a_eliminar) && (data->tcb->kernel_mode == false));
 }
 
 /******************************* DESBLOQUEAR ***************************************/
