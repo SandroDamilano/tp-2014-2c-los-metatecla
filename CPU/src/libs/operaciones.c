@@ -36,6 +36,7 @@ void ejecutarLinea(int* bytecode){
 
 	char param_reg1[2];
 	char param_reg2[2];
+	char* param_numero;
 
 	//printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
 
@@ -61,8 +62,9 @@ void ejecutarLinea(int* bytecode){
 		obtener_num(datos_recibidos,1,&numero);
 		param_reg1[0] = reg1;
 		param_reg1[1] = '\0';
+		param_numero = string_itoa(numero);
 		list_add(parametros,param_reg1);
-		list_add(parametros, string_itoa(numero));
+		list_add(parametros, param_numero);
 
 		ejecucion_instruccion("LOAD",parametros);
 
@@ -70,6 +72,9 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char) + sizeof(int32_t)); //registro + numero
 
+		free(datos_recibidos);
+		free(structRecibido);
+		free(param_numero);
 		list_clean(parametros);
 		break;
 	case GETM:
@@ -137,6 +142,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case SETM:
@@ -164,7 +171,8 @@ void ejecutarLinea(int* bytecode){
 		param_reg1[1] = '\0';
 		param_reg2[0] = reg2;
 		param_reg2[1] = '\0';
-		list_add(parametros,string_itoa(numero));
+		param_numero = string_itoa(numero);
+		list_add(parametros,param_numero);
 		list_add(parametros,param_reg1);
 		list_add(parametros, param_reg2);
 
@@ -206,6 +214,9 @@ void ejecutarLinea(int* bytecode){
 
 		free(auxxx);
 
+		free(datos_recibidos);
+		free(structRecibido);
+		free(param_numero);
 		list_clean(parametros);
 		break;
 	case MOVR:
@@ -241,6 +252,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case ADDR:
@@ -291,6 +304,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case SUBR:
@@ -326,6 +341,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case MULR:
@@ -361,6 +378,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case MODR:
@@ -396,6 +415,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case DIVR:
@@ -436,6 +457,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case INCR:
@@ -470,6 +493,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char));
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case DECR:
@@ -500,6 +525,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char));
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case COMP:
@@ -540,6 +567,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case CGEQ:
@@ -574,6 +603,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case CLEQ:
@@ -608,6 +639,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case GOTO:
@@ -636,6 +669,8 @@ void ejecutarLinea(int* bytecode){
 
 		registros_cpu.P = registros_cpu.registros_programacion[elegirRegistro(reg1)];
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case JMPZ:
@@ -657,7 +692,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
-		list_add(parametros,string_itoa(direccion));
+		param_numero = string_itoa(direccion);
+		list_add(parametros,param_numero);
 		ejecucion_instruccion("JMPZ",parametros);
 
 		if(registros_cpu.registros_programacion[0] == 0){
@@ -666,6 +702,9 @@ void ejecutarLinea(int* bytecode){
 			incrementar_pc(4);
 		}
 
+		free(datos_recibidos);
+		free(structRecibido);
+		free(param_numero);
 		list_clean(parametros);
 		break;
 	case JPNZ:
@@ -687,7 +726,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
-		list_add(parametros,string_itoa(direccion));
+		param_numero = string_itoa(direccion);
+		list_add(parametros,param_numero);
 		ejecucion_instruccion("JPNZ",parametros);
 
 		if(registros_cpu.registros_programacion[0] != 0){
@@ -696,6 +736,8 @@ void ejecutarLinea(int* bytecode){
 			incrementar_pc(4);
 		}
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case INTE: //TODO INTE (SOLO PARA UBICARME EN LA BARRA)
@@ -717,7 +759,8 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
-		list_add(parametros,string_itoa(direccion));
+		param_numero = string_itoa(direccion);
+		list_add(parametros,param_numero);
 		ejecucion_instruccion("INTE",parametros);
 
 		//Mando señal con la direccion
@@ -755,6 +798,8 @@ void ejecutarLinea(int* bytecode){
 
 		comienzo_ejecucion(tcb, quantum);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case SHIF:
@@ -780,7 +825,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_reg(datos_recibidos,4,&reg1);
 		param_reg1[0] = reg1;
 		param_reg1[1] = '\0';
-		list_add(parametros,string_itoa(numero));
+		param_numero = string_itoa(numero);
+		list_add(parametros,param_numero);
 		list_add(parametros, param_reg1);
 		ejecucion_instruccion("SHIF",parametros);
 
@@ -794,6 +840,9 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(5);
 
+		free(datos_recibidos);
+		free(structRecibido);
+		free(param_numero);
 		list_clean(parametros);
 		break;
 	case NOPP:
@@ -823,7 +872,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_reg(datos_recibidos,4,&reg1);
 		param_reg1[0] = reg1;
 		param_reg1[1] = '\0';
-		list_add(parametros,string_itoa(numero));
+		param_numero = string_itoa(numero);
+		list_add(parametros,param_numero);
 		list_add(parametros, param_reg1);
 		ejecucion_instruccion("PUSH",parametros);
 
@@ -853,6 +903,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(5);
 
+		free(datos_recibidos);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case TAKE:
@@ -875,7 +927,6 @@ void ejecutarLinea(int* bytecode){
 
 		datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
-		//free(datos_recibidos);
 		free(structRecibido);
 
 		obtener_num(datos_recibidos,0,&numero);
@@ -883,7 +934,8 @@ void ejecutarLinea(int* bytecode){
 		obtener_reg(datos_recibidos,4,&reg1);
 		param_reg1[0] = reg1;
 		param_reg1[1] = '\0';
-		list_add(parametros,string_itoa(numero));
+		param_numero = string_itoa(numero);
+		list_add(parametros,param_numero);
 		list_add(parametros, param_reg1);
 		ejecucion_instruccion("TAKE",parametros);
 
@@ -911,13 +963,16 @@ void ejecutarLinea(int* bytecode){
 		aux = *((int32_t*)datos_recibidos);
 		//memcpy(&aux, datos_recibidos, numero);
 
-		printf("EL TAKE DEVUELVE: %s\n", string_itoa(aux));
+		//printf("EL TAKE DEVUELVE: %s\n", string_itoa(aux));
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = aux;
 
 		registros_cpu.S -= numero;
 		incrementar_pc(5);
 
+		free(datos_recibidos);
+		free(structRecibido);
+		free(param_numero);
 		list_clean(parametros);
 		break;
 	case XXXX://PIDO OTRO Y LO RECIBO EN EL WHILE
@@ -950,6 +1005,7 @@ void ejecutarLinea(int* bytecode){
 		registros_cpu.registros_programacion[0] = ((t_struct_direccion*) structRecibido)->numero;
 
 		free(crear_segmento_struct);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case FREE:
@@ -985,6 +1041,7 @@ void ejecutarLinea(int* bytecode){
 		printf("SE INGRESO POR CONSOLA %d\n", registros_cpu.registros_programacion[0]);
 
 		list_clean(parametros);
+		free(structRecibido);
 		break;
 	case INNC:
 		ejecucion_instruccion("INNC",parametros);
@@ -1017,6 +1074,7 @@ void ejecutarLinea(int* bytecode){
 		//TODO validar
 
 		list_clean(parametros);
+		free(structRecibido);
 		break;
 	case OUTN:
 		ejecucion_instruccion("OUTN",parametros);
@@ -1062,7 +1120,7 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_NUMERO);
 		free(tamanio);
 
-
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case CREA: //FIXME: RECIBO EL ALGO DESPUES DE MANDAR ESTO?
@@ -1091,7 +1149,8 @@ void ejecutarLinea(int* bytecode){
 
 		printf("Tid del hijo %d\n", registros_cpu.registros_programacion[0]);
 
-
+		free(tid);
+		free(structRecibido);
 		list_clean(parametros);
 		break;
 	case JOIN:
@@ -1148,12 +1207,9 @@ void ejecutarLinea(int* bytecode){
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
 	free(id_semaforo);
 	free(tcb_enviar);
-	//free(((t_struct_respuesta_msp*) structRecibido)->buffer);
-	//free(structRecibido); //FIXME En las operaciones que no reciben parametros, va a fallar
-	//free(datos_recibidos);
+	free(tid_enviar);
 	free(datos_solicitados);
 	free(datos_enviados);
 	free(aux);
-	//free(datos_recibidos);
 }
 

@@ -281,6 +281,8 @@ void encolar_en_ready(t_hilo* tcb){
 	pthread_mutex_unlock(&mutex_ready);
 	sem_post(&sem_ready);
 
+	estado_del_sistema();
+
 	//printf("Se encoló en ready el pid %d con PC %d\n", tcb->pid, tcb->puntero_instruccion);
 };
 
@@ -311,6 +313,8 @@ void mandar_a_exit(t_hilo* tcb, t_fin fin){
 	pthread_mutex_unlock(&mutex_exit);
 	//printf("Se mando a exit el tid %d\n", (data->tcb)->tid);
 	sem_post(&sem_exit);
+
+	estado_del_sistema();
 }
 
 t_hilo* obtener_tcb_a_ejecutar(){
@@ -367,6 +371,7 @@ void agregar_a_exec(int sockCPU, t_hilo* tcb){
 	list_add(cola_exec, data);
 	pthread_mutex_unlock(&mutex_exec);
 	tcb->cola = EXEC;
+	estado_del_sistema();
 }
 
 /********************************** BLOQUEAR ***************************************/
@@ -382,6 +387,7 @@ void bloquear_tcb(t_hilo* tcb, t_evento evento, uint32_t parametro){
 	list_add(cola_block, (void*)data);
 	pthread_mutex_unlock(&mutex_block);
 	tcb->cola = BLOCK;
+	estado_del_sistema();
 };
 
 void bloquear_tcbKernel(t_hilo* tcb){
@@ -971,7 +977,7 @@ void handler_cpu(int sockCPU){
 		//La CPU cerró la conexión
 		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
 		if (tcb!=NULL){
-			if (tcb->kernel_mode == 0){
+			if (tcb->kernel_mode == false){
 				mandar_a_exit(tcb, ABORTAR);
 			}else{
 				retornar_de_systcall(tcb, ABORTAR);

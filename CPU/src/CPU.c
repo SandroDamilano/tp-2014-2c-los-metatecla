@@ -66,6 +66,7 @@ int main(int argc, char** argv) {
 	if(tipo_struct == D_STRUCT_NUMERO){
 		quantum = ((t_struct_numero *) structRecibido)->numero;
 		printf("Recibi quantum de %d\n", quantum);
+		free(structRecibido);
 	}
 
 	//socket a Kernel pidiendo tcb
@@ -83,9 +84,11 @@ int main(int argc, char** argv) {
 			} else {
 				printf("Se recibio tcb\n");
 				copiar_structRecibido_a_tcb(tcb, structRecibido);
+				free(structRecibido);
 			}
 
 	}
+	free(pedir_tcb);
 
 	int bytecode[4];// = malloc(sizeof(uint32_t));
 
@@ -109,6 +112,7 @@ int main(int argc, char** argv) {
 				copiar_tcb_a_structTcb(tcb, tcb_enviar);
 				resultado = socket_enviar(sockKernel, D_STRUCT_TCB_QUANTUM, tcb_enviar);
 				controlar_envio(resultado, D_STRUCT_TCB_QUANTUM);
+				free(tcb_enviar);
 
 				fin_ejecucion();
 
@@ -135,6 +139,9 @@ int main(int argc, char** argv) {
 
 	}
 
+	free(tcb);
+	config_destroy(config_cpu);
+	free(logger); //FIXME: LO HAGO? TODOS COMPARTIMOS LA MISMA VARIABLE Y LA FUIMOS MALLOQUEANDO :O
 	return EXIT_SUCCESS;
 }
 
@@ -150,11 +157,13 @@ void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]) {
 	datos_solicitados->tamanio = 4; //tamaño bytecode
 	int resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
 	controlar_envio(resultado, D_STRUCT_SOL_BYTES);
+	free(datos_solicitados);
 	socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 	controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
 	memcpy(bytecode, ((t_struct_respuesta_msp*) structRecibido)->buffer, ((t_struct_respuesta_msp*) structRecibido)->tamano_buffer);
+	free(((t_struct_respuesta_msp*) structRecibido)->buffer);
+	free(structRecibido);
 	incrementar_pc(4);
-	free(datos_solicitados);
 	ejecutarLinea(bytecode);
 }
 
@@ -166,12 +175,13 @@ t_struct_numero* terminar_y_pedir_tcb(t_hilo* tcb) {
 	if (resultado != 1) {
 		printf("No se pudo pedir TCB\n");
 	}
+	free(pedir_tcb);
 	//socket de Kernel con tcb
 	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 	copiar_structRecibido_a_tcb(tcb, structRecibido);
+	free(structRecibido);
 	cantidad_lineas_ejecutadas = 0;
 	terminoEjecucion = false;
-	free(pedir_tcb);
 	comienzo_ejecucion(tcb, quantum);
 	copiar_tcb_a_registros();
 	return pedir_tcb;
