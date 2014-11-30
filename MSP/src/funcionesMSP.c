@@ -493,8 +493,14 @@ void handler_conexiones(void){
 	 				buffer->buffer = solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio);
 	 				//memcpy(buffer->buffer, solicitar_memoria(solicitud->PID, solicitud->base, solicitud->tamanio), solicitud->tamanio);
 
-	 				buffer->tamano_buffer = solicitud->tamanio;
-	 				socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, buffer);
+	 				if(buffer->buffer != NULL){
+	 					buffer->tamano_buffer = solicitud->tamanio;
+	 					socket_enviar(sock, D_STRUCT_RESPUESTA_MSP, buffer);
+	 				} else {
+	 					t_struct_numero* seg_fault = malloc(sizeof(seg_fault));
+	 					socket_enviar(sock, D_STRUCT_SEG_FAULT, seg_fault);
+	 					free(seg_fault);
+	 				}
 
 	 				free(buffer->buffer);
 	 				//free(structRecibido); libero abajo
@@ -507,6 +513,10 @@ void handler_conexiones(void){
 	 				pthread_mutex_lock(&mutex_log);
 	 				log_info(logger,"Recepcion de una solicitud de Escribir Memoria con los paramentros: PID: %i, Direccion Base: %i,Bytes a Escribir: %s, Tamaño: %i\n", escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
 	 				pthread_mutex_unlock(&mutex_log);
+
+	 				int cualquier_cosa;
+	 				memcpy(&cualquier_cosa, escritura->buffer, 4);
+	 				printf("SE RECIBIO: %d. En numero: %d\n", cualquier_cosa, *((int*)escritura->buffer));
 
 	 				resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
 	 				respuesta = malloc(sizeof(t_struct_numero));
@@ -525,6 +535,8 @@ void handler_conexiones(void){
 	 				pthread_mutex_lock(&mutex_log);
 	 				log_info(logger,"Recepcion de una solicitud de Crear Segmento con los paramentros: PID: %i,  Tamaño: %i\n", ((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 	 				pthread_mutex_unlock(&mutex_log);
+
+	 				printf("CREO SEGMENTO DE PID %d y TAMAÑO %d\n",((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 
 	 				resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 

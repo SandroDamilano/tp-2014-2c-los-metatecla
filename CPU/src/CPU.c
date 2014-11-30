@@ -159,7 +159,9 @@ void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]) {
 	controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 	free(datos_solicitados);
 	socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-	controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+	if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE) {
+		return;
+	}
 	memcpy(bytecode, ((t_struct_respuesta_msp*) structRecibido)->buffer, ((t_struct_respuesta_msp*) structRecibido)->tamano_buffer);
 	free(((t_struct_respuesta_msp*) structRecibido)->buffer);
 	free(structRecibido);
@@ -178,6 +180,9 @@ t_struct_numero* terminar_y_pedir_tcb(t_hilo* tcb) {
 	free(pedir_tcb);
 	//socket de Kernel con tcb
 	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+	if(controlar_struct_recibido(tipo_struct, D_STRUCT_TCB) == EXIT_FAILURE) {
+			return NULL;
+	}
 	copiar_structRecibido_a_tcb(tcb, structRecibido);
 	free(structRecibido);
 	cantidad_lineas_ejecutadas = 0;

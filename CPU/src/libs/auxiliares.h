@@ -45,10 +45,11 @@ void copiar_registros_a_tcb();
 int elegirRegistro(char registro);
 void esperar_retardo();
 void incrementar_pc(int cant_bytes);
-void controlar_struct_recibido(int struct_recibido, int struct_posta);
+int controlar_struct_recibido(int struct_recibido, int struct_posta);
 void controlar_envio(int resultado, int tipo);
 
 void abortar();
+
 
 enum bytecodes{
 	LOAD,

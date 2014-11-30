@@ -39,6 +39,7 @@ void ejecutarLinea(int* bytecode){
 	char* param_numero;
 
 	//printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
+	printf("PC: %d\n", registros_cpu.P);
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -53,7 +54,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			return ;
+		}
 
 		datos_recibidos = malloc(sizeof(int32_t)+sizeof(char)); //registro + numero
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -89,7 +92,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			return ;
+		}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -125,7 +130,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			return ;
+		}
 
 		datos_recibidos = malloc(1); //Un byte
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -159,7 +166,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			return ;
+		}
 
 		datos_recibidos = malloc(sizeof(int32_t) + 2*sizeof(char)); //numero + registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -208,7 +217,11 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
 
 		resultado = socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		//TODO validar
+
+		if (((t_struct_numero*) structRecibido)->numero == -1){
+			printf("No hay espacio suficiente en memoria\n");
+			abortar();
+		}
 
 		incrementar_pc(sizeof(int32_t) + 2*sizeof(char));
 
@@ -232,7 +245,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			return ;
+		}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -269,7 +284,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			return ;
+		}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -321,7 +338,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -358,7 +377,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -395,7 +416,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -432,7 +455,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -474,7 +499,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -510,7 +537,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -542,7 +571,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -584,7 +615,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -620,7 +653,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -656,7 +691,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -686,7 +723,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -720,7 +759,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -753,7 +794,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -789,7 +832,9 @@ void ejecutarLinea(int* bytecode){
 		printf("PEDI TCB (INTE)\n");
 
 		resultado = socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_TCB);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_TCB) == EXIT_FAILURE){
+			return;
+		}
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		copiar_tcb_a_registros();
@@ -815,7 +860,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(int32_t) + sizeof(char)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -863,7 +910,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -897,7 +946,12 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		//TODO HACER VALIDACION
+
+
+		if (((t_struct_numero*) structRecibido)->numero == -1){
+			printf("No hay espacio suficiente en memoria\n");
+			abortar();
+		}
 
 		registros_cpu.S += numero;
 
@@ -923,7 +977,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -952,7 +1008,9 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_SOL_BYTES);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 		free(datos_recibidos);
 
 		datos_recibidos = malloc(numero); //sizeof(int32_t)); //numero
@@ -1000,9 +1058,16 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_MALC);
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			return;
+		}
 
-		registros_cpu.registros_programacion[0] = ((t_struct_direccion*) structRecibido)->numero;
+		if (((t_struct_numero*) structRecibido)->numero == -1){
+			printf("No hay espacio suficiente en memoria\n");
+			abortar();
+		} else {
+			registros_cpu.registros_programacion[0] = ((t_struct_direccion*) structRecibido)->numero;
+		}
 
 		free(crear_segmento_struct);
 		free(structRecibido);
@@ -1034,7 +1099,9 @@ void ejecutarLinea(int* bytecode){
 
 		//Recibo un numero que se ingreso por consola
 		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_INNN);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_INNN)==EXIT_FAILURE){
+					return;
+				}
 
 		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
 
@@ -1056,7 +1123,9 @@ void ejecutarLinea(int* bytecode){
 
 		//Recibo un string que se ingreso por consola
 		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_STRING);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_STRING)==EXIT_FAILURE){
+					return;
+				}
 
 		//Envio cadena recibida a memoria
 		char* cadena = ((t_struct_string*) structRecibido)->string;
@@ -1070,8 +1139,14 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
 
 		resultado = socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO);
-		//TODO validar
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO)==EXIT_FAILURE){
+					return;
+				}
+
+		if (((t_struct_numero*) structRecibido)->numero == -1){
+			printf("No hay espacio suficiente en memoria\n");
+			abortar();
+		}
 
 		list_clean(parametros);
 		free(structRecibido);
@@ -1101,7 +1176,9 @@ void ejecutarLinea(int* bytecode){
 
 		//Recibo la cadena de memoria
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+					return ;
+				}
 
 		datos_recibidos = malloc(registros_cpu.registros_programacion[1]); //tamaño determinado por reg B
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
