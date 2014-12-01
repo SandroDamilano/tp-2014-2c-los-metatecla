@@ -20,9 +20,6 @@ void leer_configuracion(){
 	log_info(logger,"La direccion IP del kernel es:%s",direccion_ip_kernel);
 	log_info(logger,"El puerto del kernel es:%d",puerto_kernel);
 
-	dictionary_put(config_cpu->properties,"IP_KERNEL",direccion_ip_kernel);
-	dictionary_put(config_cpu->properties,"PUERTO_KERNEL",&puerto_kernel);
-
 	config_struct_cpu.ip_kernel = direccion_ip_kernel;
 	config_struct_cpu.puerto_kernel = puerto_kernel;
 
@@ -31,8 +28,6 @@ void leer_configuracion(){
 	log_info(logger,"La direccion IP de la MSP es:%s",direccion_ip_msp);
 	log_info(logger,"El puerto de la MSP es:%d",puerto_msp);
 
-	dictionary_put(config_cpu->properties,"IP_MSP",direccion_ip_msp);
-	dictionary_put(config_cpu->properties,"PUERTO_MSP",&puerto_msp);
 
 	config_struct_cpu.ip_msp = direccion_ip_msp;
 	config_struct_cpu.puerto_msp = puerto_msp;
@@ -40,7 +35,6 @@ void leer_configuracion(){
 	ret = config_get_int_value(config_cpu,"RETARDO");
 	log_info(logger,"El retardo es:%d",ret);
 	retardo = ret;
-	dictionary_put(config_cpu->properties,"RETARDO",&ret);
 
 	config_struct_cpu.retardo = retardo;
 
