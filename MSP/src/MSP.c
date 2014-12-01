@@ -528,13 +528,13 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 			segment_not_found_exception(direccion.segmento);
 			return NULL;
 		}
-	free(segmento);
+	//free(segmento);
 	} else {
-	free(respuesta);
+	//free(respuesta);
 	PID_not_found_exception(PID);
 	return NULL;}
-free(respuesta);
-free(proceso);
+//free(respuesta);
+//free(proceso);
 return NULL;
 }
 
