@@ -491,7 +491,11 @@ void handler_conexiones(void){
 	 	int resultado;
 
 	 	while(1){
-	 		socket_recibir(sock, &tipoRecibido,&structRecibido);
+
+	 		if (socket_recibir(sock, &tipoRecibido,&structRecibido) == -1){
+	 			printf("Se desconectó un cliente\n");
+	 			return;
+	 		}
 
 	 		switch(tipoRecibido){
 	 			case D_STRUCT_SOL_BYTES:
