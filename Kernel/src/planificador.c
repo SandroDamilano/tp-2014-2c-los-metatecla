@@ -44,8 +44,8 @@ void mostrar_solicitud_cpu(int* sock){
 void atender_solicitudes_pendientes(){
 	while(1){
 
-		sem_wait(&sem_solicitudes);
 		sem_wait(&sem_ready);
+		sem_wait(&sem_solicitudes);
 		pthread_mutex_lock(&mutex_solicitudes);
 		int* sockCPU = list_remove(solicitudes_tcb, 0);
 		pthread_mutex_unlock(&mutex_solicitudes);
@@ -54,7 +54,7 @@ void atender_solicitudes_pendientes(){
 		mandar_a_ejecutar(tcb, *sockCPU);
 	}
 }
-
+/*
 void atender_cpus(){
 	int i;
 	fd_set read_cpus;
@@ -78,7 +78,7 @@ void atender_cpus(){
 			handler_cpu(i);
 		}
 	}
-}
+}*/
 
 /*********************** HILOS DEDICADOS ******************************/
 
@@ -120,8 +120,8 @@ void terminar_TCBs(){
 			terminar_proceso(data->tcb);
 			break;
 		};
-		//free(data->tcb);
-		//free(data);
+		free(data->tcb);
+		free(data);
 	};
 }
 
@@ -219,11 +219,11 @@ void eliminar_block(uint32_t pid){
 	pthread_mutex_unlock(&mutex_block);
 	while(data!=NULL){
 		mandar_a_exit(data->tcb, TERMINAR);
+		free(data);
 		pthread_mutex_lock(&mutex_block);
 		data = list_remove_by_condition(cola_block, (void*)es_el_pid_block);
 		pthread_mutex_unlock(&mutex_block);
 	};
-	free(data);
 }
 
 void eliminar_exec(uint32_t pid){
@@ -234,11 +234,11 @@ void eliminar_exec(uint32_t pid){
 	while(data!=NULL){
 		//TODO decirle a la cpu que aborte su ejecución (¿Eliminar solicitud de atención?)
 		mandar_a_exit(data->tcb, TERMINAR);
+		free(data);
 		pthread_mutex_lock(&mutex_exec);
 		data = list_remove_by_condition(cola_exec, (void*)es_el_pid_exec);
 		pthread_mutex_unlock(&mutex_exec);
 	};
-	free(data);
 }
 
 bool es_la_solicitud(int* solicitud){
@@ -248,9 +248,10 @@ bool es_la_solicitud(int* solicitud){
 void eliminar_solicitud(int sockCPU){//FIXME Sigo mandando cualquiera
 	solicitud_a_eliminar = sockCPU;
 	pthread_mutex_lock(&mutex_solicitudes);
-	if(list_size(solicitudes_tcb)>1){
+	if(list_size(solicitudes_tcb)!=0){
 		printf("hola. El wait vale %d\n", sem_solicitudes.__align);
 		sem_wait(&sem_solicitudes);
+		printf("hola. El wait vale %d\n", sem_solicitudes.__align);
 	}
 	int* solicitud = list_remove_by_condition(solicitudes_tcb, (void*)es_la_solicitud);
 	pthread_mutex_unlock(&mutex_solicitudes);
@@ -288,6 +289,7 @@ void encolar_en_ready(t_hilo* tcb){
 void pop_new(t_hilo* tcb){
 	void *nuevo = queue_pop(cola_new);
 	*tcb = *(t_hilo*)nuevo;
+	free(nuevo);
 };
 
 void sacar_de_new(t_hilo* tcb){
@@ -595,6 +597,7 @@ void boot(char* systcalls_path){
 	free(paquete_syscalls->buffer);
 	free(paquete_syscalls);
 	free(structRecibido);
+	free(syscalls_code);
 
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);//sockMSP
 	if (tipoStruct != D_STRUCT_NUMERO) {
@@ -814,6 +817,7 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 			printf("No hay espacio suficiente en memoria para el stack del nuevo hijo\n");
 			return 0;
 		}
+		free(structRecibido);
 	} else {
 		printf("No se recibio la direccion del segmento de codigo del proceso\n");
 		return 0;
@@ -850,6 +854,7 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 	free(paquete_codigo->buffer);
 	free(paquete_codigo);
 	free(structRecibido);
+	free(codigo_stack_padre);
 
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if (tipoStruct != D_STRUCT_NUMERO) {
@@ -860,6 +865,7 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 			return 0;
 		}
 	}
+	free(structRecibido);
 
 	//Creo el TCB hijo, copio los datos del padre, y lo mando a READY
 	t_hilo* tcb_hijo = crear_TCB(tcb_padre->pid, tcb_padre->segmento_codigo, dir_stack_hijo, tcb_padre->segmento_codigo_size);
@@ -892,7 +898,7 @@ void agregar_solicitud(int* sockCPU){
 }
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
-	t_hilo* tcb = malloc(sizeof(t_hilo));
+	t_hilo* tcb;// = malloc(sizeof(t_hilo));
 	int* solicitud;
 	uint32_t pid;
 
@@ -929,7 +935,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 }
 
 void handler_cpu(int sockCPU){
-	t_hilo* tcb = malloc(sizeof(t_hilo));
+	t_hilo* tcb;// = malloc(sizeof(t_hilo));
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
 	uint32_t tid_padre;
@@ -949,7 +955,8 @@ void handler_cpu(int sockCPU){
 
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//La CPU cerró la conexión
-		t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
+		//t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
+		tcb = obtener_tcb_de_cpu(sockCPU);
 		if (tcb!=NULL){
 			if (tcb->kernel_mode == false){
 				mandar_a_exit(tcb, ABORTAR);
@@ -974,7 +981,7 @@ void handler_cpu(int sockCPU){
 		direccion_syscall = ((t_struct_direccion*) structRecibido)->numero;
 		//otro socket para el tcb
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
-
+		tcb = malloc(sizeof(t_hilo));
 
 		if(tipoRecibido2 == D_STRUCT_TCB){
 			copiar_structRecibido_a_tcb(tcb, structRecibido2);
@@ -1071,6 +1078,8 @@ void handler_cpu(int sockCPU){
 		break;
 	case D_STRUCT_TCB_QUANTUM:
 
+		tcb = malloc(sizeof(t_hilo));
+
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		//Lo saco de EXEC
 		sacar_de_exec(sockCPU);
@@ -1078,6 +1087,8 @@ void handler_cpu(int sockCPU){
 
 		break;
 	case D_STRUCT_TCB:
+
+		tcb = malloc(sizeof(t_hilo));
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		//Lo saco de EXEC
@@ -1111,7 +1122,7 @@ void handler_cpu(int sockCPU){
 		socket_enviar(socket_consola, tipoRecibido2, structRecibido2);
 		break;
 	}//ACÁ TERMINA EL SWITCH
-	//free(structRecibido);
+	free(structRecibido);
 	}//ACÁ TERMINA EL ELSE DEL IF
 }
 

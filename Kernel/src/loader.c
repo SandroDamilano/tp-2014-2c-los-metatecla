@@ -163,6 +163,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	free(paquete_codigo->buffer);
 	free(paquete_codigo);
 	free(structRecibido);
+	free(codigo);
 
 	socket_recibir(socket_MSP, &tipoStruct, &structRecibido);
 	if (tipoStruct != D_STRUCT_NUMERO) {
