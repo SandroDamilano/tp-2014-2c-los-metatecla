@@ -539,11 +539,6 @@ void handler_conexiones(void){
 	 				respuesta->numero = resultado;
 	 				socket_enviar(sock, D_STRUCT_NUMERO, respuesta);
 
-	 				/*pthread_mutex_lock(&mutex_log);
-	 				log_info(logger,"Se envio la respuesta del Escribir Memoria con exito");
-	 				pthread_mutex_unlock(&mutex_log);*/
-
-	 				//free(structRecibido);
 	 				free(respuesta);
 	 				free(escritura->buffer);
 	 				break;
@@ -571,7 +566,6 @@ void handler_conexiones(void){
 	 				pthread_mutex_unlock(&mutex_log);
 
 	 				free(respuesta);
-	 				//free(structRecibido);
 	 				break;
 
 	 			case D_STRUCT_FREE:
@@ -582,11 +576,6 @@ void handler_conexiones(void){
 
 	 				resultado = destruirSegmento(((t_struct_free *) structRecibido)->PID, ((t_struct_free *) structRecibido)->direccion_base);
 
-	 				/*Le comunico a CPU si se pudo destruir segmento?
-	 				t_struct_numero* respuesta = malloc(sizeof(t_struct_numero));
-	 				respuesta->numero = resultado;
-	 				socket_enviar(sock, D_STRUCT_NUMERO, &respuesta);*/
-
 	 				pthread_mutex_lock(&mutex_log);
 	 				if(resultado == -1){
 	 				log_error(logger,"No se pudo destruir el segmento solicitado \n");
@@ -595,9 +584,20 @@ void handler_conexiones(void){
 	 					}
 	 				pthread_mutex_unlock(&mutex_log);
 
-	 				//free(structRecibido);
 
 	 				break;
+	 			case D_STRUCT_NUMERO:
+	 				printf("ME LLEGO UN NUMERO PARA DESCONEXION\n");
+	 				if(((t_struct_numero*) structRecibido)->numero == 0){
+	 					socket_cerrarConexion(conexion->socket);
+	 					printf("cerre el socket\n");
+	 					free(conexion);
+	 					printf("Frie conexion\n");
+	 					int ret = 1;
+	 					pthread_exit(&ret);
+	 					free(structRecibido);
+	 					printf("Mate hilo conexion\n");
+	 				}
 	 		}
 	 	free(structRecibido);
 	 	}
