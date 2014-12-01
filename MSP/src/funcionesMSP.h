@@ -124,6 +124,11 @@ void* devolverInformacion(void *baseMarco, t_direccion direccion, uint32_t taman
 void guardarInformacion(void *baseMarco,t_direccion direccion,void* bytes_escribir, uint32_t tamanio);
 void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_lista_segmentos *segmento, uint32_t numeroMarco);
 
+//Liberar memoria
+void liberarProceso(t_lista_procesos *proceso);
+void liberarSegmento(t_lista_segmentos *segmento);
+void liberarPagina(t_lista_paginas *pagina);
+
 ////////////INICIO////////////
 void leer_config(char *path); 	//levanta archivo de configuracion y asigna a las variables correspodientes
 void crear_logger();			//Crea archivos de log

@@ -294,21 +294,27 @@ void destruir_archivo(char* nombre_archivo) {
 
 void destruir_archivo_swap(int pid, uint32_t segmento, uint32_t pagina){
 	char* file_name = string_new();
+	char* pid_nombre = string_itoa(pid);
+	char* segmento_nombre = string_itoa(segmento);
+	char* pagina_nombre = string_itoa(pagina);
 
 	string_append(&file_name, path_swap);
 	string_append(&file_name, "PID:");
-	string_append(&file_name, string_itoa(pid));
+	string_append(&file_name, pid_nombre);
 	string_append(&file_name, "-");
 	string_append(&file_name, "SEG:");
-	string_append(&file_name, string_itoa(segmento));
+	string_append(&file_name, segmento_nombre);
 	string_append(&file_name, "-");
 	string_append(&file_name, "PAG:");
-	string_append(&file_name, string_itoa(pagina));
+	string_append(&file_name, pagina_nombre);
 	string_append(&file_name, ".bc");
 
 	destruir_archivo(file_name);
 
-	//free(file_name); Si esta el free rompe
+	free(pid_nombre);
+	free(segmento_nombre);
+	free(pagina_nombre);
+
 }
 
 DIR* abrir_directorio_swap(){
@@ -329,16 +335,19 @@ DIR* abrir_directorio_swap(){
 t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 	t_pagina pag;
 	char* file_name = string_new();
+	char* pid_nombre = string_itoa(PID);
+	char* segmento_nombre = string_itoa(SEG);
+	char* pagina_nombre = string_itoa(PAG);
 
 		string_append(&file_name, path_swap);
 		string_append(&file_name, "PID:");
-		string_append(&file_name, string_itoa(PID));
+		string_append(&file_name, pid_nombre);
 		string_append(&file_name, "-");
 		string_append(&file_name, "SEG:");
-		string_append(&file_name, string_itoa(SEG));
+		string_append(&file_name, segmento_nombre);
 		string_append(&file_name, "-");
 		string_append(&file_name, "PAG:");
-		string_append(&file_name, string_itoa(PAG));
+		string_append(&file_name, pagina_nombre);
 		string_append(&file_name, ".bc");
 		FILE* arch_swap = fopen(file_name, "a+");
 
@@ -348,6 +357,11 @@ t_pagina abrir_archivo_en_direcctorio(uint32_t PID, uint32_t SEG, uint32_t PAG){
 		pag.num_pag = PAG;
 		pag.nombre_archivo = file_name;
 		pag.archivo = arch_swap;
+
+		free(pid_nombre);
+		free(segmento_nombre);
+		free(pagina_nombre);
+
 		return pag;
 }
 
@@ -478,6 +492,7 @@ void handler_conexiones(void){
 
 	 	while(1){
 	 		socket_recibir(sock, &tipoRecibido,&structRecibido);
+
 	 		switch(tipoRecibido){
 	 			case D_STRUCT_SOL_BYTES:
 
@@ -503,6 +518,7 @@ void handler_conexiones(void){
 	 				}
 
 	 				free(buffer->buffer);
+	 				free(buffer);
 	 				//free(structRecibido); libero abajo
 	 				break;
 
@@ -513,10 +529,6 @@ void handler_conexiones(void){
 	 				pthread_mutex_lock(&mutex_log);
 	 				log_info(logger,"Recepcion de una solicitud de Escribir Memoria con los paramentros: PID: %i, Direccion Base: %i,Bytes a Escribir: %s, Tamaño: %i\n", escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
 	 				pthread_mutex_unlock(&mutex_log);
-
-	 				int cualquier_cosa;
-	 				memcpy(&cualquier_cosa, escritura->buffer, 4);
-	 				printf("SE RECIBIO: %d. En numero: %d\n", cualquier_cosa, *((int*)escritura->buffer));
 
 	 				resultado = escribirMemoria(escritura->PID, escritura->base, escritura->buffer, escritura->tamanio);
 	 				respuesta = malloc(sizeof(t_struct_numero));
@@ -529,6 +541,7 @@ void handler_conexiones(void){
 
 	 				//free(structRecibido);
 	 				free(respuesta);
+	 				free(escritura->buffer);
 	 				break;
 
 	 			case D_STRUCT_MALC:
@@ -582,9 +595,9 @@ void handler_conexiones(void){
 
 	 				break;
 	 		}
+	 	free(structRecibido);
 	 	}
 
-	 	free(structRecibido);
 	 	return;
  }
 
@@ -648,6 +661,7 @@ void handler_conexiones(void){
 				bytesEnMemoria[tamanio_escritura]= '\0';
 				printf("En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);
 				indicaciones_consola();
+				free(bytesEnMemoria);
 
 	break;
 	case '5': printf("El comando elegido fue: Tabla de segmentos\n");
@@ -664,7 +678,14 @@ void handler_conexiones(void){
 			  listar_marcos();
 			  indicaciones_consola();
 	break;
-	case '8': terminarConsola=0; break;
+	case '8': terminarConsola=0;
+			//Termina MSP -> Liberar recursos
+			list_destroy_and_destroy_elements(listaProcesos,(void*) (liberarProceso));
+			free(memoria_ppal);
+			free(tabla_marcos);
+			log_destroy(logger);
+			printf("TERMINADA CONSOLA\n");
+	break;
 	}
 	}
 
@@ -740,4 +761,24 @@ return NULL;
 	  i++;
 	 }
  }
+
+//Liberar Memoria
+void liberarPagina(t_lista_paginas *pagina){
+				free(pagina);
+			}
+
+void liberarSegmento(t_lista_segmentos *segmento){
+		/*list_iterate((*segmento).lista_Paginas, (void*) (*liberarPagina));
+			free(segmento);*/
+		list_destroy_and_destroy_elements(segmento->lista_Paginas, (void*) liberarPagina);
+		free(segmento);
+		}
+
+ void liberarProceso(t_lista_procesos *proceso){
+  		/*if(!list_is_empty((*proceso).lista_Segmentos))	{
+  		list_iterate((*proceso).lista_Segmentos, (void*) (*liberarSegmento));}
+  		free(proceso);*/
+	 	list_destroy_and_destroy_elements(proceso->lista_Segmentos, (void*)liberarSegmento);
+	 	free(proceso);
+  	}
 
