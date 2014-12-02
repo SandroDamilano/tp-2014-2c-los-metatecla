@@ -24,7 +24,7 @@
 #include "commons/string.h"
 #include <sockets/enviar_recibir_paquete.h>
 
-
+t_log* logger;
 
 char* path_config, *path_swap;
 pthread_mutex_t mutex_log;

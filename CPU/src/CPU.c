@@ -217,7 +217,7 @@ while(1){
 	}
 	signal(SIGINT, llegoSenialParaTerminar);
 
-	esperar_retardo();
+	//esperar_retardo();
 
 
 	}
