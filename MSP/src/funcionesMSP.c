@@ -430,6 +430,8 @@ void modificarBitAlgoritmo(uint32_t numeroMarco){
 /*********************************************** CONEXIONES ********************************************************/
 
 void handler_conexiones(void){
+	lista_conexiones = list_create();
+
 	int socket_servidor = socket_crearServidor("127.0.0.1", puertoMSP);
 	pthread_t nueva_solicitud;
 	pthread_mutex_lock(&mutex_log);
@@ -439,6 +441,7 @@ void handler_conexiones(void){
 
 		t_conexion_entrante* conexion = malloc(sizeof(t_conexion_entrante));
 		conexion->socket = socket_aceptarCliente(socket_servidor);
+		list_add(lista_conexiones, conexion);
 
 		void* structRecibido;
 		t_tipoEstructura tipo_struct;
@@ -490,10 +493,16 @@ void handler_conexiones(void){
 	 	t_struct_numero* respuesta;
 	 	int resultado;
 
+	 	int id_socket;
+	 	bool es_la_conexion(t_conexion_entrante* conexion){
+	 		return conexion->socket == id_socket;
+	 	}
+
 	 	while(1){
 
 	 		if (socket_recibir(sock, &tipoRecibido,&structRecibido) == -1){
 	 			printf("Se desconectó un cliente\n");
+	 			free(structRecibido);
 	 			return;
 	 		}
 
@@ -587,8 +596,14 @@ void handler_conexiones(void){
 
 	 				break;
 	 			case D_STRUCT_NUMERO:
+	 				id_socket = conexion->socket;
+
+
 	 				printf("ME LLEGO UN NUMERO PARA DESCONEXION\n");
 	 				if(((t_struct_numero*) structRecibido)->numero == 0){
+
+	 					list_remove_by_condition(lista_conexiones, (void*)es_la_conexion);
+
 	 					socket_cerrarConexion(conexion->socket);
 	 					printf("cerre el socket\n");
 	 					free(conexion);
