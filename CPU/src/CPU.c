@@ -18,6 +18,8 @@ t_hilo* tcb;
 char* PATH;
 t_config* config_cpu;
 t_config_cpu config_struct_cpu;
+t_log* logger;
+
 
 void * structRecibido;
 t_tipoEstructura tipo_struct;
@@ -237,14 +239,11 @@ void llegoSenialParaTerminar(int senial){
 		free(fin);
 		deboTerminar = true;
 		printf("PUSE CTRL C!!!!!!!!!!!\n");
-		//} else {
 			printf("libero memoria\n");
 			free(tcb);
 			config_destroy(config_cpu);
-			//free(logger); //FIXME: LO HAGO? TODOS COMPARTIMOS LA MISMA VARIABLE Y LA FUIMOS MALLOQUEANDO :O
-			//log_destroy(logger);
+			log_destroy(logger);
 			exit(EXIT_SUCCESS);
-		//}
 		break;
 	}
 }
@@ -271,29 +270,6 @@ void ejecutar_otra_linea(int sockMSP,t_hilo* tcb, int bytecode[4]) {
 	ejecutarLinea(bytecode);
 }
 
-t_struct_numero* terminar_y_pedir_tcb(t_hilo* tcb) {
-	//socket a Kernel pidiendo tcb
-	t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
-	pedir_tcb->numero = D_STRUCT_PEDIR_TCB;
-	int resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
-	if (resultado != 1) {
-		printf("No se pudo pedir TCB\n");
-	}
-	free(pedir_tcb);
-	//socket de Kernel con tcb
-	signal(SIGINT, llegoSenialParaTerminar);
-	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-	if((controlar_struct_recibido(tipo_struct, D_STRUCT_TCB) == EXIT_FAILURE) || deboTerminar == true) {
-			return NULL;
-	}
-	copiar_structRecibido_a_tcb(tcb, structRecibido);
-	free(structRecibido);
-	cantidad_lineas_ejecutadas = 0;
-	terminoEjecucion = false;
-	comienzo_ejecucion(tcb, quantum);
-	copiar_tcb_a_registros();
-	return pedir_tcb;
-}
 
 
 
