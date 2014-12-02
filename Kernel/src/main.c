@@ -322,4 +322,5 @@ void handler_nuevas_conexiones(int socket_escucha, int* maxfd){
 		*maxfd = socket_atendido;
 	}
 
+	free(structRecibido);
 }

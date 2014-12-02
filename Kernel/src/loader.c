@@ -73,8 +73,8 @@ void handler_consola(int sock_consola){
 		break;
 	}
 
-	free(structRecibido);
 	}
+	free(structRecibido);
 
 }
 

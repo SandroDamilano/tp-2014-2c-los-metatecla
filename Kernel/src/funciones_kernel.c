@@ -64,8 +64,8 @@ int obtener_pid(){
 
 int obtener_tid(){
 	pthread_mutex_lock(&mutex_TIDs);
-	cantidad_de_TIDs++;	// o usar function process_get_thread_id() que provee un id unico
 	int tid = cantidad_de_TIDs;
+	cantidad_de_TIDs++;	// o usar function process_get_thread_id() que provee un id unico
 	pthread_mutex_unlock(&mutex_TIDs);
 	return tid;
 };
@@ -98,8 +98,6 @@ void poner_en_new(t_hilo* tcb){
 
 void imprimir_texto(int socket_consola, char* mensaje){
 	t_struct_string* impresion = malloc(sizeof(t_struct_string));
-	//impresion->string = malloc(tamanio_mensaje);
-	//memcpy(impresion->string, mensaje, tamanio_mensaje);
 	impresion->string = mensaje;
 	socket_enviar(socket_consola, D_STRUCT_OUTC, impresion);
 	int tamanio_mensaje = strlen(mensaje);

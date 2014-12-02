@@ -910,6 +910,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		t_struct_numero* innn = malloc(sizeof(t_struct_numero));
 		innn->numero = D_STRUCT_INNN;
 		socket_enviar(socket_consola, D_STRUCT_NUMERO, innn);
+		free(innn);
 
 		break;
 	case D_STRUCT_ABORT:
@@ -988,7 +989,7 @@ void handler_cpu(int sockCPU){
 		} else {
 			printf("No llegó el TCB para la operacion INTE\n");
 		}
-
+		free(structRecibido2);
 
 		sacar_de_exec(sockCPU);
 		atender_systcall(tcb, direccion_syscall);
@@ -1018,6 +1019,7 @@ void handler_cpu(int sockCPU){
 		//RECIBO PC
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 		int pc = ((t_struct_numero*) structRecibido2)->numero;
+		free(structRecibido2);
 		tid_hijo = crear_nuevo_hilo(tcb, pc);
 
 		if(tid_hijo != 0){
@@ -1068,6 +1070,7 @@ void handler_cpu(int sockCPU){
 		} else {
 			printf("No se recibio el TID para la operacion BLOCK\n");
 		}
+		free(structRecibido2);
 
 		break;
 	case D_STRUCT_WAKE:
@@ -1120,9 +1123,10 @@ void handler_cpu(int sockCPU){
 
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 		socket_enviar(socket_consola, tipoRecibido2, structRecibido2);
+		free(structRecibido2);
 		break;
 	}//ACÁ TERMINA EL SWITCH
-	free(structRecibido);
 	}//ACÁ TERMINA EL ELSE DEL IF
+	free(structRecibido);
 }
 
