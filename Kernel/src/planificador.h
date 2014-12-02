@@ -21,6 +21,8 @@
 	extern uint32_t direccion_codigo_syscalls;
 	extern uint32_t direccion_stack_syscalls;
 
+	pthread_t thr_consumidor_new, thr_parca, thr_atencion_CPUs;
+
 	t_queue* cola_new;
 	sem_t sem_new;
 	pthread_mutex_t mutex_new;

@@ -13,7 +13,6 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 	inicializar_ready_block();
 	inicializar_semaforos_colas();
 
-	pthread_t thr_consumidor_new, thr_parca, thr_atencion_CPUs;
 	pthread_create(&thr_consumidor_new, NULL, (void*)&poner_new_a_ready, NULL);
 	pthread_create(&thr_parca, NULL, (void*)&terminar_TCBs, NULL);
 	pthread_create(&thr_atencion_CPUs, NULL, (void*)&atender_solicitudes_pendientes, NULL);
@@ -559,7 +558,7 @@ void boot(char* systcalls_path){
 	} else {
 		printf("No se recibio la direccion del segmento de codigo de las syscalls\n");
 	}
-
+	free(structRecibido);
 
 	//Creo segmento de stack para las syscalls
 	crear_seg = malloc(sizeof(t_struct_malloc));
@@ -612,6 +611,8 @@ void boot(char* systcalls_path){
 	t_hilo *tcb_kernel = crear_TCB(0, direccion_codigo_syscalls, direccion_stack_syscalls, tamanio_codigo);
 	tcb_kernel->kernel_mode = true;
 	bloquear_tcbKernel(tcb_kernel);
+
+	fclose(syscalls_file);
 }
 
 void estado_del_sistema() {

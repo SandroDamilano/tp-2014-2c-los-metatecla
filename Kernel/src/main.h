@@ -66,5 +66,6 @@
 	void inicializar_multiplex();
 	void handler_nuevas_conexiones(int socket_escucha, int* maxfd);
 	fd_set combinar_master_fd(fd_set* master1, fd_set* master2, int maxfd);
+	void llegoSenialParaTerminar(int n);
 
 #endif /* MAIN_H_ */

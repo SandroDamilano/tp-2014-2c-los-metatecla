@@ -13,6 +13,7 @@
 	#include <semaphore.h>
 	#include <panel/kernel.h>
 	#include <stdlib.h>
+	#include <signal.h>
 	#include <sockets/enviar_recibir_paquete.h>
 
 	extern t_queue* cola_new;

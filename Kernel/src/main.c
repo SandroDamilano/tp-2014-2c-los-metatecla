@@ -68,10 +68,61 @@ int main(int argc, char **argv){
 		exit(EXIT_FAILURE);
 	}
 
-	pthread_join(thread_LOADER, NULL);
+	signal(SIGINT, llegoSenialParaTerminar);
+
+	pthread_join(thread_KERNEL, NULL);
 	pthread_join(thread_PLANIFICADOR, NULL);
 
 	return 0;
+}
+
+void llegoSenialParaTerminar(int n){
+
+	void destruir_block(t_data_nodo_block* data){
+		free(data->tcb);
+	}
+
+	void destruir_exec(t_data_nodo_exec* data){
+		free(data->tcb);
+	}
+
+	void destruir_exit(t_data_nodo_exit* data){
+		free(data->tcb);
+	}
+
+	t_struct_numero* fin;
+	switch(n){
+	case SIGINT:
+		fin = malloc(sizeof(t_struct_numero));
+		fin->numero = 0;
+		socket_enviar(socket_MSP, D_STRUCT_NUMERO, fin);
+		free(fin);
+
+		printf("CTRL C!!!!!\n");
+		list_destroy(cola_ready);
+		list_destroy_and_destroy_elements(cola_block, (void*)destruir_block);
+		list_destroy_and_destroy_elements(cola_exec, (void*)destruir_exec);
+		queue_destroy(cola_new);
+		queue_destroy_and_destroy_elements(cola_exit, (void*)destruir_exit);
+		list_destroy(solicitudes_tcb);
+		list_destroy(consolas);
+		list_destroy(terminados);
+
+		FD_ZERO(&master_cpus);
+		FD_ZERO(&master_consolas);
+
+		log_destroy(logger);
+		config_destroy(config_file);
+
+		pthread_cancel(thread_KERNEL);
+		pthread_cancel(thr_consumidor_new);
+		pthread_cancel(thr_parca);
+		pthread_cancel(thr_atencion_CPUs);
+		pthread_cancel(thread_PLANIFICADOR);
+		exit(EXIT_SUCCESS);
+
+		break;
+	}
 }
 
 void leer_config()
