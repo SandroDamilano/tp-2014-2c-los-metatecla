@@ -98,7 +98,7 @@ void llegoSenialParaTerminar(int n){
 		socket_enviar(socket_MSP, D_STRUCT_NUMERO, fin);
 		free(fin);
 
-		printf("CTRL C!!!!!\n");
+		//printf("CTRL C!!!!!\n");
 		list_destroy(cola_ready);
 		list_destroy_and_destroy_elements(cola_block, (void*)destruir_block);
 		list_destroy_and_destroy_elements(cola_exec, (void*)destruir_exec);

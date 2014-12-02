@@ -43,8 +43,13 @@ void mostrar_solicitud_cpu(int* sock){
 void atender_solicitudes_pendientes(){
 	while(1){
 
+		waits:
 		sem_wait(&sem_ready);
 		sem_wait(&sem_solicitudes);
+		if(list_size(cola_ready)==0){
+			sem_post(&sem_solicitudes);
+			goto waits;
+		}
 		pthread_mutex_lock(&mutex_solicitudes);
 		int* sockCPU = list_remove(solicitudes_tcb, 0);
 		pthread_mutex_unlock(&mutex_solicitudes);
