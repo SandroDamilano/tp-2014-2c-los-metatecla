@@ -84,6 +84,17 @@ void leer_config()
 
 }
 
+void llegoSenialParaTerminar(int n){
+
+	switch(n){
+	case SIGINT:
+		log_destroy(logger);
+		config_destroy(config_file);
+		exit(EXIT_SUCCESS);
+		break;
+	}
+}
+
 void escuchar_mensajes(int sockKernel){
 	t_tipoEstructura tipoRecibido;
 	t_tipoEstructura tipoRecibido2;
@@ -93,8 +104,8 @@ void escuchar_mensajes(int sockKernel){
 	int maximo;
 	char* texto;
 
-
 	while(1){
+
 		if(socket_recibir(sockKernel, &tipoRecibido, &structRecibido)!=-1){
 
 		switch(tipoRecibido){
@@ -119,6 +130,7 @@ void escuchar_mensajes(int sockKernel){
 			socket_enviar(sockKernel, D_STRUCT_STRING, innc);
 			free(innc->string);
 			free(innc);
+			free(texto);
 			break;
 
 		case D_STRUCT_OUTN:
@@ -131,12 +143,15 @@ void escuchar_mensajes(int sockKernel){
 			texto = ((t_struct_string*)structRecibido)->string;
 			texto[length] = '\0';
 			printf("%s\n", texto);
+			free(structRecibido2);
 			break;
 		}
 		}
+		free(structRecibido);
+		signal(SIGINT, llegoSenialParaTerminar);
 	}
 }
 
-//TODO HACER FREES
+//HACER FREES
 
 

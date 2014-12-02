@@ -20,6 +20,7 @@
 	#include <arpa/inet.h>
 	#include <unistd.h>
 	#include <errno.h>
+	#include <signal.h>
 
 	#include <commons/string.h>
 	#include <estructuras_auxiliares.h>

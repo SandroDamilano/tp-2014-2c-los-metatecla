@@ -43,6 +43,7 @@ int main(int argc, char	**argv){
 	t_struct_numero* es_consola = malloc(sizeof(t_struct_numero));
 	es_consola->numero = ES_CONSOLA;
 	socket_enviar(sockKernel, D_STRUCT_NUMERO, es_consola);
+	free(es_consola);
 
 	t_struct_env_bytes* beso_code = malloc(sizeof(t_struct_env_bytes));
 
