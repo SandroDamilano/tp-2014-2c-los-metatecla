@@ -31,7 +31,7 @@ int main(int argc, char **argv){
 
 	// 1- Inicializar panel ansisop
 	logger = malloc(sizeof(t_log));
-	inicializar_panel(KERNEL, "/home/utnso/tp-2014-2c-los-metatecla/");
+	inicializar_panel(KERNEL, "/home/utnso/git/tp-2014-2c-los-metatecla/");
 
 	// 3- Leer archivo de configuracion y asignar valores
 	leer_config();
