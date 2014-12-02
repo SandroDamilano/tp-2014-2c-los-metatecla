@@ -10,6 +10,7 @@
 
 #include "MSP.h"
 #include <panel/panel.h>
+#include <signal.h>
 
 pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_consola = PTHREAD_MUTEX_INITIALIZER;
@@ -18,6 +19,23 @@ pthread_mutex_t mutex_crearSegmento = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_tablaMarcos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_swap = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_memoriaPpal = PTHREAD_MUTEX_INITIALIZER;
+
+void llegoSenialParaTerminar(int senial){
+	switch(senial){
+	case SIGINT:
+		printf("PUSE CTRL C!!!!!!!!!!!\n");
+			printf("libero memoria\n");
+			config_destroy(config_file);
+			log_destroy(logger);
+			list_destroy_and_destroy_elements(listaProcesos,(void*) (liberarProceso));
+			free(memoria_ppal);
+			free(tabla_marcos);
+			list_destroy_and_destroy_elements(lista_conexiones, free);
+			pthread_join(consola, NULL);
+			exit(EXIT_SUCCESS);
+		break;
+	}
+}
 
 int main(int argc, char *argv[]) {
 
@@ -63,6 +81,7 @@ int main(int argc, char *argv[]) {
 		pthread_t atender_conexiones;
 		pthread_create(&atender_conexiones, NULL, (void*) &handler_conexiones, NULL);
 
+		signal(SIGINT, llegoSenialParaTerminar);
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
 		//pthread_join(atender_conexiones, NULL); TODO sacar de comentario
@@ -528,13 +547,13 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 			segment_not_found_exception(direccion.segmento);
 			return NULL;
 		}
-	free(segmento);
+	//free(segmento);
 	} else {
-	free(respuesta);
+	//free(respuesta);
 	PID_not_found_exception(PID);
 	return NULL;}
-free(respuesta);
-free(proceso);
+//free(respuesta);
+//free(proceso);
 return NULL;
 }
 

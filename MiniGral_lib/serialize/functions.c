@@ -55,6 +55,9 @@ t_stream * serialize(int tipoEstructura, void * estructuraOrigen){
 			case D_STRUCT_NUMERO:
 				paquete = serializeStruct_numero((t_struct_numero *) estructuraOrigen);
 				break;
+			case D_STRUCT_SEG_FAULT:
+				paquete = serializeStruct_segFault((t_struct_numero *) estructuraOrigen);
+				break;
 			case D_STRUCT_DIRECCION:
 				paquete = serializeStruct_direccion((t_struct_direccion *) estructuraOrigen);
 				break;
@@ -134,6 +137,21 @@ t_stream * serializeStruct_numero(t_struct_numero * estructuraOrigen){
 	paquete->length = sizeof(t_header) + sizeof(int32_t);
 
 	char * data = crearDataConHeader(D_STRUCT_NUMERO, paquete->length); //creo el data
+
+	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));		//copio a data el numero.
+
+	paquete->data = data;
+
+	return paquete;
+}
+
+t_stream * serializeStruct_segFault(t_struct_numero * estructuraOrigen){
+
+	t_stream * paquete = malloc(sizeof(t_stream));		//creo el paquete
+
+	paquete->length = sizeof(t_header) + sizeof(int32_t);
+
+	char * data = crearDataConHeader(D_STRUCT_SEG_FAULT, paquete->length); //creo el data
 
 	memcpy(data + sizeof(t_header), estructuraOrigen, sizeof(t_struct_numero));		//copio a data el numero.
 
@@ -583,6 +601,7 @@ void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length){
 			case D_STRUCT_SIGNAL:
 				estructuraDestino = deserializeStruct_signal(dataPaquete, length);
 				break;
+			case D_STRUCT_SEG_FAULT:
 			case D_STRUCT_TCB_CREA:
 			case D_STRUCT_INNC:
 			case D_STRUCT_INNN:

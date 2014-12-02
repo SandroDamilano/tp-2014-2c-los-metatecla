@@ -24,13 +24,15 @@
 #include "commons/string.h"
 #include <sockets/enviar_recibir_paquete.h>
 
-
+t_log* logger;
 
 char* path_config, *path_swap;
 pthread_mutex_t mutex_log;
 int paginas_en_disco;
 void* buffer;
 char bufferLog[80];
+
+t_list* lista_conexiones;
 
 typedef struct  lista_paginas{
 	uint32_t numeroPagina;
@@ -128,6 +130,8 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 void liberarProceso(t_lista_procesos *proceso);
 void liberarSegmento(t_lista_segmentos *segmento);
 void liberarPagina(t_lista_paginas *pagina);
+
+void llegoSenialParaTerminar(int senial);
 
 ////////////INICIO////////////
 void leer_config(char *path); 	//levanta archivo de configuracion y asigna a las variables correspodientes

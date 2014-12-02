@@ -18,6 +18,8 @@ t_hilo* tcb;
 char* PATH;
 t_config* config_cpu;
 t_config_cpu config_struct_cpu;
+t_log* logger;
+
 
 void * structRecibido;
 t_tipoEstructura tipo_struct;
@@ -237,14 +239,11 @@ void llegoSenialParaTerminar(int senial){
 		free(fin);
 		deboTerminar = true;
 		printf("PUSE CTRL C!!!!!!!!!!!\n");
-		//} else {
 			printf("libero memoria\n");
 			free(tcb);
 			config_destroy(config_cpu);
-			//free(logger); //FIXME: LO HAGO? TODOS COMPARTIMOS LA MISMA VARIABLE Y LA FUIMOS MALLOQUEANDO :O
-			//log_destroy(logger);
+			log_destroy(logger);
 			exit(EXIT_SUCCESS);
-		//}
 		break;
 	}
 }

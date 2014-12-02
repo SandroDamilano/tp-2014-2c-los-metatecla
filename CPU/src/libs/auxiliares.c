@@ -102,6 +102,7 @@ void incrementar_pc(int cant_bytes){
 }
 
 void abortar(){
+	printf("\n\nABORTAR\n\n");
 	t_tipoEstructura tipo_struct;
 	void* structRecibido;
 
