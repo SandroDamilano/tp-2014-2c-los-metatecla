@@ -25,7 +25,7 @@ int main(int argc, char	**argv){
 	char* beso_file = argv[1];
 
 	// 2- Crear/Abrir file log del programa para el registro de actividades
-	logger = log_create("consola.log", "CONSOLA", 0, LOG_LEVEL_TRACE);
+	logger = log_create("/home/utnso/tp-2014-2c-los-metatecla/Consola.log", "CONSOLA", 0, LOG_LEVEL_TRACE);
 	log_info(logger,"Inicio de registro de actividades del Proceso CONSOLA.");
 
 	// 3- Leer archivo de configuracion y asignar valores
