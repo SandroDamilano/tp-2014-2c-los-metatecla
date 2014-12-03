@@ -69,22 +69,22 @@ int main(int argc, char *argv[]) {
 	paginasMemoriaSwapActual = cant_mem_swap*1024*1024/256 ;
 	listaProcesos = list_create();
 
-	//TODO log lista de procesos, tabla de paginas y tabla de segmentos
 	//4. Abrir conexiones con Kernel y CPU, y levantar Consola MSP
 
 	//Se crea el hilo para la consola
 		pthread_create(&consola, NULL, inciarConsola, NULL);
 
-		//TODO LOG Se abren conexiones por sockets para Kernel y CPU
+
 
 		//Se crea un hilo que va a manejar las conexiones
 		pthread_t atender_conexiones;
 		pthread_create(&atender_conexiones, NULL, (void*) &handler_conexiones, NULL);
 
-		signal(SIGINT, llegoSenialParaTerminar);
 		//Espera que se termine el hilo consola
 		pthread_join(consola, NULL);
-		//pthread_join(atender_conexiones, NULL); TODO sacar de comentario
+		pthread_join(atender_conexiones, NULL);
+		signal(SIGINT, llegoSenialParaTerminar);
+
 
 		return EXIT_SUCCESS;
 }

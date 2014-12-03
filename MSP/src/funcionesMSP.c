@@ -698,11 +698,6 @@ void handler_conexiones(void){
 			  indicaciones_consola();
 	break;
 	case '8': terminarConsola=0;
-			//Termina MSP -> Liberar recursos
-			list_destroy_and_destroy_elements(listaProcesos,(void*) (liberarProceso));
-			free(memoria_ppal);
-			free(tabla_marcos);
-			log_destroy(logger);
 			printf("TERMINADA CONSOLA\n");
 	break;
 	}
@@ -712,7 +707,7 @@ void handler_conexiones(void){
 	   log_info(logger,"Finalizo el hilo de la Consola");
 	pthread_mutex_unlock(&mutex_log);
 
-pthread_exit(NULL);	/* No se si esta bien implementado el pthread_exit */
+pthread_exit(NULL);
 
 
 
