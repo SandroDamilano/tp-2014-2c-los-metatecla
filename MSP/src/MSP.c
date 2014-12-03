@@ -366,10 +366,7 @@ int escribirMemoria(uint32_t PID, uint32_t direcc_log, void* bytes_escribir, uin
 									procesoDePaginaASacar = list_find(listaProcesos,(void*) (*pidASacar));
 									segmentoDePaginaASacar = list_find(procesoDePaginaASacar->lista_Segmentos, (void*) (*segmentoASacar));
 									paginaSacada = list_find(segmentoDePaginaASacar->lista_Paginas, (void*) (*paginaASacar));
-									printf("Pagina a sacar: %i\n", paginaSacada->numeroPagina);
-									printf("Pagina en swap: %i\n", paginaSacada->swap);
 									paginaSacada->swap=1;
-									printf("Pagina en swap: %i\n", paginaSacada->swap);
 									paginaSacada->marcoEnMemPpal=-1;
 									hacerSwap(PID,direccion,pagina,segmento, numeroMarcoASwapear);
 									pthread_mutex_lock(&mutex_log);
@@ -456,9 +453,9 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								log_info(logger,"Al marco %i, se asigno la pagina %i del segmento %i del PID %i \n",numeroDeMarcoLibre, pagina->numeroPagina,segmento->numeroSegmento, PID);
 								pthread_mutex_unlock(&mutex_log);
 								t_pagina paginaACargar;
-								printf("extraigo info de archivo\n");
+
 								paginaACargar= extraerInfoDeArchSwap(PID, direccion.segmento, direccion.pagina);
-								printf("extraida info de archivo\n");
+
 								t_direccion direccion_base; // Cargo el contenido del archivo en la direccion base: n° de segmento y pagina que corresponde, pero desplazamiento 0
 								memcpy(&direccion_base.segmento, &segmento->numeroSegmento, sizeof(uint32_t));
 								memcpy(&direccion_base.pagina, &pagina->numeroPagina, sizeof(uint32_t));
@@ -466,7 +463,7 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 								guardarInformacion(memoria_ppal+(numeroDeMarcoLibre*256),direccion_base,paginaACargar.codigo,paginaACargar.tamanio_buffer);
 								pagina->marcoEnMemPpal=numeroDeMarcoLibre;
 								pagina->swap=0;
-								printf("guarde el archivo en memoria\n"); //DEBUG
+
 								tabla_marcos[numeroDeMarcoLibre].marco_libre = 0;//Ocupado
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].pagina, &pagina->numeroPagina, sizeof(uint32_t));
 								memcpy(&tabla_marcos[numeroDeMarcoLibre].segmento, &segmento->numeroSegmento, sizeof(uint32_t));

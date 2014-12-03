@@ -475,8 +475,6 @@ void handler_conexiones(void){
 		pthread_create(&nueva_solicitud, NULL, (void*) &handler_solicitudes, conexion);
 	}
 
-	//TODO cerrar conexion
-
 }
 
 
