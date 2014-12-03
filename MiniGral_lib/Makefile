@@ -17,7 +17,7 @@ functions: ./serialize/functions.c
 	$(CC) -c -fmessage-length=0 -fPIC ./serialize/functions.c
 
 enviar_recibir_paquete: ./sockets/enviar_recibir_paquete.c
-	$(CC) -c -fmessage-length=0 -fPIC ./sockets/enviar_recibir_paquete.
+	$(CC) -c -fmessage-length=0 -fPIC ./sockets/enviar_recibir_paquete.c
 
 funciones_comunes: funciones_comunes.c
 	$(CC) -c -fmessage-length=0 -fPIC funciones_comunes.c
@@ -39,9 +39,9 @@ uninstall:
 
 clean:
 	$(RM) libMiniGral_lib.so
-	$(RM) functions.so
-	$(RM) enviar_recibir_paquete.so
-	$(RM) funciones_comunes.so
+	$(RM) functions.o
+	$(RM) enviar_recibir_paquete.o
+	$(RM) funciones_comunes.o
 
 reinstall:
 	make uninstall
