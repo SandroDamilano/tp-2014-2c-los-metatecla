@@ -3,6 +3,7 @@
 	<name>MiniGral_lib</name>
 	<comment></comment>
 	<projects>
+		<project>ansisop-panel</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

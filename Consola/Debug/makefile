@@ -26,13 +26,14 @@ endif
 all: Consola
 
 dependents:
-	-cd /home/utnso/git/tp-2014-2c-los-metatecla/MiniGral_lib/Debug && $(MAKE) all
+	-cd /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug && $(MAKE) clean all
+	-cd /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug && $(MAKE) clean all
 
 # Tool invocations
-Consola: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so
+Consola: $(OBJS) $(USER_OBJS) /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug/libansisop-panel.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/git/tp-2014-2c-los-metatecla/MiniGral_lib/Debug" -o "Consola" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug" -L"/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug" -o "Consola" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -43,6 +44,7 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/git/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so:
+/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so:
+/home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug/libansisop-panel.so:
 
 -include ../makefile.targets

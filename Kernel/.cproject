@@ -41,6 +41,7 @@
 								<option id="gnu.c.link.option.libs.1881875507" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="MiniGral_lib"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="ansisop-panel"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1528560178" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

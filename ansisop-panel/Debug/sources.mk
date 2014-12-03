@@ -13,6 +13,7 @@ LIBRARIES :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-ansisop-panel \
-ansisop-panel/collections \
+panel \
+panel/commons \
+panel/commons/collections \
 

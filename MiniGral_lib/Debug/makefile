@@ -9,6 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include sockets/subdir.mk
+-include serialize/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -25,11 +26,14 @@ endif
 # All Target
 all: libMiniGral_lib.so
 
+dependents:
+	-cd /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug && $(MAKE) all
+
 # Tool invocations
-libMiniGral_lib.so: $(OBJS) $(USER_OBJS)
+libMiniGral_lib.so: $(OBJS) $(USER_OBJS) /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug/libansisop-panel.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -shared -o "libMiniGral_lib.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug" -shared -o "libMiniGral_lib.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -40,5 +44,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
+/home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug/libansisop-panel.so:
 
 -include ../makefile.targets

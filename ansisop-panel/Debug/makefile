@@ -8,8 +8,9 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include ansisop-panel/collections/subdir.mk
--include ansisop-panel/subdir.mk
+-include panel/commons/collections/subdir.mk
+-include panel/commons/subdir.mk
+-include panel/subdir.mk
 -include subdir.mk
 -include objects.mk
 

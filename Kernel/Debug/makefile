@@ -26,14 +26,14 @@ endif
 all: Kernel
 
 dependents:
-	-cd /home/utnso/workspace/ansisop-panel/Debug && $(MAKE) clean all
-	-cd /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release && $(MAKE) clean all
+	-cd /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug && $(MAKE) all
+	-cd /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug && $(MAKE) all
 
 # Tool invocations
-Kernel: $(OBJS) $(USER_OBJS) /home/utnso/workspace/ansisop-panel/Debug/libansisop-panel.so /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release/libMiniGral_lib.so
+Kernel: $(OBJS) $(USER_OBJS) /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug/libansisop-panel.so /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release" -L"/home/utnso/workspace/ansisop-panel/Debug" -o "Kernel" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug" -L"/home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug" -o "Kernel" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -44,7 +44,7 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/workspace/ansisop-panel/Debug/libansisop-panel.so:
-/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Release/libMiniGral_lib.so:
+/home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug/libansisop-panel.so:
+/home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so:
 
 -include ../makefile.targets
