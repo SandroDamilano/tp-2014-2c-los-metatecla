@@ -258,6 +258,10 @@ uint32_t destruirSegmento(uint32_t PID, uint32_t direccBase){
 	}
 	}
 
+	void liberarSegmento(t_lista_segmentos *segmento){
+		list_iterate((*segmento).lista_Paginas,(void*) (*liberarMemoria));
+		free(segmento);}
+
 	t_lista_procesos *proceso ;
 	proceso = list_find(listaProcesos, (void*) (*mismoPID));
 	if(proceso != NULL){
