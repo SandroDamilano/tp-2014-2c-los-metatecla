@@ -414,20 +414,18 @@ void hacerSwap(uint32_t PID, t_direccion direccion, t_lista_paginas *pagina, t_l
 	tabla_marcos[numeroMarco].pagina=direccion.pagina;
 	tabla_marcos[numeroMarco].segmento=direccion.segmento;
 	tabla_marcos[numeroMarco].pid=PID;
-	printf("HICE SWAP \n");
 }
 
 void modificarBitAlgoritmo(uint32_t numeroMarco){
 	uint32_t i;
 	if(string_equals_ignore_case(alg_sustitucion,"LRU")){
 		for(i=0;i<=cant_marcos-1;i++){
-			printf("marco Libre: %i \n", tabla_marcos[i].marco_libre);
+
 			if(tabla_marcos[i].marco_libre==0){
 			tabla_marcos[i].bitAlgoritmo+=1;
-			printf("bitAlgoritmo: %i, numeroMarco: %i \n", tabla_marcos[i].bitAlgoritmo, i);
+
 			}}
 		tabla_marcos[numeroMarco].bitAlgoritmo=0;
-		printf("bitAlgoritmo: %i, numeroMarco: %i \n", tabla_marcos[numeroMarco].bitAlgoritmo, numeroMarco);
 
 		} else {
 			tabla_marcos[numeroMarco].bitAlgoritmo=1;
@@ -510,7 +508,9 @@ void handler_conexiones(void){
 	 	while(1){
 
 	 		if (socket_recibir(sock, &tipoRecibido,&structRecibido) == -1){
-	 			printf("Se desconectó un cliente\n");
+	 			pthread_mutex_lock(&mutex_log);
+	 			log_info(logger,"Se desconecto un Cliente");
+	 			pthread_mutex_unlock(&mutex_log);
 	 			free(structRecibido);
 	 			return;
 	 		}
@@ -566,7 +566,6 @@ void handler_conexiones(void){
 	 				log_info(logger,"Recepcion de una solicitud de Crear Segmento con los paramentros: PID: %i,  Tamaño: %i\n", ((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 	 				pthread_mutex_unlock(&mutex_log);
 
-	 				printf("CREO SEGMENTO DE PID %d y TAMAÑO %d\n",((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 
 	 				resultado = crearSegmento(((t_struct_malloc* )structRecibido)->PID, ((t_struct_malloc* )structRecibido)->tamano_segmento);
 
@@ -608,19 +607,19 @@ void handler_conexiones(void){
 	 				id_socket = conexion->socket;
 
 
-	 				printf("ME LLEGO UN NUMERO PARA DESCONEXION\n");
+
 	 				if(((t_struct_numero*) structRecibido)->numero == 0){
 
 	 					list_remove_by_condition(lista_conexiones, (void*)es_la_conexion);
 
 	 					socket_cerrarConexion(conexion->socket);
-	 					printf("cerre el socket\n");
+
 	 					free(conexion);
-	 					printf("Frie conexion\n");
+
 	 					int ret = 1;
 	 					pthread_exit(&ret);
 	 					free(structRecibido);
-	 					printf("Mate hilo conexion\n");
+
 	 				}
 	 		}
 	 	free(structRecibido);
@@ -685,9 +684,11 @@ void handler_conexiones(void){
 				scanf("%d", &direcVir);
 				printf("Ingrese un tamaño:\n");
 				scanf("%d", &tamanio_escritura);
-				char* bytesEnMemoria =solicitar_memoria(PID, direcVir, tamanio_escritura);
-				bytesEnMemoria[tamanio_escritura]= '\0';
-				printf("En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);
+				void* bytesEnMemoria =solicitar_memoria(PID, direcVir, tamanio_escritura);
+				if(bytesEnMemoria != NULL){
+				((char*)bytesEnMemoria)[tamanio_escritura]= '\0';
+				printf("En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);}
+				else {printf("La solitud fallo (Fijarse en archivo de logeo)\n");}
 				indicaciones_consola();
 				free(bytesEnMemoria);
 
@@ -735,9 +736,10 @@ return NULL;
 		printf("Numero segmento: %d,   Tamanio: %d,   Direccion Base: %d\n",(*segmento).numeroSegmento,(*segmento).tamanio, base);
 	}
 	void imprimirPID(t_lista_procesos *proceso){
+	if(list_size((*proceso).lista_Segmentos) != 0){
 	printf("El PID del proceso es: %d\n", (*proceso).pid);
 	list_iterate((*proceso).lista_Segmentos, (void*) (*imprimirSegmento));
-}
+}}
  list_iterate(listaProcesos, (void*) (*imprimirPID));
  }
 
