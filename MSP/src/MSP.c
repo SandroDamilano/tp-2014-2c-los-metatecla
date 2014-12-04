@@ -67,6 +67,7 @@ int main(int argc, char *argv[]) {
 	tabla_marcos = crearTablaDeMarcos();
 	paginasMemoriaPpalActual = tamanio_mem_ppal*1024/256;
 	paginasMemoriaSwapActual = cant_mem_swap*1024*1024/256 ;
+	printf("Paginas en ppal: %d, Paginas en Swap: %d\n",paginasMemoriaPpalActual,paginasMemoriaSwapActual);
 	listaProcesos = list_create();
 
 	//4. Abrir conexiones con Kernel y CPU, y levantar Consola MSP
@@ -114,22 +115,23 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		}
 
 	//1.Verifica si hay memoria disponible
-	int cant_mem_actual=paginasMemoriaPpalActual+paginasMemoriaSwapActual;
+	int cant_mem_actual=(paginasMemoriaPpalActual+paginasMemoriaSwapActual)*256;
 	if (tamanio_segmento > 1048576){
 		pthread_mutex_lock(&mutex_log);
 		log_error(logger,"Error el tamaño de segmento pedido es mayor a lo soportado (maximo 1048576 bytes).");
 		pthread_mutex_unlock(&mutex_log);
 		return -1;
 	}
-
+	printf("Cantidad de memoria, %d, Tamanio segmento: %d\n",cant_mem_actual,tamanio_segmento);	
 	if(tamanio_segmento > cant_mem_actual){
 		pthread_mutex_lock(&mutex_log);
-		log_error(logger,"Error Memoria Llena");
+		printf("ERROR MEMORIA LLENA\n");
+		log_error(logger,"ERROR MEMORIA LLENA");
 		pthread_mutex_unlock(&mutex_log);
 		return -1;
 	}
 	//2.Se fija si se existe el proceso
-
+	printf("LLEGUE\n");
 	t_lista_procesos* proceso;
 	proceso = list_find(listaProcesos,(void*) (*mismoPID));
 
@@ -138,7 +140,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	int paginasSegmentoEnMP = 0;
 	uint32_t cantPaginasNuevoSeg=0;
 	cantPaginasNuevoSeg=tamanio_segmento/256;
-
+	printf("LLEGUE2\n");
 	pthread_mutex_lock(&mutex_reservarMemoria);
 	if((tamanio_segmento%256)>0){cantPaginasNuevoSeg++;};
 	if(cantPaginasNuevoSeg<=paginasMemoriaSwapActual){
@@ -154,14 +156,14 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 			 paginasMemoriaPpalActual -= cantPaginasNuevoSeg;}
 	}
 	pthread_mutex_unlock(&mutex_reservarMemoria);
-
+	printf("LLEGUE3\n");
 	pthread_mutex_lock(&mutex_log);
 	if(paginasMemoriaSwapActual == 0){
 	log_info(logger,"La memoria Swap se encuentra Llena");}
 	if(paginasMemoriaPpalActual == 0){
 		log_info(logger,"La memoria Principal se encuentra Llena");}
 	pthread_mutex_unlock(&mutex_log);
-
+	printf("LLEGUE4\n");
 	//4.Crea lista de segmentos o agrega nuevo segmento
 	if(proceso==NULL){
 		proceso = malloc(sizeof(t_lista_procesos));
@@ -172,6 +174,7 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 	pthread_mutex_lock(&mutex_crearSegmento);
 	int tamanioListaSeg=list_size((*proceso).lista_Segmentos);
 	t_lista_segmentos *nuevoSegmento = malloc(sizeof(t_lista_segmentos));
+	printf("LLEGUE5\n");
 	if(tamanioListaSeg<4096){
 		(*nuevoSegmento).lista_Paginas=list_create();
 		(*nuevoSegmento).numeroSegmento=asignarNumeroSegmento((*proceso).lista_Segmentos);
@@ -197,15 +200,16 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		cantPaginas=cantPaginas-1;
 	}
 	pthread_mutex_unlock(&mutex_crearSegmento);
-
+	printf("LLEGUE6\n");
 	//6. Carga paginas en memoria principal si es necesario
-
+	printf("paginas segmento en MP: %d\n",paginasSegmentoEnMP);
 	if(paginasSegmentoEnMP>0){
 		 uint32_t cantPagCargar=paginasSegmentoEnMP;
 		 pthread_mutex_lock(&mutex_tablaMarcos);
 		 while(cantPagCargar>0){
 			 bool mismaPagina(t_lista_paginas *pagina){
-			 			return pagina->numeroPagina==cantPagCargar-1;//AGREGUE ESTE -1
+			 	printf("Numero de Pagina, %d, pagina a cargar %d\n",pagina->numeroPagina,cantPagCargar-1);
+				return pagina->numeroPagina==cantPagCargar-1;//AGREGUE ESTE -1
 			 }
 
 			uint32_t marcoLibre = buscarMarcoLibre(tabla_marcos);
@@ -222,12 +226,14 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 			(*paginaACargar).swap=0;
 			cantPagCargar=cantPagCargar-1;
 		 }
-		 pthread_mutex_lock(&mutex_tablaMarcos);
+		 pthread_mutex_unlock(&mutex_tablaMarcos);
 		 }
+	printf("LLEGUE7\n");
   direccionBaseDelSegmento = crearDireccion((*nuevoSegmento).numeroSegmento,0,0);
   pthread_mutex_lock(&mutex_log);
   		log_info(logger,"Se creo el nuevo segmento del proceso: %d, tiene el tamaño: %d y su direccion base es: %u",PID,tamanio_segmento, direccionBaseDelSegmento);
   		pthread_mutex_unlock(&mutex_log);
+	
 	return direccionBaseDelSegmento ;
 }
 
@@ -251,12 +257,22 @@ uint32_t destruirSegmento(uint32_t PID, uint32_t direccBase){
 			tabla_marcos[numeroDeMarco].bitAlgoritmo=0;
 			pthread_mutex_lock(&mutex_log);
 			log_info(logger,"El marco %i, ahora se encuentra libre \n",numeroDeMarco);
-			pthread_mutex_unlock(&mutex_log);}
+			pthread_mutex_unlock(&mutex_log);
+			pthread_mutex_lock(&mutex_reservarMemoria);
+			paginasMemoriaPpalActual+=1;
+			pthread_mutex_unlock(&mutex_reservarMemoria);				}
 		else {
 		//1. Destruir el archivo
 		destruir_archivo_swap(PID, (direccionTraducida).segmento, (*unaPagina).numeroPagina);
+		pthread_mutex_lock(&mutex_reservarMemoria);
+		paginasMemoriaSwapActual+=1;
+		pthread_mutex_unlock(&mutex_reservarMemoria);
 	}
 	}
+
+	void liberarSegmento(t_lista_segmentos *segmento){
+		list_iterate((*segmento).lista_Paginas,(void*) (*liberarMemoria));
+		free(segmento);}
 
 	t_lista_procesos *proceso ;
 	proceso = list_find(listaProcesos, (void*) (*mismoPID));
