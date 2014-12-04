@@ -8,7 +8,7 @@
 #ifndef FUNCIONESMSP_H_
 #define FUNCIONESMSP_H_
 
-#define MAX_COUNT_OF_CONFIG_KEYS 4
+#define MAX_COUNT_OF_CONFIG_KEYS 5
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>

@@ -8,7 +8,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#define MAX_COUNT_OF_CONFIG_KEYS 6
+#define MAX_COUNT_OF_CONFIG_KEYS 7
 
 	#include <stdio.h>
 	#include <stdlib.h>
@@ -38,7 +38,7 @@
 	// Vars de config
 	uint32_t quantum = 0;
 	extern uint32_t tamanio_stack = 0;
-	char *ip_msp, *syscalls_path;
+	char *ip_msp, *ip_kernel, *syscalls_path;
 	uint32_t puerto_kernel, puerto_msp;
 
 	char bufferLog[80];

@@ -9,7 +9,7 @@
 uint32_t puertoMSP;
 uint32_t tamanio_mem_ppal;
 uint32_t cant_mem_swap;
-char* alg_sustitucion;
+char* alg_sustitucion, *ipMSP;
 
 /*********************************** INICIO *******************************************************************/
 void crear_logger(){
@@ -432,7 +432,7 @@ void modificarBitAlgoritmo(uint32_t numeroMarco){
 void handler_conexiones(void){
 	lista_conexiones = list_create();
 
-	int socket_servidor = socket_crearServidor("127.0.0.1", puertoMSP);
+	int socket_servidor = socket_crearServidor(ipMSP, puertoMSP);
 	pthread_t nueva_solicitud;
 	pthread_mutex_lock(&mutex_log);
 	log_info(logger,"MSP a la escucha de nuevas conexiones");

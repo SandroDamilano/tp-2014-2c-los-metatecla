@@ -295,7 +295,7 @@ fd_set combinar_master_fd(fd_set* master1, fd_set* master2, int maxfd){
 }
 
 void handshake_thread(){
-	int socket_escucha = socket_crearServidor("127.0.0.1", puerto_kernel);
+	int socket_escucha = socket_crearServidor(ip_kernel, puerto_kernel);
 	fd_set read_fd;
 	int maxfd = socket_escucha;
 	int i;
