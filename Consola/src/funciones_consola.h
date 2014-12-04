@@ -32,7 +32,7 @@
 	uint32_t esBESO;
 
 	// config file vars
-	char* ip_kernel;
+	char* ip_kernel, *config_path;
 	int puerto_kernel;
 
 	//char *buffer;
@@ -50,7 +50,7 @@
 	char s[INET6_ADDRSTRLEN];
 
 	// FUNCIONES Grales
-	void leer_config();
+	void leer_config(char* config_path);
 	void liberarMemoria();
 	void escuchar_mensajes(int sockKernel);
 

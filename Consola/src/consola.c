@@ -23,13 +23,17 @@ int main(int argc, char	**argv){
 
 	// 1- Recibir BESO FILE a ejecutar
 	char* beso_file = argv[1];
+	config_path = argv[2];
+
+	if(!config_path)
+	config_path = getenv("ESO_CONFIG");	//var de entorno que contiene el path al config.cfg
 
 	// 2- Crear/Abrir file log del programa para el registro de actividades
 	logger = log_create("/home/utnso/tp-2014-2c-los-metatecla/Consola.log", "CONSOLA", 0, LOG_LEVEL_TRACE);
 	log_info(logger,"Inicio de registro de actividades del Proceso CONSOLA.");
 
 	// 3- Leer archivo de configuracion y asignar valores
-	leer_config();
+	leer_config(config_path);
 
 	// 4- Conectar a Proceso KERNEL
 	//int sockKernel = conectar_a_Kernel(ip_kernel,puerto_kernel);
