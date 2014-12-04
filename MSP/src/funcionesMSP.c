@@ -56,6 +56,17 @@ void leer_config(char *config_path)	{
 			exit(1);
 		}
 
+	if(config_has_property(config_file, "IP_MSP"))	{
+			ipMSP = config_get_string_value(config_file,"IP_MSP");
+	    	sprintf(bufferLog,"IP_MSP = [%s]", ipMSP);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'IP_MSP' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'IP_MSP' en archivo de configuracion. Programa abortado.");
+		exit(1);
+	}
+
 	if(config_has_property(config_file, "CANTIDAD_SWAP")){
 			cant_mem_swap = config_get_int_value(config_file,"CANTIDAD_SWAP");
 	    	sprintf(bufferLog,"CANTIDAD_SWAP = [%d]",cant_mem_swap);

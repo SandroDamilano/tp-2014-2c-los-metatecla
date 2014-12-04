@@ -154,6 +154,18 @@ void leer_config()
 		exit(1);
 	}
 
+	//IP_KERNEL
+	if(config_has_property(config_file, "IP_KERNEL"))	{
+			ip_kernel = config_get_string_value(config_file,"IP_KERNEL");
+	    	sprintf(bufferLog,"IP_KERNEL = [%s]", ip_kernel);
+	    	log_debug(logger,bufferLog);
+	} else {
+		fprintf(stderr, "Falta key 'IP_KERNEL' en archivo de configuracion. Chequear.\n");
+		fprintf(stderr, "Programa abortado.\n");
+		log_error(logger,"Falta key 'IP_KERNEL' en archivo de configuracion. Programa abortado.");
+		exit(1);
+	}
+
 	//IP_MSP
 	if(config_has_property(config_file, "IP_MSP"))
 	{
