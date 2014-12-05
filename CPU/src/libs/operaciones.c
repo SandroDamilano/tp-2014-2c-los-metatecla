@@ -111,6 +111,7 @@ void ejecutarLinea(int* bytecode){
 
 		ejecucion_instruccion("GETM",parametros);
 
+
 		if(reg2 == 'S'){ //HORRIBLE
 			numero_enviar = registros_cpu.S;
 			datos_solicitados->base = sumar_desplazamiento(registros_cpu.X,numero_enviar);
@@ -134,18 +135,17 @@ void ejecutarLinea(int* bytecode){
 			return ;
 		}
 
-		//datos_recibidos = malloc(1); //Un byte
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
-		//printf("Me llego de memoria %s\n",datos_recibidos);
+
+		uint32_t putos = 0;
 
 		if(reg1 == 'S'){
-			//printf("El reg 1 (S) tiene %d\n", registros_cpu.S);
-			registros_cpu.S = *((int*)datos_recibidos);
+			//registros_cpu.S = *((int*)datos_recibidos);
 		} else {
-			//printf("El reg 1 tiene %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
-			registros_cpu.registros_programacion[elegirRegistro(reg1)] = *((int*)datos_recibidos);
+			//registros_cpu.registros_programacion[elegirRegistro(reg1)] = *((int*)datos_recibidos);
+			memcpy(&putos, datos_recibidos, 1);
+			registros_cpu.registros_programacion[elegirRegistro(reg1)] = (int32_t)putos;
 		}
-
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
 
@@ -189,7 +189,8 @@ void ejecutarLinea(int* bytecode){
 
 		//HORRIBLEEEE
 		int dir;
-		void* auxxx = malloc(numero);
+		char* auxxx = malloc(numero);
+		int forro = 0;
 
 		if(reg2 == 'S'){
 			printf("S TIENE %d\n", registros_cpu.S);
@@ -200,14 +201,17 @@ void ejecutarLinea(int* bytecode){
 
 		} else {
 			printf("REG TIENE %d\n", registros_cpu.registros_programacion[elegirRegistro(reg2)]);
-			memcpy(auxxx, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+			//memcpy(auxxx, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+			memcpy(&forro, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
 			dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
 		} //TURBIO :S
 
-		printf("NUMERO ENVIAR SETM: %d\n", *((int*)auxxx));
+		//printf("NUMERO ENVIAR SETM: %d\n", *((int*)auxxx));
+		printf("NUMERO ENVIAR SETM: %d\n", forro);
 
 		datos_enviados->PID = registros_cpu.I;
-		datos_enviados->buffer = auxxx;
+		//datos_enviados->buffer = auxxx;
+		datos_enviados->buffer = &forro;
 		datos_enviados->tamanio = numero;
 		datos_enviados->base = dir;
 
