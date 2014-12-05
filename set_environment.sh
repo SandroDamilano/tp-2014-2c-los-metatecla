@@ -11,4 +11,7 @@ echo 'Directorio para swapping creado con éxito'
 echo 'export ESO_CONFIG=~/tp-2014-2c-los-metatecla/Consola/Debug/config.cfg' >> ~/.bashrc
 echo 'Variable de entorno ESO_CONFIG alojada en .bashrc con éxito'
 
+echo "PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '" >> ~/.bashrc
+echo 'Set color prompt syntax ON'
+
 echo '\nFin seteo de entorno.'
