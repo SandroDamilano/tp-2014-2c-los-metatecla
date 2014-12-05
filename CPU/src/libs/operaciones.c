@@ -205,8 +205,17 @@ void ejecutarLinea(int* bytecode){
 		} else {
 			printf("REG TIENE %d\n", registros_cpu.registros_programacion[elegirRegistro(reg2)]);
 			//memcpy(auxxx, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
-			memcpy(&forro, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
-			dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+
+			if(registros_cpu.registros_programacion[elegirRegistro(reg2)] <0){
+				memcpy(&forro, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+
+				forro -= elevar(2, 8*numero);
+
+				dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+			} else {
+				memcpy(&forro, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
+				dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+			}
 		} //TURBIO :S
 
 		//printf("NUMERO ENVIAR SETM: %d\n", *((int*)auxxx));

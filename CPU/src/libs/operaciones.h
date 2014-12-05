@@ -10,6 +10,7 @@
 
 #include "auxiliares.h"
 #include <sockets/enviar_recibir_paquete.h>
+#include <estructuras_auxiliares.h>
 
 int* param;
 //int sockMSP;
