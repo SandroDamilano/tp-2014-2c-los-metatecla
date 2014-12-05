@@ -16,7 +16,6 @@ void ejecutarLinea(int* bytecode){
 	int bytecodeLetras = convertirAString(bytecode);
 	t_list* parametros = list_create();
 	char* aux;
-	aux = malloc(sizeof(uint32_t));
 	char reg1;
 	char reg2;
 	int32_t numero;
@@ -25,11 +24,13 @@ void ejecutarLinea(int* bytecode){
 	uint32_t direccionMSP;
 	int resultado;
 
+	aux = malloc(sizeof(uint32_t));
 	t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
 	t_struct_numero* id_semaforo = malloc(sizeof(t_struct_numero));
 	t_struct_numero* tid_enviar = malloc(sizeof(t_struct_numero));
 	t_struct_sol_bytes* datos_solicitados = malloc(sizeof(t_struct_sol_bytes));
 	t_struct_env_bytes* datos_enviados = malloc(sizeof(t_struct_env_bytes));
+
 	void* datos_recibidos;
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
@@ -53,6 +54,15 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+				free(structRecibido);
+				list_clean(parametros);
+				list_destroy(parametros);
+				free(id_semaforo);
+				free(tcb_enviar);
+				free(tid_enviar);
+				free(datos_solicitados);
+				free(datos_enviados);
+				free(aux);
 			return ;
 		}
 
@@ -92,6 +102,15 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return ;
 		}
 
@@ -172,6 +191,15 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return ;
 		}
 
@@ -193,12 +221,10 @@ void ejecutarLinea(int* bytecode){
 
 		//HORRIBLEEEE
 		int dir;
-		char* auxxx = malloc(numero);
 		int forro = 0;
 
 		if(reg2 == 'S'){
 			printf("S TIENE %d\n", registros_cpu.S);
-			//memcpy(auxxx, &registros_cpu.S, numero);
 			memcpy(&forro, &registros_cpu.S,numero);
 
 
@@ -206,7 +232,6 @@ void ejecutarLinea(int* bytecode){
 
 		} else {
 			printf("REG TIENE %d\n", registros_cpu.registros_programacion[elegirRegistro(reg2)]);
-			//memcpy(auxxx, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
 
 			if(registros_cpu.registros_programacion[elegirRegistro(reg2)] <0){
 				memcpy(&forro, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
@@ -249,8 +274,7 @@ void ejecutarLinea(int* bytecode){
 
 		cambio_registros(registros_cpu);
 
-		free(auxxx);
-
+		free(datos_enviados->buffer);
 		free(datos_recibidos);
 		free(structRecibido);
 		free(param_numero);
@@ -270,6 +294,15 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return ;
 		}
 
@@ -310,6 +343,15 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return ;
 		}
 
@@ -365,8 +407,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -405,8 +456,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -443,8 +503,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -483,8 +552,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -528,8 +606,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -567,8 +654,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -602,8 +698,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -647,8 +752,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -686,8 +800,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -725,8 +848,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -758,8 +890,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -795,8 +936,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -831,8 +981,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -868,6 +1027,15 @@ void ejecutarLinea(int* bytecode){
 
 		resultado = socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_TCB) == EXIT_FAILURE){
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return;
 		}
 
@@ -897,8 +1065,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -948,8 +1125,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -1016,8 +1202,17 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		//datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -1033,6 +1228,7 @@ void ejecutarLinea(int* bytecode){
 		list_add(parametros, param_reg1);
 		ejecucion_instruccion("TAKE",parametros);
 
+		free(datos_recibidos);
 
 		//Pido lo que hay en el stack del tamanio numero que recibi antes
 		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S - numero);
@@ -1047,9 +1243,18 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
-		free(datos_recibidos);
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
+
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
@@ -1097,6 +1302,15 @@ void ejecutarLinea(int* bytecode){
 
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return;
 		}
 
@@ -1138,8 +1352,17 @@ void ejecutarLinea(int* bytecode){
 		//Recibo un numero que se ingreso por consola
 		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_INNN)==EXIT_FAILURE){
-					return;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return;
+		}
 
 		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
 
@@ -1162,8 +1385,17 @@ void ejecutarLinea(int* bytecode){
 		//Recibo un string que se ingreso por consola
 		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_STRING)==EXIT_FAILURE){
-					return;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return;
+		}
 
 		//Envio cadena recibida a memoria
 		char* cadena = ((t_struct_string*) structRecibido)->string;
@@ -1178,8 +1410,17 @@ void ejecutarLinea(int* bytecode){
 
 		resultado = socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO)==EXIT_FAILURE){
-					return;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return;
+		}
 
 		if (((t_struct_numero*) structRecibido)->numero == -1){
 			printf("No hay espacio suficiente en memoria\n");
@@ -1215,8 +1456,17 @@ void ejecutarLinea(int* bytecode){
 		//Recibo la cadena de memoria
 		socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_RESPUESTA_MSP) == EXIT_FAILURE){
-					return ;
-				}
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		//datos_recibidos = malloc(registros_cpu.registros_programacion[1]); //tamaño determinado por reg B
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
@@ -1258,7 +1508,18 @@ void ejecutarLinea(int* bytecode){
 
 		//Recibo TID del hijo
 		resultado = socket_recibir(sockKernel, &tipo_struct, &structRecibido);
-		controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO);
+		if(controlar_struct_recibido(tipo_struct, D_STRUCT_NUMERO) == EXIT_FAILURE){
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
+			return ;
+		}
 
 		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
 
@@ -1317,7 +1578,7 @@ void ejecutarLinea(int* bytecode){
 	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
 	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
 
-	list_destroy(parametros); //Que onda la destruccion de los elementos?
+	list_destroy(parametros);
 	free(id_semaforo);
 	free(tcb_enviar);
 	free(tid_enviar);
