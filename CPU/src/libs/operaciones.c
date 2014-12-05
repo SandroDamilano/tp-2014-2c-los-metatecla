@@ -141,6 +141,8 @@ void ejecutarLinea(int* bytecode){
 
 		if(reg1 == 'S'){
 			//registros_cpu.S = *((int*)datos_recibidos);
+			memcpy(&putos, datos_recibidos, 1);
+			registros_cpu.S = (int32_t)putos;
 		} else {
 			//registros_cpu.registros_programacion[elegirRegistro(reg1)] = *((int*)datos_recibidos);
 			memcpy(&putos, datos_recibidos, 1);
@@ -194,7 +196,8 @@ void ejecutarLinea(int* bytecode){
 
 		if(reg2 == 'S'){
 			printf("S TIENE %d\n", registros_cpu.S);
-			memcpy(auxxx, &registros_cpu.S, numero);
+			//memcpy(auxxx, &registros_cpu.S, numero);
+			memcpy(&forro, &registros_cpu.S,numero);
 
 
 			dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
@@ -317,7 +320,7 @@ void ejecutarLinea(int* bytecode){
 				if(reg2 != 'S'){
 				registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.registros_programacion[elegirRegistro(reg2)];}
 				else {
-					registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.S;
+					registros_cpu.registros_programacion[0] = sumar_desplazamiento(registros_cpu.X, registros_cpu.registros_programacion[elegirRegistro(reg1)] + registros_cpu.S);
 				}
 			}
 		}
