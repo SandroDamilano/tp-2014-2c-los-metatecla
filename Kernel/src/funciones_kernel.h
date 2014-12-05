@@ -18,20 +18,30 @@
 
 	extern t_queue* cola_new;
 	extern t_queue* cola_exit;
+	extern t_list* cola_ready;
+	extern t_list* cola_block;
 	extern t_list* consolas; //Lista con info de las consolas activas y sus procesos
 	extern t_list* cola_exec;
 	extern sem_t sem_new;
 	extern sem_t sem_exit;
+	extern sem_t sem_ready;
+	extern sem_t sem_abort;
 	extern pthread_mutex_t mutex_consolas;
 	extern pthread_mutex_t mutex_new;
 	extern pthread_mutex_t mutex_exit;
 	extern pthread_mutex_t mutex_exec;
+	extern pthread_mutex_t mutex_ready;
+	extern pthread_mutex_t mutex_block;
 	extern pthread_mutex_t mutex_TIDs;
 	extern pthread_mutex_t mutex_PIDs;
 
 	extern pthread_mutex_t mutex_log;
 	extern pthread_mutex_t mutex_cpus_conectadas;
 	extern pthread_mutex_t mutex_consolas_conectadas;
+
+	extern t_list* lista_abortar;
+	extern pthread_mutex_t mutex_abortar;
+	extern bool espera_por_inn;
 
 	//TODO Inicializar cantidad de PIDs y TIDs
 	extern int cantidad_de_PIDs;
@@ -79,5 +89,7 @@
 	int obtener_pid();
 	int obtener_tid();
 	void imprimir_texto(int socket_consola, char* mensaje);
+	bool hay_que_abortar_pid(uint32_t pid);
+	void agregar_a_abortar(uint32_t pid);
 
 #endif /* FUNCIONES_KERNEL_H_ */

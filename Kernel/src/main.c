@@ -107,6 +107,7 @@ void llegoSenialParaTerminar(int n){
 		list_destroy(solicitudes_tcb);
 		list_destroy(consolas);
 		list_destroy(terminados);
+		list_destroy(lista_abortar);
 
 		FD_ZERO(&master_cpus);
 		FD_ZERO(&master_consolas);

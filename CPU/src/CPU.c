@@ -102,59 +102,6 @@ int main(int argc, char** argv) {
 	comienzo_ejecucion(tcb,quantum);
 
 /********************** EMPIEZA WHILE(1) ***************************************/
-	/*while(1){
-	if(registros_cpu.K == false){ //SI NO ES MODO KERNEL
-		if(terminoEjecucion == true){
-			terminar_y_pedir_tcb(tcb);
-		} else {
-			if(cantidad_lineas_ejecutadas == quantum){
-				printf("cant lineas = quantum\n");
-				//socket a kernel con tcb
-				copiar_registros_a_tcb();
-				t_struct_tcb* tcb_enviar = malloc(sizeof(t_struct_tcb));
-				copiar_tcb_a_structTcb(tcb, tcb_enviar);
-				resultado = socket_enviar(sockKernel, D_STRUCT_TCB_QUANTUM, tcb_enviar);
-				controlar_envio(resultado, D_STRUCT_TCB_QUANTUM);
-				free(tcb_enviar);
-
-				fin_ejecucion();
-
-				terminar_y_pedir_tcb(tcb);
-
-			} else{
-				cantidad_lineas_ejecutadas++;
-				registros_cpu.I = tcb->pid;
-				ejecutar_otra_linea(sockMSP, tcb, bytecode);
-			}
-		}
-	}
-
-	if(registros_cpu.K == true){ //SI ES MODO KERNEL
-		if(terminoEjecucion == true){
-			terminar_y_pedir_tcb(tcb);
-		} else{
-			registros_cpu.I = 0;
-			ejecutar_otra_linea(sockMSP,tcb,bytecode);
-			}
-		}
-
-	signal(SIGINT, llegoSenialParaTerminar);
-
-	esperar_retardo();
-
-	if(deboTerminar == true){
-		break;
-		}
-
-	}
-
-	printf("hola\n");
-	free(tcb);
-	config_destroy(config_cpu);
-	//free(logger); //FIXME: LO HAGO? TODOS COMPARTIMOS LA MISMA VARIABLE Y LA FUIMOS MALLOQUEANDO :O
-	log_destroy(logger);
-	return EXIT_SUCCESS;
-}*/
 
 while(1){
 	t_struct_numero* pedir_tcb;
@@ -205,8 +152,16 @@ while(1){
 				controlar_envio(resultado, D_STRUCT_TCB_QUANTUM);
 				free(tcb_enviar);
 
-				fin_ejecucion();
-				terminar_y_pedir_tcb(tcb);
+				void* structRecibido2;
+				t_tipoEstructura tipoStruct2;
+				socket_recibir(sockKernel, &tipoStruct2, &structRecibido2);
+				if(tipoStruct2 == D_STRUCT_ABORT){
+					abortar();
+				} else {
+					fin_ejecucion();
+					terminar_y_pedir_tcb(tcb);
+				}
+
 
 			} else{
 				cantidad_lineas_ejecutadas++;

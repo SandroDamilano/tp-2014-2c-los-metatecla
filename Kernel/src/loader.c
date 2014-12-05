@@ -16,6 +16,7 @@ void handler_consola(int sock_consola){
 	int tamanio;
 	//int numero;
 	int sockCPU;
+	uint32_t pid;
 
 	t_tipoEstructura tipoRecibido;
 	void* structRecibido;
@@ -23,10 +24,25 @@ void handler_consola(int sock_consola){
 	if(socket_recibir(sock_consola, &tipoRecibido, &structRecibido)==-1){
 		//La Consola cerró la conexión
 
-		//TODO: Averiguar qué hacer con el proceso que se estaba ejecutando
-		//Saco el nodo correspondiente de la estructura que relaciona el socket de la consola con el proceso
-		eliminar_consola(sock_consola);
+		pid = obtener_pid_consola(sock_consola);
 
+		if(espera_por_inn){
+			sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
+			if(la_cpu_esta_ejecutando_el_pid(sockCPU, pid)){
+				t_struct_numero* abortar = malloc(sizeof(t_struct_numero));
+				abortar->numero = D_STRUCT_ABORT;
+				socket_enviar(sockCPU, D_STRUCT_ABORT, abortar);
+				free(abortar);
+
+				t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
+				retornar_de_systcall(tcb, ABORTAR);
+				sem_post(&sem_abort);
+			}
+		}
+
+		if(pid != 999){ //HORRIBLE
+			eliminar_proceso(pid);
+		}
 		//Cierro el socket y lo saco del FD maestro
 		pthread_mutex_lock(&mutex_log);
 		desconexion_consola(sock_consola);
@@ -60,6 +76,7 @@ void handler_consola(int sock_consola){
 		//Así como viene, se lo mando a la CPU
 		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
 		socket_enviar(sockCPU, tipoRecibido, structRecibido);
+		espera_por_inn = false;
 
 		break;
 
@@ -69,6 +86,7 @@ void handler_consola(int sock_consola){
 		//Así como viene, se lo mando a la CPU
 		sockCPU = obtener_cpu_ejecutando_la_consola(sock_consola);
 		socket_enviar(sockCPU, tipoRecibido, structRecibido);
+		espera_por_inn = false;
 
 		break;
 	}
@@ -202,15 +220,48 @@ void agregar_consola(uint32_t pid, uint32_t tid, int sock){
 }
 
 void eliminar_consola(int sock){
+	t_data_nodo_consolas* data = sacar_data_consola(sock);
+	free(data);
+}
+
+t_data_nodo_consolas* sacar_data_consola(int sock){
 	sock_a_eliminar = sock;
 	pthread_mutex_lock(&mutex_consolas);
 	t_data_nodo_consolas* data = list_remove_by_condition(consolas, (void*)es_la_consola);
 	pthread_mutex_unlock(&mutex_consolas);
-	free(data);
+	return data;
+}
+
+t_data_nodo_consolas* obtener_data_consola(int sock){
+	sock_a_eliminar = sock;
+	pthread_mutex_lock(&mutex_consolas);
+	t_data_nodo_consolas* data = list_find(consolas, (void*)es_la_consola);
+	pthread_mutex_unlock(&mutex_consolas);
+	return data;
+}
+
+uint32_t obtener_pid_consola(int sock){
+	t_data_nodo_consolas* data = obtener_data_consola(sock);
+	uint32_t pid;
+	if(data != NULL){
+		pid = data->pid;
+	} else {
+		pid = 999;
+	}
+
+	//free(data);
+	return pid;
 }
 
 bool es_la_consola(t_data_nodo_consolas* data){
 	return (data->socket == sock_a_eliminar);
+}
+
+void eliminar_proceso(uint32_t pid){
+	agregar_a_abortar(pid);
+	sem_init(&sem_abort, 1, 0);
+	eliminar_ready(pid);
+	eliminar_block(pid);
 }
 
 //Sólo puede haber una solicitud de un imput por vez, y lo hace la consola que está ejecutando el TCB de kernel
@@ -225,3 +276,14 @@ bool tiene_al_tcbKernel(t_data_nodo_exec* data){
 	return (data->tcb->kernel_mode == 1);
 }
 
+bool la_cpu_esta_ejecutando_el_pid(int sockCPU, uint32_t pid){
+	bool es_la_cpu_buscada(t_data_nodo_exec* data){
+		return ((data->sock  ==  sockCPU) && (data->tcb->pid == pid));
+	}
+
+	pthread_mutex_lock(&mutex_exec);
+	bool respuesta = list_any_satisfy(cola_exec, (void*)es_la_cpu_buscada);
+	pthread_mutex_unlock(&mutex_exec);
+	return respuesta;
+
+}

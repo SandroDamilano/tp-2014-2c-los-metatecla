@@ -58,6 +58,7 @@
 	pthread_mutex_t mutex_log;
 	int cantidad_de_PIDs;
 	int cantidad_de_TIDs;
+	sem_t sem_abort;
 
 	fd_set master_consolas;
 	int consolas_fdmax;
@@ -67,7 +68,8 @@
 
 	int sock_a_eliminar;
 
-	void* main_LOADER(void* parametros);
+	bool espera_por_inn;
+
 	void handler_consola(int sock_consola);
 	int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola);
 	void destruir_seg_codigo(uint32_t pid, uint32_t dir_codigo);
@@ -76,6 +78,11 @@
 	bool es_la_consola(t_data_nodo_consolas* data);
 	int obtener_cpu_ejecutando_la_consola(int sock_consola);
 	bool tiene_al_tcbKernel(t_data_nodo_exec* data);
-	//void *get_in_addr(struct sockaddr *sa);
+	uint32_t obtener_pid_consola(int sock);
+
+	t_data_nodo_consolas* sacar_data_consola(int sock);
+	t_data_nodo_consolas* obtener_data_consola(int sock);
+	void eliminar_proceso(uint32_t pid);
+	bool la_cpu_esta_ejecutando_el_pid(int sockCPU, uint32_t pid);
 
 #endif /* LOADER_H_ */

@@ -34,6 +34,8 @@ void ejecutarLinea(int* bytecode){
 	void* datos_recibidos;
 	void * structRecibido;
 	t_tipoEstructura tipo_struct;
+	void * structRecibido2;
+	t_tipoEstructura tipo_struct2;
 
 	char param_reg1[2];
 	char param_reg2[2];
@@ -1008,6 +1010,14 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_INTE);
 		free(direccion_syscalls);
 
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
+
 		incrementar_pc(4); //direccion
 
 		//Mando tcb
@@ -1282,6 +1292,14 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_TCB, tcb_enviar);
 		controlar_envio(resultado, D_STRUCT_TCB);
 
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
+
 		fin_ejecucion();
 
 		terminoEjecucion = true;
@@ -1440,6 +1458,14 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_OUTN);
 		free(OUTN);
 
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
+
 		list_clean(parametros);
 		break;
 	case OUTC:
@@ -1479,11 +1505,27 @@ void ejecutarLinea(int* bytecode){
 		controlar_envio(resultado, D_STRUCT_OUTC);
 		free(cadena_consola);
 
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
+
 		t_struct_numero* tamanio = malloc(sizeof(t_struct_numero));
 		tamanio->numero = registros_cpu.registros_programacion[1];
 		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, tamanio);
 		controlar_envio(resultado, D_STRUCT_NUMERO);
 		free(tamanio);
+
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
 
 		free(structRecibido);
 		list_clean(parametros);
@@ -1498,6 +1540,14 @@ void ejecutarLinea(int* bytecode){
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_TCB_CREA, tid);
 		controlar_envio(resultado, D_STRUCT_TCB_CREA);
+
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
 
 		//Mando PC
 		t_struct_numero* program_counter = malloc(sizeof(t_struct_numero));
@@ -1542,6 +1592,13 @@ void ejecutarLinea(int* bytecode){
 
 		free(join);
 
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
 
 		list_clean(parametros);
 		break;
@@ -1552,6 +1609,14 @@ void ejecutarLinea(int* bytecode){
 
 		resultado = socket_enviar(sockKernel, D_STRUCT_BLOCK, id_semaforo);
 		controlar_envio(resultado, D_STRUCT_BLOCK);
+
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
 
 		tid_enviar->numero = tcb->tid;
 
@@ -1569,14 +1634,17 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_WAKE, id_semaforo);
 		controlar_envio(resultado, D_STRUCT_WAKE);
 
+		//TOODO BIEN
+		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
+		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(structRecibido2);
+			return;
+		}
+		free(structRecibido2);
 
 		list_clean(parametros);
 		break;
 	}
-
-	//printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
-	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
-	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
 
 	list_destroy(parametros);
 	free(id_semaforo);

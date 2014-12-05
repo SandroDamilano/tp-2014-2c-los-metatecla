@@ -122,7 +122,6 @@ uint32_t crearSegmento(uint32_t PID, uint32_t tamanio_segmento){
 		pthread_mutex_unlock(&mutex_log);
 		return -1;
 	}
-	printf("Cantidad de memoria, %d, Tamanio segmento: %d\n",cant_mem_actual,tamanio_segmento);	
 	if(tamanio_segmento > cant_mem_actual){
 		pthread_mutex_lock(&mutex_log);
 		printf("ERROR MEMORIA LLENA\n");
