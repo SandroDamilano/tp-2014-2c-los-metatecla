@@ -40,20 +40,27 @@ void mostrar_solicitud_cpu(int* sock){
 	printf("Tengo la solicitud: %d\n", *sock);
 }
 
+bool hay_en_ready(){
+	pthread_mutex_lock(&mutex_ready);
+	bool respuesta = list_size(cola_ready)!=0;
+	pthread_mutex_unlock(&mutex_ready);
+	return respuesta;
+}
+
 void atender_solicitudes_pendientes(){
 	while(1){
 
 		waits:
 		sem_wait(&sem_ready);
 		sem_wait(&sem_solicitudes);
-		if(list_size(cola_ready)==0){
+		if(!hay_en_ready()){
 			sem_post(&sem_solicitudes);
 			goto waits;
 		}
+		t_hilo* tcb = obtener_tcb_a_ejecutar();
 		pthread_mutex_lock(&mutex_solicitudes);
 		int* sockCPU = list_remove(solicitudes_tcb, 0);
 		pthread_mutex_unlock(&mutex_solicitudes);
-		t_hilo* tcb = obtener_tcb_a_ejecutar();
 
 		mandar_a_ejecutar(tcb, *sockCPU);
 	}
@@ -253,9 +260,7 @@ void eliminar_solicitud(int sockCPU){//FIXME Sigo mandando cualquiera
 	solicitud_a_eliminar = sockCPU;
 	pthread_mutex_lock(&mutex_solicitudes);
 	if(list_size(solicitudes_tcb)!=0){
-		printf("hola. El wait vale %d\n", sem_solicitudes.__align);
 		sem_wait(&sem_solicitudes);
-		printf("hola. El wait vale %d\n", sem_solicitudes.__align);
 	}
 	int* solicitud = list_remove_by_condition(solicitudes_tcb, (void*)es_la_solicitud);
 	pthread_mutex_unlock(&mutex_solicitudes);
