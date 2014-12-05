@@ -38,8 +38,6 @@ void ejecutarLinea(int* bytecode){
 	char param_reg2[2];
 	char* param_numero;
 
-	//printf("PID (reg): %d. PID (tcb): %d\n", registros_cpu.I, tcb->pid);
-	printf("PC: %d\n", registros_cpu.P);
 
 	switch(bytecodeLetras){
 	case LOAD:
@@ -58,7 +56,6 @@ void ejecutarLinea(int* bytecode){
 			return ;
 		}
 
-		//datos_recibidos = malloc(sizeof(int32_t)+sizeof(char)); //registro + numero
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -96,7 +93,6 @@ void ejecutarLinea(int* bytecode){
 			return ;
 		}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -115,19 +111,16 @@ void ejecutarLinea(int* bytecode){
 		if(reg2 == 'S'){ //HORRIBLE
 			numero_enviar = registros_cpu.S;
 			datos_solicitados->base = sumar_desplazamiento(registros_cpu.X,numero_enviar);
-			//printf("Numero a enviar %d (llego S))\n", numero_enviar);
 		} else {
 			numero_enviar = registros_cpu.registros_programacion[elegirRegistro(reg2)];
 			datos_solicitados->base = numero_enviar;
-			//printf("Numero a enviar %d (no es S)\n", numero_enviar);
 		}
 
-		printf("EN GETM, NUMERO ENVIAR: %d\n", numero_enviar);
 
 		if(registros_cpu.K == false){
-					datos_enviados->PID = registros_cpu.I;
+			datos_enviados->PID = registros_cpu.I;
 		} else {
-					datos_enviados->PID = 0;
+			datos_enviados->PID = 0;
 		}
 
 		datos_solicitados->tamanio = 1; //FIXME MEDIO TURBIO PERO ANDA
@@ -142,18 +135,15 @@ void ejecutarLinea(int* bytecode){
 
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		uint32_t putos = 0;
-		int32_t putooo = 0;
+		int8_t putooo = 0;
 
 		if(reg1 == 'S'){
-			//registros_cpu.S = *((int*)datos_recibidos);
-			memcpy(&putos, datos_recibidos, 1);
-			registros_cpu.S = (int32_t)putos;
+			memcpy(&putooo, datos_recibidos, 1);
+			registros_cpu.S = putooo;
 
 		} else {
-			//registros_cpu.registros_programacion[elegirRegistro(reg1)] = *((int*)datos_recibidos);
-			memcpy(&putos, datos_recibidos, 1);
-			//registros_cpu.registros_programacion[elegirRegistro(reg1)] = (int32_t)putos;
+			memcpy(&putooo, datos_recibidos, 1);
+
 			registros_cpu.registros_programacion[elegirRegistro(reg1)] = putooo;
 			printf("SACO DE MEMORIA : %d\n", putooo);
 		}
@@ -181,7 +171,6 @@ void ejecutarLinea(int* bytecode){
 			return ;
 		}
 
-		//datos_recibidos = malloc(sizeof(int32_t) + 2*sizeof(char)); //numero + registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_num(datos_recibidos,0,&numero);
@@ -227,7 +216,6 @@ void ejecutarLinea(int* bytecode){
 			}
 		} //TURBIO :S
 
-		//printf("NUMERO ENVIAR SETM: %d\n", *((int*)auxxx));
 		printf("NUMERO ENVIAR SETM: %d\n", forro);
 
 		if(registros_cpu.K == false){
@@ -235,8 +223,7 @@ void ejecutarLinea(int* bytecode){
 		} else {
 			datos_enviados->PID = 0;
 		}
-		//datos_enviados->buffer = auxxx;
-		//datos_enviados->buffer = forro;
+
 		datos_enviados->buffer = malloc(numero);
 		memcpy(datos_enviados->buffer, &forro, numero);
 		datos_enviados->tamanio = numero;
@@ -280,7 +267,6 @@ void ejecutarLinea(int* bytecode){
 			return ;
 		}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -319,7 +305,6 @@ void ejecutarLinea(int* bytecode){
 			return ;
 		}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -373,7 +358,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -412,7 +396,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -451,7 +434,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -490,7 +472,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -534,7 +515,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -572,7 +552,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -606,7 +585,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -650,7 +628,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -688,7 +665,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(2*sizeof(char)); //registro + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -726,7 +702,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(char)); //registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_reg(datos_recibidos,0,&reg1);
@@ -758,7 +733,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
@@ -794,7 +768,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
@@ -829,7 +802,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(uint32_t)); //direccion
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_direc(datos_recibidos,0,&direccion);
@@ -869,7 +841,6 @@ void ejecutarLinea(int* bytecode){
 
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		copiar_tcb_a_registros();
-		//registros_cpu.I = 0;
 		cantidad_lineas_ejecutadas = 0;
 
 		comienzo_ejecucion(tcb, quantum);
@@ -895,7 +866,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(int32_t) + sizeof(char)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 
@@ -945,7 +915,6 @@ void ejecutarLinea(int* bytecode){
 					return ;
 				}
 
-		//datos_recibidos = malloc(sizeof(char) + sizeof(int32_t)); //numero + registro
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		obtener_num(datos_recibidos,0,&numero);
@@ -1044,15 +1013,11 @@ void ejecutarLinea(int* bytecode){
 				}
 		free(datos_recibidos);
 
-		//datos_recibidos = malloc(numero); //sizeof(int32_t)); //numero
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
-		//obtener_num(datos_recibidos,0,&numero);
 		int aux;
 		aux = *((int32_t*)datos_recibidos);
-		//memcpy(&aux, datos_recibidos, numero);
 
-		//printf("EL TAKE DEVUELVE: %s\n", string_itoa(aux));
 
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = aux;
 
@@ -1231,7 +1196,7 @@ void ejecutarLinea(int* bytecode){
 		free(structRecibido);
 		list_clean(parametros);
 		break;
-	case CREA: //FIXME: RECIBO EL ALGO DESPUES DE MANDAR ESTO?
+	case CREA:
 		ejecucion_instruccion("CREA",parametros);
 
 		t_struct_numero* tid = malloc(sizeof(t_struct_numero));
@@ -1308,9 +1273,7 @@ void ejecutarLinea(int* bytecode){
 
 	printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
 	printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
-	//printf("Registro C: %d\n", registros_cpu.registros_programacion[2]);
 	printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
-	//printf("Registro S: %d\n", registros_cpu.S);
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
 	free(id_semaforo);

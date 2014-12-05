@@ -198,6 +198,7 @@ typedef struct direccion{
 	uint32_t traducirADecimal(char *binario, int cantidad_bits);
 	t_direccion traducirDireccion(uint32_t unaDireccion);
 	uint32_t sumar_desplazamiento(uint32_t direccion, uint32_t desplazamiento);
+	uint32_t elevar(uint32_t numero, uint32_t elevado);
 
 
 #endif /* ESTRUCTURAS_AUXILIARES_H_ */
