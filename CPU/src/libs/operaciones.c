@@ -124,7 +124,12 @@ void ejecutarLinea(int* bytecode){
 
 		printf("EN GETM, NUMERO ENVIAR: %d\n", numero_enviar);
 
-		datos_solicitados->PID = registros_cpu.I;
+		if(registros_cpu.K == false){
+					datos_enviados->PID = registros_cpu.I;
+		} else {
+					datos_enviados->PID = 0;
+		}
+
 		datos_solicitados->tamanio = 1; //FIXME MEDIO TURBIO PERO ANDA
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_SOL_BYTES, datos_solicitados);
@@ -138,15 +143,19 @@ void ejecutarLinea(int* bytecode){
 		datos_recibidos = ((t_struct_respuesta_msp*) structRecibido)->buffer;
 
 		uint32_t putos = 0;
+		int32_t putooo = 0;
 
 		if(reg1 == 'S'){
 			//registros_cpu.S = *((int*)datos_recibidos);
 			memcpy(&putos, datos_recibidos, 1);
 			registros_cpu.S = (int32_t)putos;
+
 		} else {
 			//registros_cpu.registros_programacion[elegirRegistro(reg1)] = *((int*)datos_recibidos);
 			memcpy(&putos, datos_recibidos, 1);
-			registros_cpu.registros_programacion[elegirRegistro(reg1)] = (int32_t)putos;
+			//registros_cpu.registros_programacion[elegirRegistro(reg1)] = (int32_t)putos;
+			registros_cpu.registros_programacion[elegirRegistro(reg1)] = putooo;
+			printf("SACO DE MEMORIA : %d\n", putooo);
 		}
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
@@ -221,9 +230,15 @@ void ejecutarLinea(int* bytecode){
 		//printf("NUMERO ENVIAR SETM: %d\n", *((int*)auxxx));
 		printf("NUMERO ENVIAR SETM: %d\n", forro);
 
-		datos_enviados->PID = registros_cpu.I;
+		if(registros_cpu.K == false){
+			datos_enviados->PID = registros_cpu.I;
+		} else {
+			datos_enviados->PID = 0;
+		}
 		//datos_enviados->buffer = auxxx;
-		datos_enviados->buffer = &forro;
+		//datos_enviados->buffer = forro;
+		datos_enviados->buffer = malloc(numero);
+		memcpy(datos_enviados->buffer, &forro, numero);
 		datos_enviados->tamanio = numero;
 		datos_enviados->base = dir;
 
