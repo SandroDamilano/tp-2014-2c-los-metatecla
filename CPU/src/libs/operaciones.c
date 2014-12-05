@@ -72,6 +72,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char) + sizeof(int32_t)); //registro + numero
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		free(param_numero);
@@ -149,6 +151,8 @@ void ejecutarLinea(int* bytecode){
 		}
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -243,6 +247,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(int32_t) + 2*sizeof(char));
 
+		cambio_registros(registros_cpu);
+
 		free(auxxx);
 
 		free(datos_recibidos);
@@ -283,6 +289,8 @@ void ejecutarLinea(int* bytecode){
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] = registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 		incrementar_pc(sizeof(char)*2);
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -337,6 +345,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -374,6 +384,8 @@ void ejecutarLinea(int* bytecode){
 		registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] - registros_cpu.registros_programacion[elegirRegistro(reg2)];
 
 		incrementar_pc(sizeof(char)*2);
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -451,6 +463,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -494,6 +508,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -531,6 +547,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char));
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -563,6 +581,8 @@ void ejecutarLinea(int* bytecode){
 		registros_cpu.registros_programacion[elegirRegistro(reg1)] -= 1;
 
 		incrementar_pc(sizeof(char));
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -607,6 +627,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -643,6 +665,8 @@ void ejecutarLinea(int* bytecode){
 		registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] >= registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
 
 		incrementar_pc(sizeof(char)*2);
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -681,6 +705,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(sizeof(char)*2);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -711,6 +737,8 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("GOTO",parametros);
 
 		registros_cpu.P = registros_cpu.registros_programacion[elegirRegistro(reg1)];
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -746,6 +774,8 @@ void ejecutarLinea(int* bytecode){
 			incrementar_pc(4);
 		}
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		free(param_numero);
@@ -780,6 +810,8 @@ void ejecutarLinea(int* bytecode){
 		} else {
 			incrementar_pc(4);
 		}
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -845,6 +877,8 @@ void ejecutarLinea(int* bytecode){
 
 		comienzo_ejecucion(tcb, quantum);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -887,6 +921,8 @@ void ejecutarLinea(int* bytecode){
 		}
 
 		incrementar_pc(5);
+
+		cambio_registros(registros_cpu);
 
 		free(datos_recibidos);
 		free(structRecibido);
@@ -957,6 +993,8 @@ void ejecutarLinea(int* bytecode){
 
 		incrementar_pc(5);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		list_clean(parametros);
@@ -1024,6 +1062,8 @@ void ejecutarLinea(int* bytecode){
 		registros_cpu.S -= numero;
 		incrementar_pc(5);
 
+		cambio_registros(registros_cpu);
+
 		free(datos_recibidos);
 		free(structRecibido);
 		free(param_numero);
@@ -1040,6 +1080,8 @@ void ejecutarLinea(int* bytecode){
 		fin_ejecucion();
 
 		terminoEjecucion = true;
+
+		cambio_registros(registros_cpu);
 
 		list_clean(parametros);
 		break;
@@ -1271,9 +1313,9 @@ void ejecutarLinea(int* bytecode){
 		break;
 	}
 
-	printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
-	printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
-	printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
+	//printf("Registro A: %d\n", registros_cpu.registros_programacion[0]);
+	//printf("Registro B: %d\n", registros_cpu.registros_programacion[1]);
+	//printf("Registro D: %d\n", registros_cpu.registros_programacion[3]);
 
 	list_destroy(parametros); //Que onda la destruccion de los elementos?
 	free(id_semaforo);

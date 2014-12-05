@@ -511,7 +511,7 @@ void handler_conexiones(void){
 	 			pthread_mutex_lock(&mutex_log);
 	 			log_info(logger,"Se desconecto un Cliente");
 	 			pthread_mutex_unlock(&mutex_log);
-	 			free(structRecibido);
+	 			//free(structRecibido);
 	 			return;
 	 		}
 
