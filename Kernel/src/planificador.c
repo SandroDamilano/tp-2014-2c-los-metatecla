@@ -12,6 +12,7 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 {
 	inicializar_ready_block();
 	inicializar_semaforos_colas();
+	espera_por_inn = false;
 
 	pthread_create(&thr_consumidor_new, NULL, (void*)&poner_new_a_ready, NULL);
 	pthread_create(&thr_parca, NULL, (void*)&terminar_TCBs, NULL);
@@ -36,8 +37,11 @@ void* main_PLANIFICADOR(arg_PLANIFICADOR* parametros)
 return 0;
 }
 
-void mostrar_solicitud_cpu(int* sock){
-	printf("Tengo la solicitud: %d\n", *sock);
+bool hay_solicitudes(){
+	pthread_mutex_lock(&mutex_solicitudes);
+	bool respuesta = list_size(solicitudes_tcb) != 0;
+	pthread_mutex_unlock(&mutex_solicitudes);
+	return respuesta;
 }
 
 bool hay_en_ready(){
@@ -52,6 +56,10 @@ void atender_solicitudes_pendientes(){
 
 		waits:
 		sem_wait(&sem_ready);
+		if(!hay_solicitudes()){
+			sem_post(&sem_ready);
+			goto waits;
+		}
 		sem_wait(&sem_solicitudes);
 		if(!hay_en_ready()){
 			sem_post(&sem_solicitudes);
@@ -127,7 +135,7 @@ void terminar_TCBs(){
 
 		case ABORTAR:
 			// Hay que finalizar el proceso completo
-			escribir_consola(data->tcb->pid, "Ha ocurrido una excepción");
+			//escribir_consola(data->tcb->pid, "Ha ocurrido una excepción");
 			terminar_proceso(data->tcb);
 			break;
 		};
@@ -177,9 +185,9 @@ int obtener_socket_consola(uint32_t pid){
 
 void terminar_proceso(t_hilo* tcb){
 	uint32_t pid = tcb->pid;
+	agregar_a_abortar(pid);
 	eliminar_ready(pid);
 	eliminar_block(pid);
-	eliminar_exec(pid);
 	sacar_de_consolas(pid);
 	liberar_memoria_codigo(tcb);
 	terminar_hilo(tcb);
@@ -199,8 +207,24 @@ void liberar_memoria_stack(t_hilo* tcb){
 	free(free_segmento);
 }
 
+bool se_esta_ejecutando_pid(uint32_t pid){
+	bool mismo_pid(t_data_nodo_exec* data){
+		return ((data->tcb->pid == pid) && (!data->tcb->kernel_mode));
+	}
+
+	pthread_mutex_lock(&mutex_exec);
+	bool respuesta = list_any_satisfy(cola_exec, (void*)mismo_pid);
+	pthread_mutex_unlock(&mutex_exec);
+
+	return respuesta;
+}
+
 void liberar_memoria_codigo(t_hilo* tcb){
 	//Libero segmento de codigo
+	if(se_esta_ejecutando_pid(tcb->pid)){
+		sem_wait(&sem_abort);
+	}
+
 	t_struct_free* free_segmento = malloc(sizeof(t_struct_free));
 	free_segmento->PID = tcb->pid;
 	free_segmento->direccion_base = tcb->segmento_codigo;
@@ -234,21 +258,6 @@ void eliminar_block(uint32_t pid){
 		pthread_mutex_lock(&mutex_block);
 		data = list_remove_by_condition(cola_block, (void*)es_el_pid_block);
 		pthread_mutex_unlock(&mutex_block);
-	};
-}
-
-void eliminar_exec(uint32_t pid){
-	pid_a_eliminar = pid;
-	pthread_mutex_lock(&mutex_exec);
-	t_data_nodo_exec* data = list_remove_by_condition(cola_exec, (void*)es_el_pid_exec);
-	pthread_mutex_unlock(&mutex_exec);
-	while(data!=NULL){
-		//TODO decirle a la cpu que aborte su ejecución (¿Eliminar solicitud de atención?)
-		mandar_a_exit(data->tcb, TERMINAR);
-		free(data);
-		pthread_mutex_lock(&mutex_exec);
-		data = list_remove_by_condition(cola_exec, (void*)es_el_pid_exec);
-		pthread_mutex_unlock(&mutex_exec);
 	};
 }
 
@@ -361,7 +370,8 @@ uint32_t obtener_pid_de_cpu(int sock_cpu){
 		pid = data->tcb->pid;
 	}else{
 		//Esto no debería ocurrir nunca (si lo hiciera, qué pid devuelvo?)
-		printf("ERROR: No fue encontrado el CPU\n");
+//		printf("ERROR: No fue encontrado el CPU\n");
+		pid = 999; //HORRIBLE
 	};
 	return pid;
 }
@@ -905,7 +915,6 @@ void agregar_solicitud(int* sockCPU){
 	list_add(solicitudes_tcb, sockCPU);
 	pthread_mutex_unlock(&mutex_solicitudes);
 	sem_post(&sem_solicitudes);
-	printf("sem solicitudes vale %d\n", sem_solicitudes.__align);
 }
 
 void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
@@ -916,6 +925,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	switch(numero_cpu){
 	case D_STRUCT_INNN:
 		//pido numero por consola
+		espera_por_inn = true;
 		pid = obtener_pid_de_cpu(sockCPU);
 		int socket_consola = obtener_socket_consola(pid);
 		t_struct_numero* innn = malloc(sizeof(t_struct_numero));
@@ -929,6 +939,7 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 		tcb = obtener_tcb_de_cpu(sockCPU);
 
 		//Verifico si es el de Kernel
+		if(tcb!=NULL){
 		if(tcb->kernel_mode == true){
 			//TODO Consultar: si es el de Kernel, aborto sólo el proceso que hizo a la systcall?
 			retornar_de_systcall(tcb, ABORTAR);
@@ -936,6 +947,8 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 			mandar_a_exit(tcb, ABORTAR);
 		}
 
+		}
+		sem_post(&sem_abort);
 		break;
 
 	case D_STRUCT_PEDIR_TCB:
@@ -946,8 +959,44 @@ void handler_numeros_cpu(int32_t numero_cpu, int sockCPU){
 	}
 }
 
+bool hay_que_abortar(int sockCPU){
+	return hay_que_abortar_pid(obtener_pid_de_cpu(sockCPU));
+}
+
+void sacar_de_abortar(int sockCPU){
+	uint32_t pid_a_abortar = obtener_pid_de_cpu(sockCPU);
+
+	bool hay_que_abortarlo(uint32_t* pid){
+		return *pid == pid_a_abortar;
+	}
+
+	pthread_mutex_lock(&mutex_abortar);
+	uint32_t* pid_a_sacar = list_remove_by_condition(lista_abortar, (void*)hay_que_abortar);
+	pthread_mutex_unlock(&mutex_abortar);
+	free(pid_a_sacar);
+}
+
+bool esta_ejecutando(int sockCPU){
+	bool es_la_CPU(t_data_nodo_exec* data){
+		return data->sock == sockCPU;
+	}
+
+	pthread_mutex_lock(&mutex_exec);
+	bool respuesta = list_any_satisfy(cola_exec, (void*)es_la_CPU);
+	pthread_mutex_unlock(&mutex_exec);
+	return respuesta;
+}
+
+void mandar_todo_bien(int sockCPU){
+	t_struct_numero* todo_bien = malloc(sizeof(t_struct_numero));
+	todo_bien->numero = 0;
+	socket_enviar(sockCPU, D_STRUCT_NUMERO, todo_bien);
+	free(todo_bien);
+}
+
+
 void handler_cpu(int sockCPU){
-	t_hilo* tcb;// = malloc(sizeof(t_hilo));
+	t_hilo* tcb;
 	uint32_t tid_llamador;
 	uint32_t tid_a_esperar;
 	uint32_t tid_padre;
@@ -967,7 +1016,6 @@ void handler_cpu(int sockCPU){
 
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//La CPU cerró la conexión
-		//t_hilo* tcb = obtener_tcb_de_cpu(sockCPU);
 		tcb = obtener_tcb_de_cpu(sockCPU);
 		if (tcb!=NULL){
 			if (tcb->kernel_mode == false){
@@ -986,11 +1034,32 @@ void handler_cpu(int sockCPU){
 		FD_CLR(sockCPU, &master_cpus);
 	}else{
 
-	//TODO: PONER LOGS!
+	if(esta_ejecutando(sockCPU) && hay_que_abortar(sockCPU)){
+		t_struct_numero* abortar = malloc(sizeof(t_struct_numero));
+		abortar->numero = D_STRUCT_ABORT;
+		socket_enviar(sockCPU, D_STRUCT_ABORT, abortar);
+		free(abortar);
+
+		tcb = obtener_tcb_de_cpu(sockCPU);
+
+		if(tcb->kernel_mode == true){
+			retornar_de_systcall(tcb, ABORTAR);
+			}else{
+				mandar_a_exit(tcb, ABORTAR);
+			}
+
+		sem_post(&sem_abort);
+
+
+
+	} else {
+
 	switch(tipoRecibido){
 	case D_STRUCT_INTE:
 		//Recibo la direccion
 		direccion_syscall = ((t_struct_direccion*) structRecibido)->numero;
+
+		mandar_todo_bien(sockCPU);
 		//otro socket para el tcb
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 		tcb = malloc(sizeof(t_hilo));
@@ -1014,14 +1083,17 @@ void handler_cpu(int sockCPU){
 		break;
 	case D_STRUCT_INNC:
 
+		espera_por_inn = true;
+
 		//Pido string por consola con el maximo de caracteres recibido
-		//maximo_caracteres = ((t_struct_numero *) structRecibido)->numero;
 		pid = obtener_pid_de_cpu(sockCPU);
 		socket_consola = obtener_socket_consola(pid);
 		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 
 		break;
 	case D_STRUCT_TCB_CREA:
+
+		mandar_todo_bien(sockCPU);
 
 		//copiar_structRecibido_a_tcb(tcb, structRecibido);
 		tid_padre = ((t_struct_numero*) structRecibido)->numero;
@@ -1064,8 +1136,13 @@ void handler_cpu(int sockCPU){
 		}else{
 			encolar_en_ready(tcb);
 		}
+
+		mandar_todo_bien(sockCPU);
+
 		break;
 	case D_STRUCT_BLOCK:
+
+		mandar_todo_bien(sockCPU);
 
 		//Recibo id semaforo
 		id_semaforo = ((t_struct_numero*) structRecibido)->numero;
@@ -1089,6 +1166,8 @@ void handler_cpu(int sockCPU){
 		id_semaforo = ((t_struct_numero*) structRecibido)->numero;
 		desbloquear_por_semaforo(id_semaforo);
 
+		mandar_todo_bien(sockCPU);
+
 		break;
 	case D_STRUCT_TCB_QUANTUM:
 
@@ -1099,8 +1178,12 @@ void handler_cpu(int sockCPU){
 		sacar_de_exec(sockCPU);
 		encolar_en_ready(tcb);
 
+		mandar_todo_bien(sockCPU);
+
 		break;
 	case D_STRUCT_TCB:
+
+		mandar_todo_bien(sockCPU);
 
 		tcb = malloc(sizeof(t_hilo));
 
@@ -1124,6 +1207,9 @@ void handler_cpu(int sockCPU){
 		pid = obtener_pid_de_cpu(sockCPU);
 		socket_consola = obtener_socket_consola(pid);
 		socket_enviar(socket_consola, tipoRecibido, structRecibido);
+
+		mandar_todo_bien(sockCPU);
+
 		break;
 
 	case D_STRUCT_OUTC:
@@ -1132,12 +1218,18 @@ void handler_cpu(int sockCPU){
 		socket_consola = obtener_socket_consola(pid);
 		socket_enviar(socket_consola, tipoRecibido, structRecibido);
 
+		mandar_todo_bien(sockCPU);
+
 		socket_recibir(sockCPU, &tipoRecibido2, &structRecibido2);
 		socket_enviar(socket_consola, tipoRecibido2, structRecibido2);
 		free(structRecibido2);
+
+		mandar_todo_bien(sockCPU);
+
 		break;
-	}//ACÁ TERMINA EL SWITCH
-	}//ACÁ TERMINA EL ELSE DEL IF
+	}//ACA TERMINA EL SWITCH
+	}//ACÁ TERMINA EL ELSE DEL SEGUNDO IF
+	}//ACÁ TERMINA EL ELSE DEL PRIMER IF
 	free(structRecibido);
 }
 

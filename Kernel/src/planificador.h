@@ -39,6 +39,13 @@
 	int cpus_fdmax;
 	pthread_mutex_t mutex_master_cpus;
 
+	t_list* lista_abortar;
+	pthread_mutex_t mutex_abortar;
+
+	sem_t sem_abort;
+
+	bool espera_por_inn;
+
 	typedef struct arg_PLANIFICADOR { // Estructura para pasar argumentos al hilo
 		uint32_t quantum;
 		char* syscalls_path;
@@ -107,7 +114,6 @@
 	void liberar_memoria_codigo(t_hilo* tcb);
 	void eliminar_ready(uint32_t pid);
 	void eliminar_block(uint32_t pid);
-	void eliminar_exec(uint32_t pid);
 	void sacar_de_consolas(uint32_t pid);
 	bool es_el_tid_consola(t_data_nodo_consolas* data);
 	bool es_el_pid_consola(t_data_nodo_consolas* data);
@@ -116,6 +122,7 @@
 	bool es_el_pid_exec(t_data_nodo_exec* data);
 
 	bool esta_por_systcall(t_data_nodo_block* data);
+	void retornar_de_systcall(t_hilo* tcb_kernel, t_fin fin);
 
 	int obtener_socket_consola(uint32_t pid);
 
@@ -123,6 +130,9 @@
 	void atender_solicitudes_pendientes();
 	void atender_cpus();
 	void handler_cpu(int sockCPU);
+
+	bool hay_que_abortar(int sockCPU);
+	void sacar_de_abortar(int sockCPU);
 
 	void mostrar_solicitud_cpu(int* sock);
 

@@ -616,6 +616,10 @@ void handler_conexiones(void){
 
 	 					free(conexion);
 
+	 					pthread_mutex_lock(&mutex_log);
+	 					 log_info(logger,"Se desconecto un Cliente");
+	 					pthread_mutex_unlock(&mutex_log);
+
 	 					int ret = 1;
 	 					pthread_exit(&ret);
 	 					free(structRecibido);
@@ -734,10 +738,16 @@ return NULL;
 	void imprimirSegmento(t_lista_segmentos *segmento){
 		uint32_t base = crearDireccion((*segmento).numeroSegmento,0, 0);
 		printf("Numero segmento: %d,   Tamanio: %d,   Direccion Base: %d\n",(*segmento).numeroSegmento,(*segmento).tamanio, base);
+		pthread_mutex_lock(&mutex_log);
+		 log_info(logger,"Numero segmento: %d,   Tamanio: %d,   Direccion Base: %d\n",(*segmento).numeroSegmento,(*segmento).tamanio, base);
+		pthread_mutex_unlock(&mutex_log);
 	}
 	void imprimirPID(t_lista_procesos *proceso){
 	if(list_size((*proceso).lista_Segmentos) != 0){
 	printf("El PID del proceso es: %d\n", (*proceso).pid);
+	pthread_mutex_lock(&mutex_log);
+	  log_info(logger,"El PID del proceso es: %d\n", (*proceso).pid);
+	pthread_mutex_unlock(&mutex_log);
 	list_iterate((*proceso).lista_Segmentos, (void*) (*imprimirSegmento));
 }}
  list_iterate(listaProcesos, (void*) (*imprimirPID));
@@ -754,10 +764,16 @@ return NULL;
 	 return resultado;}
 	 t_lista_procesos *proceso = malloc(sizeof(t_lista_procesos));
 	 void imprimirPagina(t_lista_paginas *pagina){
-	 		printf("Numero pagina: %d,   Ubicacion: %s\n",(*pagina).numeroPagina,trueofalse((*pagina).swap));
+	 		printf("Numero pagina: %d, Ubicacion: %s\n",(*pagina).numeroPagina,trueofalse((*pagina).swap));
+	 		pthread_mutex_lock(&mutex_log);
+	 			log_info(logger,"Numero pagina: %d, Ubicacion: %s\n",(*pagina).numeroPagina,trueofalse((*pagina).swap));
+	 		pthread_mutex_unlock(&mutex_log);
 	 	}
 	 void imprimirSegmento(t_lista_segmentos *segmento){
 	 		printf("Numero segmento: %d\n",(*segmento).numeroSegmento);
+	 		pthread_mutex_lock(&mutex_log);
+	 		log_info(logger,"Numero segmento: %d\n",(*segmento).numeroSegmento);
+	 		pthread_mutex_unlock(&mutex_log);
 	 		list_iterate((*segmento).lista_Paginas, (void*) (*imprimirPagina));
 	 	}
 	 bool mismoPID(t_lista_procesos *PIDEncontrado){
@@ -767,14 +783,21 @@ return NULL;
 	 if(proceso!=NULL){
 	 list_iterate((*proceso).lista_Segmentos, (void*) (*imprimirSegmento));
  }else {
-	 printf("El PID ingresado: %d, no existe en el sistema", PID);}
+	 printf("El PID ingresado: %d, no existe en el sistema", PID);
+	 pthread_mutex_lock(&mutex_log);
+	 	log_info(logger,"El PID ingresado: %d, no existe en el sistema", PID);
+	 pthread_mutex_unlock(&mutex_log);}
  }
 
  void listar_marcos(){
-	 char* trueofalse(uint32_t unNumero){
+	 char* trueofalse(t_marco tabla_marcos){
 		char* resultado;
-		 if(unNumero==0){
+		 if(tabla_marcos.numeroMarco==0){
 			resultado = "Ocupado";
+			printf("Bit Algoritmo: %d, PID: %d, Segmento: %d, Pagina: %d\n",tabla_marcos.bitAlgoritmo,tabla_marcos.pid,tabla_marcos.segmento,tabla_marcos.pagina);
+			pthread_mutex_lock(&mutex_log);
+			 log_info(logger,"Bit Algoritmo: %d, PID: %d, Segmento: %d, Pagina: \n",tabla_marcos.bitAlgoritmo,tabla_marcos.pid,tabla_marcos.segmento,tabla_marcos.pagina);
+			 pthread_mutex_unlock(&mutex_log);
 		 } else {
 			 resultado = "Libre";
 		 }
@@ -782,7 +805,10 @@ return NULL;
 	 }
 	 uint32_t i = 0;
 	 while(i<cant_marcos){
-		 printf("Numero de marco: %d,  Marco: %s\n ",tabla_marcos[i].numeroMarco, trueofalse(tabla_marcos[i].marco_libre));
+		 printf("Numero de marco: %d,  Marco: %s\n ",tabla_marcos[i].numeroMarco, trueofalse(tabla_marcos[i]));
+		 pthread_mutex_lock(&mutex_log);
+		   log_info(logger,"Numero de marco: %d,  Marco: %s\n ",tabla_marcos[i].numeroMarco, trueofalse(tabla_marcos[i]));
+		 pthread_mutex_unlock(&mutex_log);
 	  i++;
 	 }
  }

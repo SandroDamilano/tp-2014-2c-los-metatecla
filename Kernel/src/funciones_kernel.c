@@ -9,9 +9,17 @@
 
 	t_queue* cola_new;
 	t_queue* cola_exit;
+	t_list* cola_ready;
+	t_list* cola_block;
+	t_list* cola_exec;
 	t_list* consolas;
 	sem_t sem_exit;
+	sem_t sem_ready;
 	pthread_mutex_t mutex_exit;
+	pthread_mutex_t mutex_exec;
+	pthread_mutex_t mutex_new;
+	pthread_mutex_t mutex_ready;
+	pthread_mutex_t mutex_block;
 	pthread_mutex_t mutex_TIDs;
 	pthread_mutex_t mutex_PIDs;
 	pthread_mutex_t mutex_log;
@@ -20,6 +28,9 @@
 	pthread_mutex_t mutex_cpus_conectadas;
 	int cantidad_de_PIDs = 1;
 	int cantidad_de_TIDs;
+
+	t_list* lista_abortar;
+	pthread_mutex_t mutex_abortar;
 
 void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_new, NULL);
@@ -32,12 +43,36 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_consolas, NULL);
 	pthread_mutex_init(&mutex_consolas_conectadas, NULL);
 	pthread_mutex_init(&mutex_cpus_conectadas, NULL);
+	pthread_mutex_init(&mutex_abortar, NULL);
 }
 
 void inicializar_colas_new_exit(){
 	cola_new = queue_create();
 	cola_exit = queue_create();
 	consolas = list_create();
+	lista_abortar = list_create();
+}
+
+bool hay_que_abortar_pid(uint32_t pid_a_abortar){
+	bool hay_que_abortarlo(uint32_t* pid){
+		return *pid == pid_a_abortar;
+	}
+
+	pthread_mutex_lock(&mutex_abortar);
+	bool respuesta = list_any_satisfy(lista_abortar, (void*)hay_que_abortarlo);
+	pthread_mutex_unlock(&mutex_abortar);
+
+	return respuesta;
+}
+
+void agregar_a_abortar(uint32_t pid){
+	if(!hay_que_abortar_pid(pid)){
+		uint32_t* PID = malloc(sizeof(uint32_t));
+		*PID = pid;
+		pthread_mutex_lock(&mutex_abortar);
+		list_add(lista_abortar, PID);
+		pthread_mutex_unlock(&mutex_abortar);
+	}
 }
 
 //La idea seria usar estas funciones para hacer push y pop de las colas de new y ready

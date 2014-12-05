@@ -37,6 +37,7 @@
 	t_stream * serializeStruct_block(t_struct_numero * estructuraOrigen);
 	t_stream * serializeStruct_wake(t_struct_numero * estructuraOrigen);
 	t_stream * serializeStruct_segFault(t_struct_numero * estructuraOrigen);
+	t_stream * serializeStruct_abort(t_struct_numero * estructuraOrigen);
 
 	t_header despaquetizarHeader(char * header);
 	void * deserialize(uint8_t tipoEstructura, char * dataPaquete, uint16_t length);

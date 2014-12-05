@@ -120,6 +120,7 @@ void abortar(){
 		free(pedir_tcb);
 		//socket de Kernel con tcb
 		socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+		controlar_struct_recibido(tipo_struct, D_STRUCT_TCB);
 		copiar_structRecibido_a_tcb(tcb, structRecibido);
 		free(structRecibido);
 		cantidad_lineas_ejecutadas = 0;
@@ -128,20 +129,52 @@ void abortar(){
 		copiar_tcb_a_registros();
 }
 
+void abortar_externo(){
+	printf("\n\nABORTAR\n\n");
+	t_tipoEstructura tipo_struct;
+	void* structRecibido;
+
+	t_struct_numero* pedir_tcb = malloc(sizeof(t_struct_numero));
+	pedir_tcb->numero = D_STRUCT_PEDIR_TCB;
+	int resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
+	if (resultado != 1) {
+		printf("No se pudo pedir TCB\n");
+	}
+	free(pedir_tcb);
+	//socket de Kernel con tcb
+	socket_recibir(sockKernel, &tipo_struct, &structRecibido);
+	controlar_struct_recibido(tipo_struct, D_STRUCT_TCB);
+	copiar_structRecibido_a_tcb(tcb, structRecibido);
+	free(structRecibido);
+	cantidad_lineas_ejecutadas = 0;
+	terminoEjecucion = false;
+	comienzo_ejecucion(tcb, quantum);
+	copiar_tcb_a_registros();
+}
+
 int controlar_struct_recibido(int struct_recibido, int struct_posta){
 
 	if(struct_recibido == struct_posta){
 		//printf("Se recibio correctamente el mensaje %d\n", struct_posta);
 		return EXIT_SUCCESS;
 	} else{
-		if(struct_recibido == D_STRUCT_SEG_FAULT){
+		switch(struct_recibido){
+		case D_STRUCT_SEG_FAULT:
 		printf("Hubo un segmentation fault\n");
 		abortar();
 		return EXIT_FAILURE;
-		} else {
+		break;
+
+		case D_STRUCT_ABORT:
+			abortar_externo();
+			return EXIT_FAILURE;
+			break;
+
+		default:
 		printf("Se debia recibir %d, pero llego %d\n", struct_posta, struct_recibido);
 		abortar();
 		return EXIT_FAILURE;
+		break;
 		}
 	}
 
