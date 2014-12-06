@@ -56,10 +56,10 @@ void atender_solicitudes_pendientes(){
 
 		waits:
 		sem_wait(&sem_ready);
-		if(!hay_solicitudes()){
-			sem_post(&sem_ready);
-			goto waits;
-		}
+//		if(!hay_solicitudes()){
+//			sem_post(&sem_ready);
+//			goto waits;
+//		}
 		sem_wait(&sem_solicitudes);
 		if(!hay_en_ready()){
 			sem_post(&sem_solicitudes);
@@ -117,6 +117,7 @@ void poner_new_a_ready(){
  */
 void terminar_TCBs(){
 	while(1){
+
 		t_data_nodo_exit* data;
 		data = sacar_de_exit();
 
@@ -233,13 +234,20 @@ void liberar_memoria_codigo(t_hilo* tcb){
 	free(free_segmento);
 }
 
+void waitear_ready(){
+	sem_wait(&sem_ready);
+	printf("termina hilo waiteador\n");
+}
 void eliminar_ready(uint32_t pid){
 	pid_a_eliminar = pid;
 	pthread_mutex_lock(&mutex_ready);
 	t_hilo* tcb = list_remove_by_condition(cola_ready, (void*)es_el_pid_ready);
 	pthread_mutex_unlock(&mutex_ready);
 	while(tcb!=NULL){
-		sem_wait(&sem_ready); //FIXME No sé si corresponde ponerlo acá así
+		//sem_wait(&sem_ready); //FIXME No sé si corresponde ponerlo acá así
+		//sem_ready.__align -= 1;
+		//pthread_t waiteador;
+		//pthread_create(&waiteador, NULL, (void*)&waitear_ready, NULL);
 		mandar_a_exit(tcb, TERMINAR);
 		pthread_mutex_lock(&mutex_ready);
 		tcb = list_remove_by_condition(cola_ready, (void*)es_el_pid_ready);
