@@ -255,11 +255,12 @@ void ejecutarLinea(int* bytecode){
 		memcpy(datos_enviados->buffer, &forro, numero);
 		datos_enviados->tamanio = numero;
 		datos_enviados->base = dir;
-		free(datos_enviados->buffer);
-
+		
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
+		
+		free(datos_enviados->buffer);
 
 		resultado = socket_recibir(sockMSP, &tipo_struct, &structRecibido);
 
