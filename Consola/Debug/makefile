@@ -26,8 +26,8 @@ endif
 all: Consola
 
 dependents:
-	-cd /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug && $(MAKE) clean all
-	-cd /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug && $(MAKE) clean all
+	-cd /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug && $(MAKE) all
+	-cd /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug && $(MAKE) all
 
 # Tool invocations
 Consola: $(OBJS) $(USER_OBJS) /home/utnso/tp-2014-2c-los-metatecla/MiniGral_lib/Debug/libMiniGral_lib.so /home/utnso/tp-2014-2c-los-metatecla/ansisop-panel/Debug/libansisop-panel.so

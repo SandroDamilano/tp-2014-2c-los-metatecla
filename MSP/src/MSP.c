@@ -532,10 +532,10 @@ void* solicitar_memoria(uint32_t PID, uint32_t direcc_log, uint32_t tamanio){
 
 				return respuesta;}
 			else {
-				free(respuesta);
+
 				segmentation_fault();}
 		} else {
-			free(respuesta);
+
 			segment_not_found_exception(direccion.segmento);
 			return NULL;
 		}
