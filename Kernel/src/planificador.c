@@ -192,11 +192,12 @@ void terminar_proceso(t_hilo* tcb){
 	sacar_de_consolas(pid);
 	liberar_memoria_codigo(tcb);
 	terminar_hilo(tcb);
+	printf("Voy a borrar los mallocs\n");
+	eliminar_mallocs(tcb);
 }
 
 void terminar_hilo(t_hilo* tcb){
 	liberar_memoria_stack(tcb);
-	eliminar_mallocs(tcb);
 }
 
 void liberar_memoria_stack(t_hilo* tcb){
@@ -545,6 +546,7 @@ void inicializar_semaforos_colas(){
 	pthread_mutex_init(&mutex_exec, NULL);
 	pthread_mutex_init(&mutex_solicitudes, NULL);
 	pthread_mutex_init(&mutex_terminados, NULL);
+	pthread_mutex_init(&mutex_mallocs, NULL);
 	sem_init(&sem_ready, 1, 0);
 	sem_init(&sem_solicitudes, 1, 0);
 };
@@ -910,18 +912,19 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 	return tcb_hijo->tid;
 }
 
-void agregar_a_mallocs(uint32_t tid, uint32_t dir){
+void agregar_a_mallocs(uint32_t pid, uint32_t dir){
 	t_data_nodo_mallocs* data = malloc(sizeof(t_data_nodo_mallocs));
-	data->tid = tid;
+	data->pid = pid;
 	data->direccion = dir;
 	pthread_mutex_lock(&mutex_mallocs);
 	list_add(mallocs, data);
 	pthread_mutex_unlock(&mutex_mallocs);
 }
 
-uint32_t sacar_direccion_de_mallocs(uint32_t tid){
+uint32_t sacar_direccion_de_mallocs(uint32_t pid){
+	int PID = pid;
 	bool es_el_malloc(t_data_nodo_mallocs* data){
-		return data->tid == tid;
+		return data->pid == PID;
 	}
 
 	uint32_t dir;
@@ -937,9 +940,20 @@ uint32_t sacar_direccion_de_mallocs(uint32_t tid){
 	return dir;
 }
 
+void eliminar_direccion_de_mallocs(uint32_t pid, uint32_t dir){
+	bool es_el_nodo(t_data_nodo_mallocs* data){
+		return ((data->pid == pid) && (data->direccion == dir));
+	}
+
+	pthread_mutex_lock(&mutex_mallocs);
+	t_data_nodo_mallocs* malloc_a_friar = list_remove_by_condition(mallocs, (void*)es_el_nodo);
+	pthread_mutex_unlock(&mutex_mallocs);
+	free(malloc_a_friar);
+}
+
 void eliminar_mallocs(t_hilo* tcb){
 	t_struct_free* free_segmento;
-	uint32_t dir = sacar_direccion_de_mallocs(tcb->tid);
+	uint32_t dir = sacar_direccion_de_mallocs(tcb->pid);
 	while(dir!=0){
 		//Libero segmento allocado
 			free_segmento = malloc(sizeof(t_struct_free));
@@ -948,7 +962,7 @@ void eliminar_mallocs(t_hilo* tcb){
 			printf("Libero el segmento alocado, ubicado en: %d\n", free_segmento->direccion_base);
 			socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
 			free(free_segmento);
-			dir = sacar_direccion_de_mallocs(tcb->tid);
+			dir = sacar_direccion_de_mallocs(tcb->pid);
 	}
 }
 
@@ -1065,6 +1079,8 @@ void handler_cpu(int sockCPU){
 	void* structRecibido2;
 
 	t_struct_numero* paquete_crea;
+	t_struct_malloc* maloc;
+	t_struct_free* fre;
 
 	if(socket_recibir(sockCPU, &tipoRecibido, &structRecibido)==-1){
 		//La CPU cerró la conexión
@@ -1278,6 +1294,20 @@ void handler_cpu(int sockCPU){
 		free(structRecibido2);
 
 		mandar_todo_bien(sockCPU);
+
+		break;
+
+	case D_STRUCT_MALC:
+
+		maloc = ((t_struct_malloc*)structRecibido);
+		agregar_a_mallocs(maloc->PID, maloc->tamano_segmento); //EL TAMAÑO ES LA DIRECCIÓN ;)
+
+		break;
+
+	case D_STRUCT_FREE:
+
+		fre = ((t_struct_free*)structRecibido);
+		eliminar_direccion_de_mallocs(fre->PID, fre->direccion_base);
 
 		break;
 	}//ACA TERMINA EL SWITCH

@@ -1374,6 +1374,13 @@ void ejecutarLinea(int* bytecode){
 			abortar();
 		} else {
 			registros_cpu.registros_programacion[0] = ((t_struct_direccion*) structRecibido)->numero;
+
+			t_struct_malloc* malc = malloc(sizeof(t_struct_malloc));
+			malc->PID = tcb->pid;
+			malc->tamano_segmento = registros_cpu.registros_programacion[0];
+			resultado = socket_enviar(sockKernel, D_STRUCT_MALC, malc);
+			controlar_envio(resultado, D_STRUCT_MALC);
+			free(malc);
 		}
 
 		free(crear_segmento_struct);
@@ -1388,6 +1395,9 @@ void ejecutarLinea(int* bytecode){
 		liberar_segmento_struct->PID = tcb->pid;
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_FREE, liberar_segmento_struct);
+		controlar_envio(resultado, D_STRUCT_FREE);
+
+		resultado = socket_enviar(sockKernel, D_STRUCT_FREE, liberar_segmento_struct);
 		controlar_envio(resultado, D_STRUCT_FREE);
 
 		free(liberar_segmento_struct);
