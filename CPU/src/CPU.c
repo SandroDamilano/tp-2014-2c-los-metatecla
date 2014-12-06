@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
 
 	if(sockKernel == -1){
 			printf("No se pudo conectar a Kernel\n");
+			exit(EXIT_FAILURE);
 		} else {
 			printf("Me conecte al Kernel. Socket %d\n", sockKernel);
 			t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
@@ -56,6 +57,7 @@ int main(int argc, char** argv) {
 
 	if(sockMSP == -1){
 		printf("No se pudo conectar a MSP\n");
+		exit(EXIT_FAILURE);
 	} else {
 		printf("Numero de socket de MSP es %d\n", sockMSP);
 		t_struct_numero* es_cpu = malloc(sizeof(t_struct_numero));
@@ -85,6 +87,7 @@ int main(int argc, char** argv) {
 		if(j != 1){
 			printf("No se recibio tcb\n");
 			printf("Me llego d_struct = %d\n", tipo_struct);
+			free(structRecibido);
 			} else {
 				printf("Se recibio tcb\n");
 				copiar_structRecibido_a_tcb(tcb, structRecibido);
