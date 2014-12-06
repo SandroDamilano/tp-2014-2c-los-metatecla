@@ -676,8 +676,17 @@ void handler_conexiones(void){
 				printf("Ingrese un texto:\n");
 				char texto[256]; //CAPAZ DEBERIA SER CHAR[ALGUN TAMANIO MAX]
 				scanf("%s", texto);
-				printf("Se ingreso %s\n", texto);
-				escribirMemoria(PID, direcVir, texto, tamanio_escritura);
+				uint32_t escritura = 0;
+				escritura = escribirMemoria(PID, direcVir, texto, tamanio_escritura);
+				if(escritura != (-1)){
+				printf("Se guardo en memoria: %s\n", texto);
+				pthread_mutex_lock(&mutex_log);
+				log_info(logger,"Se guardo en memoria: %s\n", texto);
+				pthread_mutex_unlock(&mutex_log);}
+				else{printf("Fallo la escritura (Fijarse archivo de logeo)\n");
+				pthread_mutex_lock(&mutex_log);
+				log_error(logger,"Fallo la escritura (Fijarse archivo de logeo)\n");
+				pthread_mutex_unlock(&mutex_log);}
 				indicaciones_consola();
 
 	break;
@@ -691,8 +700,14 @@ void handler_conexiones(void){
 				void* bytesEnMemoria =solicitar_memoria(PID, direcVir, tamanio_escritura);
 				if(bytesEnMemoria != NULL){
 				((char*)bytesEnMemoria)[tamanio_escritura]= '\0';
-				printf("En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);}
-				else {printf("La solitud fallo (Fijarse en archivo de logeo)\n");}
+				printf("En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);
+				pthread_mutex_lock(&mutex_log);
+				log_info(logger,"En la direccion: %d del PID: %d se encuentra guardado: %s", direcVir,PID,bytesEnMemoria);
+				pthread_mutex_unlock(&mutex_log);}
+				else {printf("La solitud fallo (Fijarse en archivo de logeo)\n");
+				pthread_mutex_lock(&mutex_log);
+				log_error(logger,"La solitud fallo (Fijarse en archivo de logeo)\n");
+				pthread_mutex_unlock(&mutex_log);}
 				indicaciones_consola();
 				free(bytesEnMemoria);
 
@@ -790,14 +805,10 @@ return NULL;
  }
 
  void listar_marcos(){
-	 char* trueofalse(t_marco tabla_marcos){
+	 char* trueofalse(t_marco marco){
 		char* resultado;
-		 if(tabla_marcos.numeroMarco==0){
+		 if(marco.marco_libre==0){
 			resultado = "Ocupado";
-			printf("Bit Algoritmo: %d, PID: %d, Segmento: %d, Pagina: %d\n",tabla_marcos.bitAlgoritmo,tabla_marcos.pid,tabla_marcos.segmento,tabla_marcos.pagina);
-			pthread_mutex_lock(&mutex_log);
-			 log_info(logger,"Bit Algoritmo: %d, PID: %d, Segmento: %d, Pagina: \n",tabla_marcos.bitAlgoritmo,tabla_marcos.pid,tabla_marcos.segmento,tabla_marcos.pagina);
-			 pthread_mutex_unlock(&mutex_log);
 		 } else {
 			 resultado = "Libre";
 		 }
@@ -806,9 +817,15 @@ return NULL;
 	 uint32_t i = 0;
 	 while(i<cant_marcos){
 		 printf("Numero de marco: %d,  Marco: %s\n ",tabla_marcos[i].numeroMarco, trueofalse(tabla_marcos[i]));
+		 if(tabla_marcos[i].marco_libre==0){
+		 printf("Bit Algoritmo: %d, PID: %d, Segmento: %d, Pagina: %d\n",tabla_marcos[i].bitAlgoritmo,tabla_marcos[i].pid,tabla_marcos[i].segmento,tabla_marcos[i].pagina);
+		 }
 		 pthread_mutex_lock(&mutex_log);
 		   log_info(logger,"Numero de marco: %d,  Marco: %s\n ",tabla_marcos[i].numeroMarco, trueofalse(tabla_marcos[i]));
-		 pthread_mutex_unlock(&mutex_log);
+		   if(tabla_marcos[i].marco_libre==0){
+		   log_info(logger,"Bit Algoritmo: %d, PID: %d, Segmento: %d, Pagina: \n",tabla_marcos[i].bitAlgoritmo,tabla_marcos[i].pid,tabla_marcos[i].segmento,tabla_marcos[i].pagina);
+		   }
+		   pthread_mutex_unlock(&mutex_log);
 	  i++;
 	 }
  }
