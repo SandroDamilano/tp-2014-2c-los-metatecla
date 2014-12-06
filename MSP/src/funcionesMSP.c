@@ -663,7 +663,10 @@ void handler_conexiones(void){
 				scanf("%d",&PID);
 				printf("Ingrese base del segmento:");
 				scanf("%d",&baseSeg);
-				destruirSegmento(PID,baseSeg);
+				int destruir = destruirSegmento(PID,baseSeg);
+				if(destruir != (-1)){
+				printf("Se destruyo con exito el segmento del PID: %d\n", PID);}
+				else{printf("Fallo al destruir (Fijarse archivo de loggeo)\n");}
 				indicaciones_consola();
 	break;
 	case '3': printf("El comando elegido fue: Escribir Memoria\n"
