@@ -168,7 +168,6 @@ void ejecutarLinea(int* bytecode){
 			memcpy(&putooo, datos_recibidos, 1);
 
 			registros_cpu.registros_programacion[elegirRegistro(reg1)] = putooo;
-			printf("SACO DE MEMORIA : %d\n", putooo);
 		}
 
 		incrementar_pc(2*sizeof(char)); //registro + registro
@@ -226,14 +225,12 @@ void ejecutarLinea(int* bytecode){
 		int forro = 0;
 
 		if(reg2 == 'S'){
-			printf("S TIENE %d\n", registros_cpu.S);
 			memcpy(&forro, &registros_cpu.S,numero);
 
 
 			dir = registros_cpu.registros_programacion[elegirRegistro(reg1)];
 
 		} else {
-			printf("REG TIENE %d\n", registros_cpu.registros_programacion[elegirRegistro(reg2)]);
 
 			if(registros_cpu.registros_programacion[elegirRegistro(reg2)] <0){
 				memcpy(&forro, &registros_cpu.registros_programacion[elegirRegistro(reg2)],numero);
@@ -247,7 +244,6 @@ void ejecutarLinea(int* bytecode){
 			}
 		} //TURBIO :S
 
-		printf("NUMERO ENVIAR SETM: %d\n", forro);
 
 		if(registros_cpu.K == false){
 			datos_enviados->PID = registros_cpu.I;
@@ -259,8 +255,8 @@ void ejecutarLinea(int* bytecode){
 		memcpy(datos_enviados->buffer, &forro, numero);
 		datos_enviados->tamanio = numero;
 		datos_enviados->base = dir;
+		free(datos_enviados->buffer);
 
-		printf("DIR DE SETM: %d\n", dir);
 
 		resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
 		controlar_envio(resultado, D_STRUCT_ENV_BYTES);
@@ -269,6 +265,15 @@ void ejecutarLinea(int* bytecode){
 
 		if (((t_struct_numero*) structRecibido)->numero == -1){
 			printf("No hay espacio suficiente en memoria\n");
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			abortar();
 		}
 
@@ -276,7 +281,6 @@ void ejecutarLinea(int* bytecode){
 
 		cambio_registros(registros_cpu);
 
-		free(datos_enviados->buffer);
 		free(datos_recibidos);
 		free(structRecibido);
 		free(param_numero);
@@ -580,7 +584,7 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("DIVR",parametros);
 
 		if(registros_cpu.registros_programacion[elegirRegistro(reg2)] == 0){
-			printf("division por cero");
+			printf("\nDivision por cero\n");
 			abortar();
 		} else {
 			registros_cpu.registros_programacion[0] = registros_cpu.registros_programacion[elegirRegistro(reg1)] / registros_cpu.registros_programacion[elegirRegistro(reg2)];
@@ -725,10 +729,8 @@ void ejecutarLinea(int* bytecode){
 		ejecucion_instruccion("COMP",parametros);
 
 		if(reg1 == 'S' && reg2 == 'X'){ //HORRIBLE ESTO
-			printf("REG1 = %d y REG2 = %d\n", sumar_desplazamiento(registros_cpu.X, registros_cpu.S), registros_cpu.X);
 			registros_cpu.registros_programacion[0] = (sumar_desplazamiento(registros_cpu.X, registros_cpu.S) == registros_cpu.X ? 1 : 0);
 		} else {
-			printf("REG1 = %d y REG2 = %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)], registros_cpu.registros_programacion[elegirRegistro(reg2)]);
 			registros_cpu.registros_programacion[0] = (registros_cpu.registros_programacion[elegirRegistro(reg1)] == registros_cpu.registros_programacion[elegirRegistro(reg2)] ? 1 : 0);
 		}
 
@@ -1001,6 +1003,7 @@ void ejecutarLinea(int* bytecode){
 		param_numero = string_itoa(direccion);
 		list_add(parametros,param_numero);
 		ejecucion_instruccion("INTE",parametros);
+		free(datos_recibidos);
 
 		//Mando señal con la direccion
 		t_struct_direccion* direccion_syscalls = malloc(sizeof(t_struct_direccion));
@@ -1013,7 +1016,16 @@ void ejecutarLinea(int* bytecode){
 		//TOODO BIEN
 		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
 		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
+			free(param_numero);
 			free(structRecibido2);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return;
 		}
 		free(structRecibido2);
@@ -1033,7 +1045,6 @@ void ejecutarLinea(int* bytecode){
 		resultado = socket_enviar(sockKernel, D_STRUCT_NUMERO, pedir_tcb);
 		controlar_envio(resultado, D_STRUCT_NUMERO);
 
-		printf("PEDI TCB (INTE)\n");
 
 		resultado = socket_recibir(sockKernel, &tipo_struct, &structRecibido);
 		if(controlar_struct_recibido(tipo_struct, D_STRUCT_TCB) == EXIT_FAILURE){
@@ -1046,6 +1057,7 @@ void ejecutarLinea(int* bytecode){
 			free(datos_solicitados);
 			free(datos_enviados);
 			free(aux);
+			free(param_numero);
 			return;
 		}
 
@@ -1057,8 +1069,8 @@ void ejecutarLinea(int* bytecode){
 
 		cambio_registros(registros_cpu);
 
-		free(datos_recibidos);
 		free(structRecibido);
+		free(param_numero);
 		list_clean(parametros);
 		break;
 	case SHIF:
@@ -1160,7 +1172,6 @@ void ejecutarLinea(int* bytecode){
 
 		int32_t auxiliar_copiar;
 
-		printf("EN PUSH, EL REGISTRO TIENE: %d\n", registros_cpu.registros_programacion[elegirRegistro(reg1)]);
 
 		memcpy(&auxiliar_copiar,&registros_cpu.registros_programacion[elegirRegistro(reg1)],numero);
 
@@ -1171,7 +1182,6 @@ void ejecutarLinea(int* bytecode){
 		datos_enviados->base = direccionMSP;
 		datos_enviados->PID = registros_cpu.I;
 		datos_enviados->buffer = &auxiliar_copiar;
-		printf("PUSHEO %d\n", auxiliar_copiar);
 		datos_enviados->tamanio = numero;
 
 		int resultado = socket_enviar(sockMSP, D_STRUCT_ENV_BYTES, datos_enviados);
@@ -1182,6 +1192,17 @@ void ejecutarLinea(int* bytecode){
 
 		if (((t_struct_numero*) structRecibido)->numero == -1){
 			printf("No hay espacio suficiente en memoria\n");
+			free(datos_recibidos);
+			free(param_numero);
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			abortar();
 		}
 
@@ -1197,7 +1218,6 @@ void ejecutarLinea(int* bytecode){
 		break;
 	case TAKE:
 
-		printf("PC EN TAKE %d\n", registros_cpu.P);
 
 		//Pido el numero y el registro que sirven como parametros de TAKE
 		direccionMSP = sumar_desplazamiento(registros_cpu.M, registros_cpu.P);
@@ -1229,7 +1249,6 @@ void ejecutarLinea(int* bytecode){
 		free(structRecibido);
 
 		obtener_num(datos_recibidos,0,&numero);
-		printf("Llego numero %d\n", numero);
 		obtener_reg(datos_recibidos,4,&reg1);
 		param_reg1[0] = reg1;
 		param_reg1[1] = '\0';
@@ -1242,7 +1261,6 @@ void ejecutarLinea(int* bytecode){
 
 		//Pido lo que hay en el stack del tamanio numero que recibi antes
 		direccionMSP = sumar_desplazamiento(registros_cpu.X, registros_cpu.S - numero);
-		printf("Direccion stack %d \n", direccionMSP);
 
 		datos_solicitados->base = direccionMSP;
 		datos_solicitados->PID = registros_cpu.I;
@@ -1262,6 +1280,7 @@ void ejecutarLinea(int* bytecode){
 			free(datos_solicitados);
 			free(datos_enviados);
 			free(aux);
+			free(param_numero);
 			return ;
 		}
 
@@ -1296,6 +1315,14 @@ void ejecutarLinea(int* bytecode){
 		socket_recibir(sockKernel, &tipo_struct2, &structRecibido2);
 		if(controlar_struct_recibido(tipo_struct2, D_STRUCT_NUMERO)==EXIT_FAILURE){
 			free(structRecibido2);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			return;
 		}
 		free(structRecibido2);
@@ -1334,6 +1361,15 @@ void ejecutarLinea(int* bytecode){
 
 		if (((t_struct_numero*) structRecibido)->numero == -1){
 			printf("No hay espacio suficiente en memoria\n");
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			abortar();
 		} else {
 			registros_cpu.registros_programacion[0] = ((t_struct_direccion*) structRecibido)->numero;
@@ -1384,7 +1420,6 @@ void ejecutarLinea(int* bytecode){
 
 		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
 
-		printf("SE INGRESO POR CONSOLA %d\n", registros_cpu.registros_programacion[0]);
 
 		list_clean(parametros);
 		free(structRecibido);
@@ -1442,6 +1477,15 @@ void ejecutarLinea(int* bytecode){
 
 		if (((t_struct_numero*) structRecibido)->numero == -1){
 			printf("No hay espacio suficiente en memoria\n");
+			free(structRecibido);
+			list_clean(parametros);
+			list_destroy(parametros);
+			free(id_semaforo);
+			free(tcb_enviar);
+			free(tid_enviar);
+			free(datos_solicitados);
+			free(datos_enviados);
+			free(aux);
 			abortar();
 		}
 
@@ -1536,8 +1580,6 @@ void ejecutarLinea(int* bytecode){
 		t_struct_numero* tid = malloc(sizeof(t_struct_numero));
 		tid->numero = tcb->tid;
 
-		printf("BASE DE STACK %d\n", tcb->base_stack);
-
 		resultado = socket_enviar(sockKernel, D_STRUCT_TCB_CREA, tid);
 		controlar_envio(resultado, D_STRUCT_TCB_CREA);
 
@@ -1573,7 +1615,6 @@ void ejecutarLinea(int* bytecode){
 
 		registros_cpu.registros_programacion[0] = ((t_struct_numero*) structRecibido)->numero;
 
-		printf("Tid del hijo %d\n", registros_cpu.registros_programacion[0]);
 
 		free(tid);
 		free(structRecibido);
