@@ -118,6 +118,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	int resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
 	if(resultado != 1){
 		printf("No se pudo crear segmento de codigo\n");
+		//escribir_consola(sock_consola, "No se pudo crear segmento de código\n");
 		return 0;
 	}
 	free(crear_seg);
@@ -129,7 +130,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 		if (respuesta != -1){
 			dir_codigo = ((t_struct_numero *) structRecibido)->numero;
 		}else{
-			printf("No hay espacio suficiente en memoria para el código\n");
+			imprimir_texto(sock_consola, "No hay espacio suficiente en memoria para el código\n");
 			return 0;
 		}
 	} else {
@@ -144,6 +145,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 	resultado = socket_enviar(socket_MSP, D_STRUCT_MALC, crear_seg);
 	if(resultado != 1){
 		printf("No se pudo crear segmento de stack\n");
+		//escribir_consola(sock_consola, "No se pudo crear segmento de stack\n");
 		//Si no logré crear el segmento de stack, destruyo el de código que creé antes
 		destruir_seg_codigo(pid, dir_codigo);
 		return 0;
@@ -157,7 +159,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 		if (respuesta != -1){
 			dir_stack = ((t_struct_numero *) structRecibido)->numero;
 		}else{
-			printf("No hay espacio suficiente en memoria para el stack\n");
+			imprimir_texto(sock_consola, "No hay espacio suficiente en memoria para el stack\n");
 			//Si no logré crear el segmento de stack, destruyo el de código que creé antes
 			destruir_seg_codigo(pid, dir_codigo);
 			return 0;
