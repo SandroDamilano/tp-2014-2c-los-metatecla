@@ -131,12 +131,15 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 			dir_codigo = ((t_struct_numero *) structRecibido)->numero;
 		}else{
 			imprimir_texto(sock_consola, "No hay espacio suficiente en memoria para el código\n");
+			free(structRecibido);
 			return 0;
 		}
 	} else {
 		printf("No se recibio la direccion del segmento de codigo del proceso\n");
+		free(structRecibido);
 		return 0;
 	}
+	free(structRecibido);
 
 	//Pido a la MSP un segmento de stack
 	crear_seg = malloc(sizeof(t_struct_malloc));
@@ -191,6 +194,7 @@ int crear_nuevo_tcb(char* codigo, int tamanio, int sock_consola){
 			printf("No se escribio correctamente en memoria\n");
 		}
 	}
+	free(structRecibido);
 
 	//Creo el TCB, agrego otra entrada a la estructura consolas y encolo el TCB en new
 	t_hilo* tcb = crear_TCB(pid, dir_codigo, dir_stack, tamanio);

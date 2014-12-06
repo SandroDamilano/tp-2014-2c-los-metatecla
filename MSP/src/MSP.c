@@ -23,8 +23,6 @@ pthread_mutex_t mutex_memoriaPpal = PTHREAD_MUTEX_INITIALIZER;
 void llegoSenialParaTerminar(int senial){
 	switch(senial){
 	case SIGINT:
-		printf("PUSE CTRL C!!!!!!!!!!!\n");
-			printf("libero memoria\n");
 			config_destroy(config_file);
 			log_destroy(logger);
 			list_destroy_and_destroy_elements(listaProcesos,(void*) (liberarProceso));
@@ -67,7 +65,6 @@ int main(int argc, char *argv[]) {
 	tabla_marcos = crearTablaDeMarcos();
 	paginasMemoriaPpalActual = tamanio_mem_ppal*1024/256;
 	paginasMemoriaSwapActual = cant_mem_swap*1024*1024/256 ;
-	printf("Paginas en ppal: %d, Paginas en Swap: %d\n",paginasMemoriaPpalActual,paginasMemoriaSwapActual);
 	listaProcesos = list_create();
 
 	//4. Abrir conexiones con Kernel y CPU, y levantar Consola MSP

@@ -70,7 +70,9 @@ void atender_solicitudes_pendientes(){
 		int* sockCPU = list_remove(solicitudes_tcb, 0);
 		pthread_mutex_unlock(&mutex_solicitudes);
 
-		mandar_a_ejecutar(tcb, *sockCPU);
+		int sock = *sockCPU;
+		free(sockCPU);
+		mandar_a_ejecutar(tcb, sock);
 	}
 }
 /*
@@ -192,7 +194,6 @@ void terminar_proceso(t_hilo* tcb){
 	sacar_de_consolas(pid);
 	liberar_memoria_codigo(tcb);
 	terminar_hilo(tcb);
-	printf("Voy a borrar los mallocs\n");
 	eliminar_mallocs(tcb);
 }
 

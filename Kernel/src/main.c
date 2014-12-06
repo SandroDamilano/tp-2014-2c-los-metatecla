@@ -109,6 +109,12 @@ void llegoSenialParaTerminar(int n){
 		list_destroy(terminados);
 		list_destroy(lista_abortar);
 
+		sem_destroy(&sem_ready);
+		sem_destroy(&sem_new);
+		sem_destroy(&sem_exit);
+		sem_destroy(&sem_solicitudes);
+		sem_destroy(&sem_abort);
+
 		FD_ZERO(&master_cpus);
 		FD_ZERO(&master_consolas);
 
