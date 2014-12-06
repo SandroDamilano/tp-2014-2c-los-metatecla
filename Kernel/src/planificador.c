@@ -196,6 +196,7 @@ void terminar_proceso(t_hilo* tcb){
 
 void terminar_hilo(t_hilo* tcb){
 	liberar_memoria_stack(tcb);
+	eliminar_mallocs(tcb);
 }
 
 void liberar_memoria_stack(t_hilo* tcb){
@@ -535,6 +536,7 @@ void inicializar_ready_block(){
 	cola_exec = list_create();
 	solicitudes_tcb = list_create();
 	terminados = list_create();
+	mallocs = list_create();
 }
 
 void inicializar_semaforos_colas(){
@@ -908,6 +910,48 @@ uint32_t crear_nuevo_hilo(t_hilo* tcb_padre, int pc){
 	return tcb_hijo->tid;
 }
 
+void agregar_a_mallocs(uint32_t tid, uint32_t dir){
+	t_data_nodo_mallocs* data = malloc(sizeof(t_data_nodo_mallocs));
+	data->tid = tid;
+	data->direccion = dir;
+	pthread_mutex_lock(&mutex_mallocs);
+	list_add(mallocs, data);
+	pthread_mutex_unlock(&mutex_mallocs);
+}
+
+uint32_t sacar_direccion_de_mallocs(uint32_t tid){
+	bool es_el_malloc(t_data_nodo_mallocs* data){
+		return data->tid == tid;
+	}
+
+	uint32_t dir;
+	pthread_mutex_lock(&mutex_mallocs);
+	t_data_nodo_mallocs* nodo = list_remove_by_condition(mallocs, (void*)es_el_malloc);
+	pthread_mutex_unlock(&mutex_mallocs);
+	if(nodo!=NULL){
+		dir = nodo->direccion;
+	}else{
+		dir = 0;
+	}
+	free(nodo);
+	return dir;
+}
+
+void eliminar_mallocs(t_hilo* tcb){
+	t_struct_free* free_segmento;
+	uint32_t dir = sacar_direccion_de_mallocs(tcb->tid);
+	while(dir!=0){
+		//Libero segmento allocado
+			free_segmento = malloc(sizeof(t_struct_free));
+			free_segmento->PID = tcb->pid;
+			free_segmento->direccion_base = dir;
+			printf("Libero el segmento alocado, ubicado en: %d\n", free_segmento->direccion_base);
+			socket_enviar(socket_MSP, D_STRUCT_FREE, free_segmento);
+			free(free_segmento);
+			dir = sacar_direccion_de_mallocs(tcb->tid);
+	}
+}
+
 /******************************** HANDLER CPU *****************************************/
 
 void mandar_a_ejecutar(t_hilo* tcb, int sockCPU){
@@ -1026,11 +1070,12 @@ void handler_cpu(int sockCPU){
 		//La CPU cerró la conexión
 		tcb = obtener_tcb_de_cpu(sockCPU);
 		if (tcb!=NULL){
-			if (tcb->kernel_mode == false){
-				mandar_a_exit(tcb, ABORTAR);
-			}else{
-				retornar_de_systcall(tcb, ABORTAR);
-			}
+//			if (tcb->kernel_mode == false){
+//				mandar_a_exit(tcb, ABORTAR);
+//			}else{
+//				retornar_de_systcall(tcb, ABORTAR);
+//			}
+			encolar_en_ready(tcb);
 		}
 		eliminar_solicitud(sockCPU);
 		pthread_mutex_lock(&mutex_log);

@@ -53,6 +53,14 @@
 		t_log* logger;
 	} arg_PLANIFICADOR;
 
+	typedef struct data_nodo_mallocs{
+		uint32_t tid;
+		uint32_t direccion;
+	}t_data_nodo_mallocs;
+
+	t_list* mallocs;
+	pthread_mutex_t mutex_mallocs;
+
 	typedef enum {TCBKM, SYSTCALL, JOIN, SEM} t_evento;
 
 	typedef struct data_nodo_block { //Estructura de la cola de BLOCK
@@ -130,6 +138,10 @@
 	void atender_solicitudes_pendientes();
 	void atender_cpus();
 	void handler_cpu(int sockCPU);
+
+	void agregar_a_mallocs(uint32_t tid, uint32_t dir);
+	uint32_t sacar_direccion_de_mallocs(uint32_t tid);
+	void eliminar_mallocs(t_hilo* tcb);
 
 	bool hay_que_abortar(int sockCPU);
 	void sacar_de_abortar(int sockCPU);
